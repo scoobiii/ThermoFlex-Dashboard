@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { EmissionData, HistoricalEmissionPoint } from '../types';
 import DashboardCard from './DashboardCard';
@@ -8,6 +9,9 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 interface EmissionsMonitorProps {
   emissions: EmissionData;
   historicalEmissions: HistoricalEmissionPoint[];
+  isMaximizable?: boolean;
+  isMaximized?: boolean;
+  onToggleMaximize?: () => void;
 }
 
 interface EmissionBarProps {
@@ -53,9 +57,22 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 
-const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({ emissions, historicalEmissions }) => {
+const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({ 
+  emissions, 
+  historicalEmissions,
+  isMaximizable,
+  isMaximized,
+  onToggleMaximize
+}) => {
   return (
-    <DashboardCard title="Monitor de Emissões" icon={<WarningIcon className="w-6 h-6" />} className="h-full">
+    <DashboardCard 
+      title="Monitor de Emissões" 
+      icon={<WarningIcon className="w-6 h-6" />} 
+      className="h-full"
+      isMaximizable={isMaximizable}
+      isMaximized={isMaximized}
+      onToggleMaximize={onToggleMaximize}
+    >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 h-full">
             <div className="space-y-4 my-auto">
                 <EmissionBar label="NOx" value={emissions.nox} max={25} unit="kg/h" />

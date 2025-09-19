@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PlantStatus, FuelMode, EmissionData, HistoricalDataPoint, Alert, Turbine, LongHistoricalDataPoint, HistoricalEmissionPoint } from '../types';
 import ControlPanel from '../components/ControlPanel';
@@ -22,6 +23,7 @@ interface PowerPlantProps {
   flexMix: { h2: number; biodiesel: number };
   setFlexMix: React.Dispatch<React.SetStateAction<{ h2: number; biodiesel: number }>>;
   turbineStatusConfig: TurbineStatusConfig;
+  efficiencyGain: number;
 }
 
 const FUEL_PROFILES = {
@@ -30,11 +32,14 @@ const FUEL_PROFILES = {
   [FuelMode.Biodiesel]: { power: 2000, efficiency: 53.5, nox: 18, sox: 0.8, co: 25, particulates: 8.0, consumption: 480 },
 };
 
+type MaximizableCard = 'power' | 'fuel' | 'emissions' | 'turbines' | 'history' | 'alerts';
+
 const PowerPlant: React.FC<PowerPlantProps> = ({ 
     plantStatus, setPlantStatus, 
     powerOutput, setPowerOutput,
     efficiency, setEfficiency,
-    fuelMode, flexMix, setFlexMix, turbineStatusConfig
+    fuelMode, flexMix, setFlexMix, turbineStatusConfig,
+    efficiencyGain
 }) => {
   const [fuelConsumption, setFuelConsumption] = useState(400);
   const [emissions, setEmissions] = useState<EmissionData>({ nox: 10.5, sox: 4.2, co: 30.1, particulates: 7.8 });
@@ -46,6 +51,7 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
   const [timeRange, setTimeRange] = useState<'24h' | '7d'>('24h');
   const [longHistoricalData, setLongHistoricalData] = useState<LongHistoricalDataPoint[]>([]);
   const [historicalEmissions, setHistoricalEmissions] = useState<HistoricalEmissionPoint[]>([]);
+  const [maximizedCard, setMaximizedCard] = useState<MaximizableCard | null>(null);
 
   const addAlert = useCallback((level: 'critical' | 'warning' | 'info', message: string) => {
     setAlerts(prev => {
@@ -100,10 +106,10 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
         baseProfile = FUEL_PROFILES[fuelMode];
     }
     
-    const { power, efficiency, consumption, ...emissionsProfile } = baseProfile;
+    const { power, efficiency: baseEfficiencyValue, consumption, ...emissionsProfile } = baseProfile;
     const newPower = power + Math.random() * 100 - 50;
     setPowerOutput(newPower);
-    setEfficiency(efficiency + Math.random() * 0.5 - 0.25);
+    setEfficiency(baseEfficiencyValue + Math.random() * 0.5 - 0.25);
     setFuelConsumption(consumption + Math.random() * 10 - 5);
     
     setEmissions({
@@ -162,7 +168,6 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
     setTurbines(Array.from({ length: 5 }, (_, i) => ({
       id: i + 1, status: 'active', rpm: 3500, temp: 580, pressure: 20,
     })));
-    // Other initial data generation can remain the same
   }, []);
 
   useEffect(() => {
@@ -179,39 +184,125 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
   const handleCloseTurbineMonitor = useCallback(() => setSelectedTurbineId(null), []);
   const handleDismissAlert = useCallback((id: number) => setAlerts(prev => prev.filter(a => a.id !== id)), []);
   const handleClearAlerts = useCallback(() => setAlerts([]), []);
+  const toggleMaximize = (card: MaximizableCard) => setMaximizedCard(prev => prev === card ? null : card);
 
   const historicalChartData = useMemo(() => timeRange === '24h' ? longHistoricalData.slice(0, 24) : longHistoricalData.slice(24), [longHistoricalData, timeRange]);
+
+  const totalEfficiency = efficiency + efficiencyGain;
+
+  const cardLayouts = {
+    default: {
+        grid: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6",
+        power: "lg:col-span-1 xl:col-span-1",
+        fuel: "lg:col-span-1 xl:col-span-1",
+        emissions: "md:col-span-2 lg:col-span-2 xl:col-span-3",
+        turbines: "md:col-span-2 lg:col-span-4 xl:col-span-5",
+        history: "md:col-span-2 lg:col-span-2 xl:col-span-3",
+        alerts: "md:col-span-2 lg:col-span-2 xl:col-span-2",
+    },
+    maximized: {
+        grid: "grid-cols-1 gap-6",
+        power: "col-span-1",
+        fuel: "col-span-1",
+        emissions: "col-span-1",
+        turbines: "col-span-1",
+        history: "col-span-1",
+        alerts: "col-span-1",
+    }
+  }
+  
+  const layout = maximizedCard ? cardLayouts.maximized : cardLayouts.default;
+
+  const isVisible = (card: MaximizableCard) => !maximizedCard || maximizedCard === card;
 
   return (
     <>
         <ControlPanel plantStatus={plantStatus} setPlantStatus={setPlantStatus} />
 
-        <main className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          <div className="lg:col-span-1 xl:col-span-1">
-            <PowerOutput powerOutput={powerOutput} efficiency={efficiency} historicalData={historicalData} />
-          </div>
-          <div className="lg:col-span-1 xl:col-span-1">
-            <FuelStatus fuelMode={fuelMode} consumption={fuelConsumption} flexMix={flexMix} setFlexMix={setFlexMix} />
-          </div>
-          <div className="md:col-span-2 lg:col-span-2 xl:col-span-3">
-            <EmissionsMonitor emissions={emissions} historicalEmissions={historicalEmissions} />
-          </div>
-          <div className="md:col-span-2 lg:col-span-4 xl:col-span-5">
-            <TurbineStatus turbines={turbines} onSelectTurbine={handleSelectTurbine} selectedTurbineId={selectedTurbineId} />
-          </div>
-          {selectedTurbine ? (
-            <div className="md:col-span-2 lg:col-span-2 xl:col-span-3">
-              <MainTurbineMonitor turbine={selectedTurbine} onClose={handleCloseTurbineMonitor} allTurbines={turbines} totalPowerOutput={powerOutput} />
-            </div>
-          ) : (
-            <div className="md:col-span-2 lg:col-span-2 xl:col-span-3">
-              <HistoricalData data={historicalChartData} timeRange={timeRange} setTimeRange={setTimeRange} />
+        <div className={`mt-6 grid ${layout.grid}`}>
+          {isVisible('power') && (
+            <div className={layout.power}>
+              <PowerOutput 
+                powerOutput={powerOutput} 
+                baseEfficiency={efficiency} 
+                totalEfficiency={totalEfficiency} 
+                historicalData={historicalData} 
+                isMaximizable={true}
+                isMaximized={maximizedCard === 'power'}
+                onToggleMaximize={() => toggleMaximize('power')}
+              />
             </div>
           )}
-          <div className="md:col-span-2 lg:col-span-2 xl:col-span-2">
-            <Alerts alerts={alerts} onDismiss={handleDismissAlert} onClearAll={handleClearAlerts} />
-          </div>
-        </main>
+
+          {isVisible('fuel') && (
+            <div className={layout.fuel}>
+              <FuelStatus 
+                fuelMode={fuelMode} 
+                consumption={fuelConsumption} 
+                flexMix={flexMix} 
+                setFlexMix={setFlexMix} 
+                isMaximizable={true}
+                isMaximized={maximizedCard === 'fuel'}
+                onToggleMaximize={() => toggleMaximize('fuel')}
+              />
+            </div>
+          )}
+
+          {isVisible('emissions') && (
+            <div className={layout.emissions}>
+              <EmissionsMonitor 
+                emissions={emissions} 
+                historicalEmissions={historicalEmissions} 
+                isMaximizable={true}
+                isMaximized={maximizedCard === 'emissions'}
+                onToggleMaximize={() => toggleMaximize('emissions')}
+              />
+            </div>
+          )}
+
+          {isVisible('turbines') && (
+            <div className={layout.turbines}>
+              <TurbineStatus 
+                turbines={turbines} 
+                onSelectTurbine={handleSelectTurbine} 
+                selectedTurbineId={selectedTurbineId} 
+                isMaximizable={true}
+                isMaximized={maximizedCard === 'turbines'}
+                onToggleMaximize={() => toggleMaximize('turbines')}
+              />
+            </div>
+          )}
+          
+          {isVisible('history') && (
+            <div className={layout.history}>
+              {selectedTurbine ? (
+                <MainTurbineMonitor turbine={selectedTurbine} onClose={handleCloseTurbineMonitor} allTurbines={turbines} totalPowerOutput={powerOutput} />
+              ) : (
+                <HistoricalData 
+                  data={historicalChartData} 
+                  timeRange={timeRange} 
+                  setTimeRange={setTimeRange} 
+                  isMaximizable={true}
+                  isMaximized={maximizedCard === 'history'}
+                  onToggleMaximize={() => toggleMaximize('history')}
+                />
+              )}
+            </div>
+          )}
+
+          {isVisible('alerts') && (
+            <div className={layout.alerts}>
+              <Alerts 
+                alerts={alerts} 
+                onDismiss={handleDismissAlert} 
+                onClearAll={handleClearAlerts} 
+                isMaximizable={true}
+                isMaximized={maximizedCard === 'alerts'}
+                onToggleMaximize={() => toggleMaximize('alerts')}
+              />
+            </div>
+          )}
+        </div>
     </>
   );
 };

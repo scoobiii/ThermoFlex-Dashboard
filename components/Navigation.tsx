@@ -1,7 +1,7 @@
 import React from 'react';
 
-const navItems = ['Power Plant', 'Utilities', 'MAUAX DAO DataCloud', 'Infrastructure', 'Financials', 'Configuration'];
-export type Page = 'Power Plant' | 'Utilities' | 'MAUAX DAO DataCloud' | 'Infrastructure' | 'Financials' | 'Configuration';
+const navItems = ['Power Plant', 'Utilities', 'Data Center', 'Infrastructure', 'MAUAX consortium', 'Financials', 'Configuration'];
+export type Page = 'Power Plant' | 'Utilities' | 'Data Center' | 'Infrastructure' | 'MAUAX consortium' | 'Financials' | 'Configuration';
 
 interface NavigationProps {
   currentPage: Page;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   ResponsiveContainer,
@@ -18,6 +19,10 @@ interface HistoricalDataProps {
   data: LongHistoricalDataPoint[];
   timeRange: '24h' | '7d';
   setTimeRange: (range: '24h' | '7d') => void;
+  // FIX: Add props for maximizing functionality
+  isMaximizable?: boolean;
+  isMaximized?: boolean;
+  onToggleMaximize?: () => void;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -66,7 +71,14 @@ const TimeRangeSelector: React.FC<{
   </div>
 );
 
-const HistoricalData: React.FC<HistoricalDataProps> = ({ data, timeRange, setTimeRange }) => {
+const HistoricalData: React.FC<HistoricalDataProps> = ({ 
+  data, 
+  timeRange, 
+  setTimeRange,
+  isMaximizable,
+  isMaximized,
+  onToggleMaximize,
+}) => {
   const action = <TimeRangeSelector timeRange={timeRange} setTimeRange={setTimeRange} />;
 
   return (
@@ -75,6 +87,9 @@ const HistoricalData: React.FC<HistoricalDataProps> = ({ data, timeRange, setTim
       icon={<ChartBarIcon className="w-6 h-6" />}
       action={action}
       className="h-full"
+      isMaximizable={isMaximizable}
+      isMaximized={isMaximized}
+      onToggleMaximize={onToggleMaximize}
     >
       <div className="h-full w-full pt-4">
         <ResponsiveContainer width="100%" height="100%">

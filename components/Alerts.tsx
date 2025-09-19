@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Alert } from '../types';
 import DashboardCard from './DashboardCard';
@@ -7,6 +8,10 @@ interface AlertsProps {
   alerts: Alert[];
   onDismiss: (id: number) => void;
   onClearAll: () => void;
+  // FIX: Add props for maximizing functionality
+  isMaximizable?: boolean;
+  isMaximized?: boolean;
+  onToggleMaximize?: () => void;
 }
 
 const alertConfig = {
@@ -24,9 +29,21 @@ const alertConfig = {
     }
 }
 
-const Alerts: React.FC<AlertsProps> = ({ alerts, onDismiss, onClearAll }) => {
+const Alerts: React.FC<AlertsProps> = ({ 
+  alerts, 
+  onDismiss, 
+  onClearAll,
+  isMaximizable,
+  isMaximized,
+  onToggleMaximize
+}) => {
   return (
-    <DashboardCard title="Alertas Recentes">
+    <DashboardCard 
+      title="Alertas Recentes"
+      isMaximizable={isMaximizable}
+      isMaximized={isMaximized}
+      onToggleMaximize={onToggleMaximize}
+    >
       {alerts.length > 0 && (
         <div className="flex justify-end mb-2 -mt-2">
           <button

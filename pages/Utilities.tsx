@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlantStatus } from '../types';
 import WasteHeatRecovery from '../components/Utilities/WasteHeatRecovery';
 import AbsorptionChiller from '../components/Utilities/AbsorptionChiller';
@@ -9,11 +9,13 @@ interface UtilitiesProps {
     powerOutput: number;
     efficiency: number;
     plantStatus: PlantStatus;
+    setEfficiencyGain: (gain: number) => void;
 }
 
-const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantStatus }) => {
+const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantStatus, setEfficiencyGain }) => {
     
     const isOnline = plantStatus === PlantStatus.Online;
+    const [ambientTemp] = useState(32.4); // Simulate ambient temperature for ISO condition check
 
     // Calculate waste heat based on power output and efficiency
     // Power Input = Power Output / Efficiency
@@ -29,6 +31,18 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
     const tiacCooling = coolingProduction * 0.4;
     const fogCooling = coolingProduction * 0.3;
     const dataCenterCooling = coolingProduction * 0.3;
+
+    useEffect(() => {
+        const ISO_TEMP_THRESHOLD = 25; // Define ISO condition threshold
+        if (isOnline && ambientTemp > ISO_TEMP_THRESHOLD) {
+            const tiacGain = tiacCooling > 0 ? 1.5 : 0;
+            const fogGain = fogCooling > 0 ? 0.8 : 0;
+            setEfficiencyGain(tiacGain + fogGain);
+        } else {
+            setEfficiencyGain(0);
+        }
+    }, [isOnline, ambientTemp, tiacCooling, fogCooling, setEfficiencyGain]);
+
 
     return (
         <div className="mt-6">

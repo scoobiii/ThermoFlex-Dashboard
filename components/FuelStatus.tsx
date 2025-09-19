@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { FuelMode } from '../types';
@@ -9,6 +10,10 @@ interface FuelStatusProps {
   consumption: number;
   flexMix: { h2: number, biodiesel: number };
   setFlexMix: React.Dispatch<React.SetStateAction<{ h2: number; biodiesel: number }>>;
+  // FIX: Add props for maximizing functionality
+  isMaximizable?: boolean;
+  isMaximized?: boolean;
+  onToggleMaximize?: () => void;
 }
 
 const COLORS: { [key: string]: string } = {
@@ -18,7 +23,15 @@ const COLORS: { [key: string]: string } = {
   'Biodiesel': '#22c55e',
 };
 
-const FuelStatus: React.FC<FuelStatusProps> = ({ fuelMode, consumption, flexMix, setFlexMix }) => {
+const FuelStatus: React.FC<FuelStatusProps> = ({ 
+  fuelMode, 
+  consumption, 
+  flexMix, 
+  setFlexMix,
+  isMaximizable,
+  isMaximized,
+  onToggleMaximize,
+}) => {
   let chartData = [];
   let fuelTitle: string = fuelMode;
 
@@ -52,7 +65,13 @@ const FuelStatus: React.FC<FuelStatusProps> = ({ fuelMode, consumption, flexMix,
   const showBiodieselSlider = fuelMode === FuelMode.FlexEthanolBiodiesel;
 
   return (
-    <DashboardCard title="Status do Combustível" icon={<GasIcon className="w-6 h-6" />}>
+    <DashboardCard 
+      title="Status do Combustível" 
+      icon={<GasIcon className="w-6 h-6" />}
+      isMaximizable={isMaximizable}
+      isMaximized={isMaximized}
+      onToggleMaximize={onToggleMaximize}
+    >
       <div className="flex flex-col h-full">
         <div>
             <div className="text-center">

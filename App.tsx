@@ -7,31 +7,78 @@ import DataCenter from './pages/DataCenter';
 import Infrastructure from './pages/Infrastructure';
 import Financials from './pages/Financials';
 import Configuration from './pages/Configuration';
+import MexEcoBr from './pages/MexEcoBr';
 import { PlantStatus, FuelMode, TurbineStatus } from './types';
 import { POWER_PLANTS } from './data/plants';
 
 export type TurbineStatusConfig = { [key: number]: TurbineStatus };
 
+// --- Configuration Persistence ---
+const CONFIG_STORAGE_KEY = 'app-config';
+
+interface AppConfig {
+  selectedPlantName: string;
+  fuelMode: FuelMode;
+  flexMix: { h2: number; biodiesel: number };
+  turbineStatusConfig: TurbineStatusConfig;
+}
+
+const defaultConfig: AppConfig = {
+  selectedPlantName: 'MAUX Bio PowerPlant (standard)',
+  fuelMode: FuelMode.NaturalGas,
+  flexMix: { h2: 20, biodiesel: 30 },
+  turbineStatusConfig: {
+    1: 'active', 2: 'active', 3: 'active', 4: 'active', 5: 'active',
+  },
+};
+
+const loadConfig = (): AppConfig => {
+  try {
+    const savedConfigString = localStorage.getItem(CONFIG_STORAGE_KEY);
+    if (savedConfigString) {
+      const savedConfig = JSON.parse(savedConfigString);
+      // Merge with defaults to ensure all keys are present
+      return { ...defaultConfig, ...savedConfig };
+    }
+  } catch (error) {
+    console.error("Failed to load or parse config from localStorage", error);
+  }
+  return defaultConfig;
+};
+
+
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<Page>('Configuration');
+  const [currentPage, setCurrentPage] = useState<Page>('Power Plant');
   
   // Shared state
   const [plantStatus, setPlantStatus] = useState<PlantStatus>(PlantStatus.Online);
   const [powerOutput, setPowerOutput] = useState(2250.0);
   const [efficiency, setEfficiency] = useState(58.5);
   const [maxCapacity, setMaxCapacity] = useState(2500);
+  const [efficiencyGain, setEfficiencyGain] = useState(0);
 
-  // Configuration Page State
-  const [selectedPlantName, setSelectedPlantName] = useState<string>('MAUX Bio PowerPlant (standard)');
-  const [fuelMode, setFuelMode] = useState<FuelMode>(FuelMode.NaturalGas);
-  const [flexMix, setFlexMix] = useState({ h2: 20, biodiesel: 30 });
-  const [turbineStatusConfig, setTurbineStatusConfig] = useState<TurbineStatusConfig>({
-    1: 'active',
-    2: 'active',
-    3: 'active',
-    4: 'active',
-    5: 'active',
-  });
+  // --- Configuration Page State (Initialized from localStorage) ---
+  const [selectedPlantName, setSelectedPlantName] = useState<string>(() => loadConfig().selectedPlantName);
+  const [fuelMode, setFuelMode] = useState<FuelMode>(() => loadConfig().fuelMode);
+  const [flexMix, setFlexMix] = useState(() => loadConfig().flexMix);
+  const [turbineStatusConfig, setTurbineStatusConfig] = useState<TurbineStatusConfig>(() => loadConfig().turbineStatusConfig);
+
+
+  // --- Effect to SAVE config changes to localStorage ---
+  useEffect(() => {
+    const configToSave: AppConfig = {
+      selectedPlantName,
+      fuelMode,
+      flexMix,
+      turbineStatusConfig,
+    };
+    try {
+      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(configToSave));
+    } catch (error) {
+      console.error("Failed to save config to localStorage", error);
+    }
+  }, [selectedPlantName, fuelMode, flexMix, turbineStatusConfig]);
+
 
   useEffect(() => {
     const plant = POWER_PLANTS.find(p => p.name === selectedPlantName);
@@ -42,16 +89,26 @@ const App: React.FC = () => {
         setPowerOutput(plant.power * (0.85 + Math.random() * 0.1));
       } else {
         setPowerOutput(0);
+        setEfficiencyGain(0); // Reset gain when offline
       }
 
-      if (plant.name === 'MAUX Bio PowerPlant (standard)') {
-        setFuelMode(FuelMode.FlexNGH2);
-      } else if (plant.fuel.includes('Gás Natural')) {
-        setFuelMode(FuelMode.NaturalGas);
-      } else if (plant.fuel.includes('Etanol')) {
-        setFuelMode(FuelMode.Ethanol);
-      } else if (plant.fuel.includes('Biodiesel')) {
-        setFuelMode(FuelMode.Biodiesel);
+      // Don't auto-change fuel mode if it was loaded from storage
+      // Only set a default if the current selection is illogical for the plant type
+      const isCurrentModeIncompatible = 
+        (plant.name === 'MAUX Bio PowerPlant (standard)' && fuelMode !== FuelMode.FlexNGH2 && fuelMode !== FuelMode.FlexEthanolBiodiesel) ||
+        (!plant.fuel.includes('Gás') && fuelMode === FuelMode.NaturalGas) ||
+        (!plant.fuel.includes('Etanol') && fuelMode === FuelMode.Ethanol);
+
+      if (isCurrentModeIncompatible) {
+        if (plant.name === 'MAUX Bio PowerPlant (standard)') {
+          setFuelMode(FuelMode.FlexNGH2);
+        } else if (plant.fuel.includes('Gás Natural')) {
+          setFuelMode(FuelMode.NaturalGas);
+        } else if (plant.fuel.includes('Etanol')) {
+          setFuelMode(FuelMode.Ethanol);
+        } else if (plant.fuel.includes('Biodiesel')) {
+          setFuelMode(FuelMode.Biodiesel);
+        }
       }
     }
   }, [selectedPlantName, plantStatus]);
@@ -70,17 +127,21 @@ const App: React.FC = () => {
           flexMix={flexMix}
           setFlexMix={setFlexMix}
           turbineStatusConfig={turbineStatusConfig}
+          efficiencyGain={efficiencyGain}
         />;
       case 'Utilities':
         return <Utilities 
           plantStatus={plantStatus}
           powerOutput={powerOutput}
           efficiency={efficiency}
+          setEfficiencyGain={setEfficiencyGain}
         />;
-      case 'MAUAX DAO DataCloud':
+      case 'Data Center':
         return <DataCenter />;
       case 'Infrastructure':
         return <Infrastructure />;
+      case 'MAUAX consortium':
+        return <MexEcoBr />;
       case 'Financials':
         return <Financials />;
       case 'Configuration':
@@ -106,6 +167,7 @@ const App: React.FC = () => {
           flexMix={flexMix}
           setFlexMix={setFlexMix}
           turbineStatusConfig={turbineStatusConfig}
+          efficiencyGain={efficiencyGain}
         />;
     }
   };

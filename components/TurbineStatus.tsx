@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Turbine } from '../types';
 import DashboardCard from './DashboardCard';
@@ -7,6 +8,10 @@ interface TurbineStatusProps {
   turbines: Turbine[];
   onSelectTurbine: (id: number) => void;
   selectedTurbineId: number | null;
+  // FIX: Add props for maximizing functionality
+  isMaximizable?: boolean;
+  isMaximized?: boolean;
+  onToggleMaximize?: () => void;
 }
 
 const statusClasses = {
@@ -43,9 +48,22 @@ const TurbineCard: React.FC<{ turbine: Turbine; isSelected: boolean; onSelect: (
     </button>
 )
 
-const TurbineStatus: React.FC<TurbineStatusProps> = ({ turbines, onSelectTurbine, selectedTurbineId }) => {
+const TurbineStatus: React.FC<TurbineStatusProps> = ({ 
+  turbines, 
+  onSelectTurbine, 
+  selectedTurbineId,
+  isMaximizable,
+  isMaximized,
+  onToggleMaximize,
+}) => {
   return (
-    <DashboardCard title="Status das Turbinas" icon={<CogIcon className="w-6 h-6" />}>
+    <DashboardCard 
+      title="Status das Turbinas" 
+      icon={<CogIcon className="w-6 h-6" />}
+      isMaximizable={isMaximizable}
+      isMaximized={isMaximized}
+      onToggleMaximize={onToggleMaximize}
+    >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {turbines.map(turbine => (
             <TurbineCard 

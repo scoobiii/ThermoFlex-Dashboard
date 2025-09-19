@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardCard from './DashboardCard';
 import { ServerRackIcon } from './icons';
@@ -51,7 +50,6 @@ const ServerRackStatus: React.FC = () => {
             cpuLoad: Math.round(newCpuLoad),
             memUsage: Math.round(newMemUsage),
             temp: Math.round(newTemp),
-            // FIX: Removed redundant condition. Due to the early return, `rack.status` can never be 'Offline' here.
             status: newStatus,
           };
         })
