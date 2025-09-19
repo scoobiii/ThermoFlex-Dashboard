@@ -1,15 +1,18 @@
-
 import React from 'react';
-import DashboardCard from '../components/DashboardCard';
+import CoolingLoad from '../components/CoolingLoad';
+import PowerConsumption from '../components/PowerConsumption';
+import DataCenterTreeMap from '../components/DataCenterTreeMap';
 
 const DataCenter: React.FC = () => {
   return (
-    <div className="mt-6">
-      <DashboardCard title="Data Center">
-        <div className="h-96 flex items-center justify-center">
-          <p className="text-gray-500 text-lg">O dashboard do Data Center está em desenvolvimento.</p>
-        </div>
-      </DashboardCard>
+    <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2">
+        <DataCenterTreeMap />
+      </div>
+      <div className="lg:col-span-1 grid grid-rows-2 gap-6">
+          <PowerConsumption />
+          <CoolingLoad />
+      </div>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PlantStatus, FuelMode, EmissionData, HistoricalDataPoint, Alert, Turbine, LongHistoricalDataPoint, HistoricalEmissionPoint } from '../types';
 import ControlPanel from '../components/ControlPanel';
@@ -19,6 +20,7 @@ interface PowerPlantProps {
   setEfficiency: (efficiency: number) => void;
   fuelMode: FuelMode;
   flexMix: { h2: number; biodiesel: number };
+  setFlexMix: React.Dispatch<React.SetStateAction<{ h2: number; biodiesel: number }>>;
   turbineStatusConfig: TurbineStatusConfig;
 }
 
@@ -32,7 +34,7 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
     plantStatus, setPlantStatus, 
     powerOutput, setPowerOutput,
     efficiency, setEfficiency,
-    fuelMode, flexMix, turbineStatusConfig
+    fuelMode, flexMix, setFlexMix, turbineStatusConfig
 }) => {
   const [fuelConsumption, setFuelConsumption] = useState(400);
   const [emissions, setEmissions] = useState<EmissionData>({ nox: 10.5, sox: 4.2, co: 30.1, particulates: 7.8 });
@@ -189,7 +191,7 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
             <PowerOutput powerOutput={powerOutput} efficiency={efficiency} historicalData={historicalData} />
           </div>
           <div className="lg:col-span-1 xl:col-span-1">
-            <FuelStatus fuelMode={fuelMode} consumption={fuelConsumption} flexMix={flexMix} setFlexMix={() => {}} />
+            <FuelStatus fuelMode={fuelMode} consumption={fuelConsumption} flexMix={flexMix} setFlexMix={setFlexMix} />
           </div>
           <div className="md:col-span-2 lg:col-span-2 xl:col-span-3">
             <EmissionsMonitor emissions={emissions} historicalEmissions={historicalEmissions} />

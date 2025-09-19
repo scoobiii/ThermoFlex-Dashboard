@@ -6,18 +6,11 @@ export enum PlantStatus {
 }
 
 export enum FuelMode {
-  NaturalGas = '100% Gás Natural',
-  Ethanol = '100% Etanol',
-  Biodiesel = '100% Biodiesel',
-  FlexNGH2 = 'Flex GN/H2',
-  FlexEthanolBiodiesel = 'Flex Etanol/Biodiesel',
-}
-
-export interface EmissionData {
-  nox: number; // Dióxido de Nitrogênio
-  sox: number; // Dióxido de Enxofre
-  co: number;  // Monóxido de Carbono
-  particulates: number; // Material Particulado
+  NaturalGas = 'Gás Natural',
+  Ethanol = 'Etanol',
+  Biodiesel = 'Biodiesel',
+  FlexNGH2 = 'Flex (GN/H2)',
+  FlexEthanolBiodiesel = 'Flex (Etanol/Biodiesel)',
 }
 
 export interface HistoricalDataPoint {
@@ -25,10 +18,25 @@ export interface HistoricalDataPoint {
   power: number;
 }
 
-export interface LongHistoricalDataPoint {
+export interface EmissionData {
+  nox: number;
+  sox: number;
+  co: number;
+  particulates: number;
+}
+
+export interface HistoricalEmissionPoint extends EmissionData {
   time: string;
-  power: number;
-  consumption: number;
+}
+
+export type TurbineStatus = 'active' | 'inactive' | 'error';
+
+export interface Turbine {
+  id: number;
+  status: TurbineStatus;
+  rpm: number;
+  temp: number;
+  pressure: number;
 }
 
 export interface Alert {
@@ -38,18 +46,8 @@ export interface Alert {
   timestamp: string;
 }
 
-export interface Turbine {
-    id: number;
-    status: 'active' | 'inactive' | 'error';
-    rpm: number;
-    temp: number;
-    pressure: number;
-}
-
-export interface HistoricalEmissionPoint {
+export interface LongHistoricalDataPoint {
   time: string;
-  nox: number;
-  sox: number;
-  co: number;
-  particulates: number;
+  power: number;
+  consumption: number;
 }

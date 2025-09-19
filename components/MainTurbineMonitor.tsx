@@ -2,7 +2,7 @@ import React from 'react';
 import { Turbine } from '../types';
 import DashboardCard from './DashboardCard';
 import { CloseIcon, CogIcon } from './icons';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 
 interface MainTurbineMonitorProps {
   turbine: Turbine;
@@ -24,18 +24,6 @@ const MetricDisplay: React.FC<{ label: string; value: string | number; unit: str
         <p className="text-gray-400">{unit}</p>
     </div>
 );
-
-const PowerCustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
-        <p className="label text-sm text-gray-300">{`${label}`}</p>
-        <p className="intro text-sm text-cyan-400">{`Potência: ${payload[0].value.toFixed(1)} MW`}</p>
-      </div>
-    );
-  }
-  return null;
-};
 
 const RPMCustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -63,19 +51,20 @@ const MainTurbineMonitor: React.FC<MainTurbineMonitorProps> = ({ turbine, onClos
   const activeTurbines = allTurbines.filter(t => t.status === 'active');
   const powerPerTurbine = activeTurbines.length > 0 ? totalPowerOutput / activeTurbines.length : 0;
   
-  const powerChartData = allTurbines.map(t => ({
-    name: `Turbina #${t.id}`,
-    power: t.status === 'active' ? powerPerTurbine : 0,
-  }));
-  
+  const powerContributionData = [
+      activeTurbines.reduce((acc, t) => {
+          const key = `Turbina #${t.id}`;
+          acc[key] = powerPerTurbine;
+          return acc;
+      }, { name: 'Power' })
+  ];
+
   const rpmChartData = activeTurbines.map(t => ({
     name: `Turbina #${t.id}`,
     rpm: t.rpm,
     id: t.id,
   }));
   
-  const powerOfThisTurbine = turbine.status === 'active' ? powerPerTurbine : 0;
-
   return (
     <DashboardCard 
         title={`Monitoramento - Turbina #${turbine.id}`} 
@@ -98,34 +87,50 @@ const MainTurbineMonitor: React.FC<MainTurbineMonitorProps> = ({ turbine, onClos
         <div className="flex-grow mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
           {/* Power Contribution Chart */}
           <div className="flex flex-col h-full min-h-[200px]">
-            <h4 className="text-md font-semibold text-gray-300 text-center mb-1">
+            <h4 className="text-md font-semibold text-gray-300 text-center mb-2">
               Contribuição de Potência
             </h4>
-            {turbine.status === 'active' && (
-              <div className="text-center text-xs text-gray-400 mb-2">
-                  <p>
-                      <span className="font-bold text-cyan-400">{powerOfThisTurbine.toFixed(1)} MW</span> / {totalPowerOutput.toFixed(1)} MW
-                  </p>
-              </div>
-            )}
             <div className="flex-grow">
-              <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={powerChartData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" horizontal={false} />
-                      <XAxis type="number" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} unit=" MW" />
-                      <YAxis type="category" dataKey="name" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} width={60} />
-                      <Tooltip content={<PowerCustomTooltip />} cursor={{fill: 'rgba(42, 52, 73, 0.5)'}} />
-                      <Bar dataKey="power">
-                          {powerChartData.map((entry, index) => (
-                              <Cell 
-                                  key={`cell-${index}`} 
-                                  fill={allTurbines[index].id === turbine.id ? '#06b6d4' : '#0891b2'} 
-                                  opacity={allTurbines[index].status === 'active' ? 1 : 0.3}
-                              />
-                          ))}
-                      </Bar>
-                  </BarChart>
-              </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        layout="vertical"
+                        data={powerContributionData}
+                        margin={{ top: 20, right: 20, left: 20, bottom: 25 }}
+                        barCategoryGap="20%"
+                    >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
+                        <XAxis type="number" stroke="#9ca3af" fontSize={10} domain={[0, 'dataMax']} unit=" MW" />
+                        <YAxis type="category" dataKey="name" hide={true} />
+                        <Tooltip 
+                            cursor={{fill: 'rgba(42, 52, 73, 0.5)'}}
+                            wrapperStyle={{ backgroundColor: '#1A2233', border: '1px solid #2A3449', borderRadius: '0.5rem', outline: 'none' }}
+                            contentStyle={{ backgroundColor: '#1A2233', border: 'none' }}
+                            labelStyle={{ color: '#e5e7eb', marginBottom: '0.5rem' }}
+                            formatter={(value: number, name: string) => [
+                                <span className="text-cyan-400">{`${value.toFixed(1)} MW`}</span>,
+                                <span className="text-gray-300">{name}</span>
+                            ]}
+                            labelFormatter={() => `Total: ${totalPowerOutput.toFixed(0)} MW`}
+                        />
+                        <Legend wrapperStyle={{fontSize: "12px", position: 'absolute', bottom: 0 }} />
+                        {activeTurbines.map((t, index) => {
+                             const isFirst = index === 0;
+                             const isLast = index === activeTurbines.length - 1;
+                             const radius: [number, number, number, number] = activeTurbines.length === 1 ? [8, 8, 8, 8] : isFirst ? [8, 0, 0, 8] : isLast ? [0, 8, 8, 0] : [0, 0, 0, 0];
+                             
+                            return (
+                                <Bar 
+                                    key={`bar-${t.id}`}
+                                    dataKey={`Turbina #${t.id}`}
+                                    stackId="a"
+                                    name={`Turbina #${t.id}`}
+                                    fill={t.id === turbine.id ? '#06b6d4' : '#0891b2'}
+                                    radius={radius}
+                                />
+                            );
+                        })}
+                    </BarChart>
+                </ResponsiveContainer>
             </div>
           </div>
           {/* RPM Comparison Chart */}
@@ -146,7 +151,6 @@ const MainTurbineMonitor: React.FC<MainTurbineMonitorProps> = ({ turbine, onClos
                           fontSize={10} 
                           tickLine={false} 
                           axisLine={false}
-                          // Fix: The prop name for formatting tick labels is `tickFormatter`, not `formatter`.
                           tickFormatter={(value) => value.replace('Turbina ', '')}
                         />
                         <YAxis 

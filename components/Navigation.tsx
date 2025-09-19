@@ -1,28 +1,7 @@
 import React from 'react';
-import { Page } from '../App';
-import { BoltIcon, WrenchScrewdriverIcon, CpuChipIcon, CircleStackIcon, AdjustmentsHorizontalIcon, ChartBarIcon } from './icons';
 
-interface NavLinkProps {
-  icon: React.ReactNode;
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}
-
-const NavLink: React.FC<NavLinkProps> = ({ icon, label, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
-      isActive
-        ? 'bg-cyan-500/10 text-cyan-400'
-        : 'text-gray-400 hover:bg-gray-700/50 hover:text-white'
-    }`}
-    aria-current={isActive ? 'page' : undefined}
-  >
-    {icon}
-    <span className="font-semibold">{label}</span>
-  </button>
-);
+const navItems = ['Power Plant', 'Utilities', 'MAUAX DAO DataCloud', 'Infrastructure', 'Financials', 'Configuration'];
+export type Page = 'Power Plant' | 'Utilities' | 'MAUAX DAO DataCloud' | 'Infrastructure' | 'Financials' | 'Configuration';
 
 interface NavigationProps {
   currentPage: Page;
@@ -30,36 +9,31 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ currentPage, setCurrentPage }) => {
-  const navItems = [
-    { id: 'powerplant', label: 'Power Plant', icon: <BoltIcon className="w-6 h-6" /> },
-    { id: 'utilities', label: 'Utilidades', icon: <WrenchScrewdriverIcon className="w-6 h-6" /> },
-    { id: 'datacenter', label: 'Data Center', icon: <CpuChipIcon className="w-6 h-6" /> },
-    { id: 'infrastructure', label: 'Infraestrutura', icon: <CircleStackIcon className="w-6 h-6" /> },
-    { id: 'configuration', label: 'Configuração', icon: <AdjustmentsHorizontalIcon className="w-6 h-6" /> },
-  ];
-
   return (
-    <nav className="w-64 bg-gray-800 p-4 border-r border-gray-700 flex-shrink-0 flex flex-col">
-       <div className="flex items-center space-x-3 px-2 pb-6">
-        <div className="bg-gray-700 p-2 rounded-lg">
-          <ChartBarIcon className="h-8 w-8 text-cyan-400" />
+    <nav className="bg-gray-900 shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-start h-16">
+          <div className="flex items-center">
+            <div className="hidden md:block">
+              <div className="flex items-baseline space-x-4">
+                {navItems.map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => setCurrentPage(item as Page)}
+                    className={`transition-colors duration-200 ${
+                      currentPage === item
+                        ? 'bg-gray-800 text-white'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    } px-3 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white`}
+                    aria-current={currentPage === item ? 'page' : undefined}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-        <h1 className="text-xl font-bold text-white">MEX BioDataCloud</h1>
-      </div>
-      <div className="space-y-2">
-        {navItems.map(item => (
-          <NavLink
-            key={item.id}
-            label={item.label}
-            icon={item.icon}
-            isActive={currentPage === item.id}
-            onClick={() => setCurrentPage(item.id as Page)}
-          />
-        ))}
-      </div>
-      <div className="mt-auto text-center text-xs text-gray-500">
-        <p>&copy; 2024 MEX BioDataCloud</p>
-        <p>Versão 1.1.0</p>
       </div>
     </nav>
   );
