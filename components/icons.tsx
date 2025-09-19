@@ -77,3 +77,9 @@ export const SnowflakeIcon: React.FC<{ className?: string }> = ({ className }) =
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m-6.75-11.25L12 12l6.75-8.75M5.25 12l6.75 8.75L18.75 12M12 12l-6.75 8.75m13.5 0L12 12m0 0l6.75-8.75M5.25 12h13.5" />
   </svg>
 );
+
+export const ServerRackIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 14.25v-2.25m0 0V9.75m0 2.25h13.5m0-2.25v2.25m0 0v2.25m0 0H5.25m13.5 0H5.25m13.5 0H5.25m-2.25 2.25h18v-12h-18v12z" />
+  </svg>
+);

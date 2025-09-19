@@ -25,6 +25,11 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
     const chillerCOP = 0.7; // Typical Coefficient of Performance for a single-effect absorption chiller
     const coolingProduction = isOnline ? wasteHeat * chillerCOP : 0;
 
+    // Distribute cooling power: 40% to TIAC, 30% to Fog, 30% to Data Center
+    const tiacCooling = coolingProduction * 0.4;
+    const fogCooling = coolingProduction * 0.3;
+    const dataCenterCooling = coolingProduction * 0.3;
+
     return (
         <div className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-11 gap-6 items-center">
@@ -51,7 +56,13 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
 
                 {/* Cooling Distribution Card */}
                 <div className="lg:col-span-3">
-                    <CoolingDistribution coolingProduction={coolingProduction} isOnline={isOnline}/>
+                    <CoolingDistribution 
+                        coolingProduction={coolingProduction} 
+                        isOnline={isOnline}
+                        tiacCooling={tiacCooling}
+                        fogCooling={fogCooling}
+                        dataCenterCooling={dataCenterCooling}
+                    />
                 </div>
 
             </div>
