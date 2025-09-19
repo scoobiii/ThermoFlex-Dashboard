@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Navigation, { Page } from './components/Navigation';
 import PowerPlant from './pages/PowerPlant';
@@ -8,18 +8,21 @@ import Infrastructure from './pages/Infrastructure';
 import Financials from './pages/Financials';
 import Configuration from './pages/Configuration';
 import { PlantStatus, FuelMode, TurbineStatus } from './types';
+import { POWER_PLANTS } from './data/plants';
 
 export type TurbineStatusConfig = { [key: number]: TurbineStatus };
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<Page>('Power Plant');
+  const [currentPage, setCurrentPage] = useState<Page>('Configuration');
   
   // Shared state
   const [plantStatus, setPlantStatus] = useState<PlantStatus>(PlantStatus.Online);
   const [powerOutput, setPowerOutput] = useState(2250.0);
   const [efficiency, setEfficiency] = useState(58.5);
+  const [maxCapacity, setMaxCapacity] = useState(2500);
 
   // Configuration Page State
+  const [selectedPlantName, setSelectedPlantName] = useState<string>('MAUX Bio PowerPlant (standard)');
   const [fuelMode, setFuelMode] = useState<FuelMode>(FuelMode.NaturalGas);
   const [flexMix, setFlexMix] = useState({ h2: 20, biodiesel: 30 });
   const [turbineStatusConfig, setTurbineStatusConfig] = useState<TurbineStatusConfig>({
@@ -29,6 +32,29 @@ const App: React.FC = () => {
     4: 'active',
     5: 'active',
   });
+
+  useEffect(() => {
+    const plant = POWER_PLANTS.find(p => p.name === selectedPlantName);
+    if (plant) {
+      setMaxCapacity(plant.power);
+      
+      if (plantStatus === PlantStatus.Online) {
+        setPowerOutput(plant.power * (0.85 + Math.random() * 0.1));
+      } else {
+        setPowerOutput(0);
+      }
+
+      if (plant.name === 'MAUX Bio PowerPlant (standard)') {
+        setFuelMode(FuelMode.FlexNGH2);
+      } else if (plant.fuel.includes('Gás Natural')) {
+        setFuelMode(FuelMode.NaturalGas);
+      } else if (plant.fuel.includes('Etanol')) {
+        setFuelMode(FuelMode.Ethanol);
+      } else if (plant.fuel.includes('Biodiesel')) {
+        setFuelMode(FuelMode.Biodiesel);
+      }
+    }
+  }, [selectedPlantName, plantStatus]);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -65,6 +91,8 @@ const App: React.FC = () => {
           setFlexMix={setFlexMix}
           turbineStatusConfig={turbineStatusConfig}
           setTurbineStatusConfig={setTurbineStatusConfig}
+          selectedPlantName={selectedPlantName}
+          setSelectedPlantName={setSelectedPlantName}
         />;
       default:
         return <PowerPlant 
@@ -86,7 +114,7 @@ const App: React.FC = () => {
     <div className="bg-gray-900 min-h-screen text-gray-200">
       <Navigation currentPage={currentPage} setCurrentPage={setCurrentPage} />
       <div className="p-4 sm:p-6 lg:p-8 max-w-full mx-auto">
-        <Header plantStatus={plantStatus} powerOutput={powerOutput} />
+        <Header plantStatus={plantStatus} powerOutput={powerOutput} selectedPlantName={selectedPlantName} maxCapacity={maxCapacity} />
         {renderPage()}
       </div>
     </div>

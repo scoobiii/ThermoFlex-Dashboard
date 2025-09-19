@@ -1,4 +1,3 @@
-
 export enum PlantStatus {
   Online = 'Online',
   Offline = 'Offline',
@@ -50,4 +49,17 @@ export interface LongHistoricalDataPoint {
   time: string;
   power: number;
   consumption: number;
+}
+
+export interface Plant {
+  name: string;
+  type: 'standard' | 'upgrade' | 'new';
+  power: number; // in MW
+  fuel: string;
+  location: string;
+  conversion?: number; // percentage
+  ethanolDemand?: number; // m³/h
+  status: 'standard' | 'Existente' | 'Proposta';
+  coordinates: { lat: number; lng: number };
+  description: string;
 }

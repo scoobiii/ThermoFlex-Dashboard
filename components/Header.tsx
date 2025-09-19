@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PlantStatus } from '../types';
 import { BoltIcon, ChartBarIcon } from './icons';
@@ -6,9 +5,11 @@ import { BoltIcon, ChartBarIcon } from './icons';
 interface HeaderProps {
   plantStatus: PlantStatus;
   powerOutput: number;
+  selectedPlantName: string;
+  maxCapacity: number;
 }
 
-const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput }) => {
+const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput, selectedPlantName, maxCapacity }) => {
   const statusInfo = {
     [PlantStatus.Online]: { text: 'Online', color: 'bg-green-500' },
     [PlantStatus.Offline]: { text: 'Offline', color: 'bg-red-500' },
@@ -22,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput }) => {
           <ChartBarIcon className="h-8 w-8 text-white" />
         </div>
         <div>
-            <h1 className="text-2xl font-bold text-white">Bio Data Cloud</h1>
+            <h1 className="text-2xl font-bold text-white">{selectedPlantName.replace(' (standard)', '')}</h1>
             <p className="text-gray-400">Plataforma de Monitoramento Integrado</p>
         </div>
       </div>
@@ -38,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput }) => {
         <div className="flex items-center space-x-2">
             <ChartBarIcon className="h-6 w-6 text-gray-400" />
             <div>
-                <p className="text-sm font-semibold leading-tight">2500 MW</p>
+                <p className="text-sm font-semibold leading-tight">{maxCapacity} MW</p>
                 <p className="text-xs text-gray-400 leading-tight">Capacidade Máxima</p>
             </div>
         </div>

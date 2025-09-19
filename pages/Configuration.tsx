@@ -1,8 +1,9 @@
-
 import React from 'react';
 import DashboardCard from '../components/DashboardCard';
 import { FuelMode, TurbineStatus } from '../types';
 import { TurbineStatusConfig } from '../App';
+import { POWER_PLANTS } from '../data/plants';
+import ThermalPlantsSummary from '../components/ThermalPlantsSummary';
 
 interface ConfigurationProps {
   fuelMode: FuelMode;
@@ -10,8 +11,9 @@ interface ConfigurationProps {
   flexMix: { h2: number; biodiesel: number };
   setFlexMix: React.Dispatch<React.SetStateAction<{ h2: number; biodiesel: number }>>;
   turbineStatusConfig: TurbineStatusConfig;
-  // FIX: Updated the type of setTurbineStatusConfig to correctly handle state updates with a function.
   setTurbineStatusConfig: React.Dispatch<React.SetStateAction<TurbineStatusConfig>>;
+  selectedPlantName: string;
+  setSelectedPlantName: (name: string) => void;
 }
 
 const Configuration: React.FC<ConfigurationProps> = ({
@@ -21,6 +23,8 @@ const Configuration: React.FC<ConfigurationProps> = ({
   setFlexMix,
   turbineStatusConfig,
   setTurbineStatusConfig,
+  selectedPlantName,
+  setSelectedPlantName,
 }) => {
   const handleTurbineStatusChange = (id: number, status: TurbineStatus) => {
     setTurbineStatusConfig(prev => ({...prev, [id]: status}));
@@ -32,8 +36,55 @@ const Configuration: React.FC<ConfigurationProps> = ({
     error: 'Erro'
   }
 
+  const selectedPlant = POWER_PLANTS.find(p => p.name === selectedPlantName);
+
   return (
     <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <DashboardCard title="Seleção de Usina" className="lg:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1 space-y-2">
+            <label htmlFor="plant-select" className="block text-sm font-medium text-gray-300">
+              Selecione a usina:
+            </label>
+            <select
+              id="plant-select"
+              value={selectedPlantName}
+              onChange={(e) => setSelectedPlantName(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
+            >
+              {POWER_PLANTS.map(plant => (
+                <option key={plant.name} value={plant.name}>
+                  {plant.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            {selectedPlant && selectedPlant.type !== 'standard' && (
+              <div className="bg-gray-700/50 p-4 rounded-lg text-sm space-y-1 h-full">
+                <h4 className="font-semibold text-base text-white">{selectedPlant.name}</h4>
+                <div className="grid grid-cols-2 gap-x-4">
+                  <p><span className="font-semibold text-gray-400">Local:</span> {selectedPlant.location}</p>
+                  <p><span className="font-semibold text-gray-400">Potência:</span> {selectedPlant.power} MW</p>
+                  <p><span className="font-semibold text-gray-400">Combustível:</span> {selectedPlant.fuel}</p>
+                  <p><span className="font-semibold text-gray-400">Status:</span> {selectedPlant.status}</p>
+                </div>
+                <p className="text-gray-300 pt-2">{selectedPlant.description}</p>
+              </div>
+            )}
+             {selectedPlant && selectedPlant.type === 'standard' && (
+                <div className="bg-gray-700/50 p-4 rounded-lg text-sm flex items-center justify-center h-full">
+                    <p className="text-gray-400">Configuração padrão da Usina Bio-Termoelétrica.</p>
+                </div>
+             )}
+          </div>
+        </div>
+      </DashboardCard>
+
+      <div className="lg:col-span-2">
+        <ThermalPlantsSummary />
+      </div>
+
       <DashboardCard title="Configuração de Combustível">
         <div className="space-y-4">
           <h4 className="text-lg font-semibold text-gray-300">Modo de Operação</h4>
