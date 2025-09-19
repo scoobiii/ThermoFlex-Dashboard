@@ -1,0 +1,62 @@
+import React from 'react';
+import { PlantStatus } from '../types';
+import WasteHeatRecovery from '../components/Utilities/WasteHeatRecovery';
+import AbsorptionChiller from '../components/Utilities/AbsorptionChiller';
+import CoolingDistribution from '../components/Utilities/CoolingDistribution';
+import FlowArrow from '../components/Utilities/FlowArrow';
+
+interface UtilitiesProps {
+    powerOutput: number;
+    efficiency: number;
+    plantStatus: PlantStatus;
+}
+
+const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantStatus }) => {
+    
+    const isOnline = plantStatus === PlantStatus.Online;
+
+    // Calculate waste heat based on power output and efficiency
+    // Power Input = Power Output / Efficiency
+    // Waste Heat = Power Input - Power Output = Power Output * (1/Efficiency - 1)
+    const powerInput = isOnline && efficiency > 0 ? powerOutput / (efficiency / 100) : 0;
+    const wasteHeat = isOnline ? powerInput - powerOutput : 0;
+    
+    // Calculate cooling production based on waste heat and chiller's COP
+    const chillerCOP = 0.7; // Typical Coefficient of Performance for a single-effect absorption chiller
+    const coolingProduction = isOnline ? wasteHeat * chillerCOP : 0;
+
+    return (
+        <div className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-11 gap-6 items-center">
+                
+                {/* Waste Heat Recovery Card */}
+                <div className="lg:col-span-3">
+                    <WasteHeatRecovery wasteHeat={wasteHeat} isOnline={isOnline} />
+                </div>
+                
+                {/* Arrow 1 */}
+                <div className="lg:col-span-1">
+                    <FlowArrow />
+                </div>
+
+                {/* Absorption Chiller Card */}
+                <div className="lg:col-span-3">
+                    <AbsorptionChiller coolingProduction={coolingProduction} isOnline={isOnline} />
+                </div>
+
+                {/* Arrow 2 */}
+                <div className="lg:col-span-1">
+                    <FlowArrow />
+                </div>
+
+                {/* Cooling Distribution Card */}
+                <div className="lg:col-span-3">
+                    <CoolingDistribution coolingProduction={coolingProduction} isOnline={isOnline}/>
+                </div>
+
+            </div>
+        </div>
+    );
+};
+
+export default Utilities;
