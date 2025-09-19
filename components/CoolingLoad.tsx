@@ -8,7 +8,12 @@ interface CoolingDataPoint {
   load: number;
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+interface EfficiencyDataPoint {
+    time: number;
+    efficiency: number;
+}
+
+const LoadTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
@@ -17,55 +22,109 @@ const CustomTooltip = ({ active, payload }: any) => {
       );
     }
     return null;
-  };
+};
+
+const EfficiencyTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
+          <p className="intro text-sm text-green-400">{`Eficiência: ${payload[0].value.toFixed(2)} kW/Ton`}</p>
+        </div>
+      );
+    }
+    return null;
+};
 
 const CoolingLoad: React.FC = () => {
   const [currentLoad, setCurrentLoad] = useState(25); // kW
   const [historicalLoad, setHistoricalLoad] = useState<CoolingDataPoint[]>([]);
+  const [efficiency, setEfficiency] = useState(0.15); // kW/Ton
+  const [historicalEfficiency, setHistoricalEfficiency] = useState<EfficiencyDataPoint[]>([]);
+
 
   useEffect(() => {
     // Initialize historical data
     setHistoricalLoad(Array.from({ length: 10 }, (_, i) => ({
         time: Date.now() - (9 - i) * 3000,
         load: 25 + (Math.random() - 0.5) * 4,
-    })))
+    })));
+    setHistoricalEfficiency(Array.from({ length: 10 }, (_, i) => ({
+        time: Date.now() - (9 - i) * 3000,
+        efficiency: 0.15 + (Math.random() - 0.5) * 0.04,
+    })));
   }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
+      // Update Load
       const newLoad = Math.max(20, Math.min(35, currentLoad + (Math.random() - 0.5) * 2));
       setCurrentLoad(newLoad);
       setHistoricalLoad(prev => {
         const newPoint = { time: Date.now(), load: newLoad };
         return [...prev.slice(1), newPoint];
       });
+
+      // Update Efficiency (lower is better)
+      const newEfficiency = Math.max(0.12, Math.min(0.25, efficiency + (Math.random() - 0.5) * 0.02));
+      setEfficiency(newEfficiency);
+      setHistoricalEfficiency(prev => {
+        const newPoint = { time: Date.now(), efficiency: newEfficiency };
+        return [...prev.slice(1), newPoint];
+      })
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [currentLoad]);
+  }, [currentLoad, efficiency]);
 
   return (
     <DashboardCard title="Carga de Refrigeração" icon={<SnowflakeIcon className="w-6 h-6 text-cyan-400" />}>
-        <div className="flex flex-col h-full">
-            <div className="text-center">
-                <p className="text-4xl font-bold text-cyan-400 tracking-tight">{currentLoad.toFixed(1)}</p>
-                <p className="text-sm text-gray-400">kW Carga Atual</p>
+        <div className="grid grid-rows-2 h-full gap-2">
+            {/* Metric 1: Cooling Load */}
+            <div className="flex flex-col">
+                <div className="text-center">
+                    <p className="text-3xl font-bold text-cyan-400 tracking-tight">{currentLoad.toFixed(1)}</p>
+                    <p className="text-xs text-gray-400">kW Carga Atual</p>
+                </div>
+                <div className="flex-grow h-10 mt-1 -mx-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={historicalLoad}>
+                            <YAxis hide={true} domain={['dataMin - 5', 'dataMax + 5']} />
+                            <Tooltip content={<LoadTooltip />} cursor={{fill: 'rgba(42, 52, 73, 0.5)'}}/>
+                            <Line 
+                                type="monotone" 
+                                dataKey="load" 
+                                stroke="#06b6d4" 
+                                strokeWidth={2} 
+                                dot={false}
+                                isAnimationActive={false}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
-            <div className="flex-grow h-20 mt-2 -mx-2">
-                <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={historicalLoad}>
-                        <YAxis hide={true} domain={['dataMin - 5', 'dataMax + 5']} />
-                        <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(42, 52, 73, 0.5)'}}/>
-                        <Line 
-                            type="monotone" 
-                            dataKey="load" 
-                            stroke="#06b6d4" 
-                            strokeWidth={2} 
-                            dot={false}
-                            isAnimationActive={false}
-                        />
-                    </LineChart>
-                </ResponsiveContainer>
+
+            {/* Metric 2: Cooling Efficiency */}
+            <div className="flex flex-col border-t border-gray-700 pt-2">
+                <div className="text-center">
+                    <p className="text-3xl font-bold text-green-400 tracking-tight">{efficiency.toFixed(2)}</p>
+                    <p className="text-xs text-gray-400">kW/Ton Eficiência</p>
+                </div>
+                <div className="flex-grow h-10 mt-1 -mx-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={historicalEfficiency}>
+                            <YAxis hide={true} domain={['dataMin - 0.05', 'dataMax + 0.05']} />
+                            <Tooltip content={<EfficiencyTooltip />} cursor={{fill: 'rgba(42, 52, 73, 0.5)'}}/>
+                            <Line 
+                                type="monotone" 
+                                dataKey="efficiency" 
+                                stroke="#22c55e"
+                                strokeWidth={2} 
+                                dot={false}
+                                isAnimationActive={false}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
         </div>
     </DashboardCard>

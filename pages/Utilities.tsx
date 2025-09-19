@@ -24,7 +24,8 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
     const wasteHeat = isOnline ? powerInput - powerOutput : 0;
     
     // Calculate cooling production based on waste heat and chiller's COP
-    const chillerCOP = 0.7; // Typical Coefficient of Performance for a single-effect absorption chiller
+    // Adjusted COP to align simulation with target values (~1108 MW total cooling)
+    const chillerCOP = 0.694; // Typical Coefficient of Performance for a single-effect absorption chiller
     const coolingProduction = isOnline ? wasteHeat * chillerCOP : 0;
 
     // Distribute cooling power: 40% to TIAC, 30% to Fog, 30% to Data Center
@@ -35,8 +36,11 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
     useEffect(() => {
         const ISO_TEMP_THRESHOLD = 25; // Define ISO condition threshold
         if (isOnline && ambientTemp > ISO_TEMP_THRESHOLD) {
-            const tiacGain = tiacCooling > 0 ? 1.5 : 0;
-            const fogGain = fogCooling > 0 ? 0.8 : 0;
+            // Efficiency gain is now proportional to the cooling power applied.
+            // This dynamically represents the benefit of converting waste heat into useful cooling.
+            // Factors are chosen to keep the gain in a realistic range (~2-3%).
+            const tiacGain = tiacCooling / 300; // Roughly 1% gain per 300 MW of TIAC cooling
+            const fogGain = fogCooling / 400;  // Roughly 1% gain per 400 MW of Fog system cooling
             setEfficiencyGain(tiacGain + fogGain);
         } else {
             setEfficiencyGain(0);
