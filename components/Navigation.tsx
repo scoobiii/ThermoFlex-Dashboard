@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Page } from '../App';
 import { BoltIcon, WrenchScrewdriverIcon, CpuChipIcon, CircleStackIcon, AdjustmentsHorizontalIcon, ChartBarIcon } from './icons';
@@ -45,7 +44,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, setCurrentPage }) 
         <div className="bg-gray-700 p-2 rounded-lg">
           <ChartBarIcon className="h-8 w-8 text-cyan-400" />
         </div>
-        <h1 className="text-xl font-bold text-white">BioDataCloud</h1>
+        <h1 className="text-xl font-bold text-white">MEX BioDataCloud</h1>
       </div>
       <div className="space-y-2">
         {navItems.map(item => (
@@ -59,8 +58,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, setCurrentPage }) 
         ))}
       </div>
       <div className="mt-auto text-center text-xs text-gray-500">
-        <p>&copy; 2024 BioDataCloud</p>
-        <p>Versão 1.0.0</p>
+        <p>&copy; 2024 MEX BioDataCloud</p>
+        <p>Versão 1.1.0</p>
       </div>
     </nav>
   );

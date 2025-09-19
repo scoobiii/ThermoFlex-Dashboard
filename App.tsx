@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlantStatus } from './types';
+import { PlantStatus, FuelMode, Turbine } from './types';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 import PowerPlant from './pages/PowerPlant';
@@ -9,25 +9,38 @@ import Infrastructure from './pages/Infrastructure';
 import Configuration from './pages/Configuration';
 
 export type Page = 'powerplant' | 'utilities' | 'datacenter' | 'infrastructure' | 'configuration';
+export type TurbineStatus = 'active' | 'inactive' | 'error';
+export type TurbineStatusConfig = Record<number, TurbineStatus>;
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<Page>('utilities');
+  const [currentPage, setCurrentPage] = useState<Page>('powerplant');
   
-  // State lifted up for the global header and shared dashboards
+  // Globally shared state
   const [plantStatus, setPlantStatus] = useState<PlantStatus>(PlantStatus.Online);
   const [powerOutput, setPowerOutput] = useState(2250);
   const [efficiency, setEfficiency] = useState(58.5);
+
+  // Configuration State
+  const [fuelMode, setFuelMode] = useState<FuelMode>(FuelMode.NaturalGas);
+  const [flexMix, setFlexMix] = useState<{ h2: number, biodiesel: number }>({ h2: 20, biodiesel: 50 });
+  const [turbineStatusConfig, setTurbineStatusConfig] = useState<TurbineStatusConfig>({
+      1: 'active', 2: 'active', 3: 'active', 4: 'active', 5: 'active'
+  });
+
 
   const renderPage = () => {
     switch (currentPage) {
       case 'powerplant':
         return <PowerPlant 
                   plantStatus={plantStatus}
-                  powerOutput={powerOutput}
-                  efficiency={efficiency}
                   setPlantStatus={setPlantStatus}
+                  powerOutput={powerOutput}
                   setPowerOutput={setPowerOutput}
+                  efficiency={efficiency}
                   setEfficiency={setEfficiency}
+                  fuelMode={fuelMode}
+                  flexMix={flexMix}
+                  turbineStatusConfig={turbineStatusConfig}
                 />;
       case 'utilities':
         return <Utilities powerOutput={powerOutput} efficiency={efficiency} plantStatus={plantStatus} />;
@@ -36,15 +49,25 @@ const App: React.FC = () => {
       case 'infrastructure':
         return <Infrastructure />;
       case 'configuration':
-        return <Configuration />;
+        return <Configuration 
+                  fuelMode={fuelMode}
+                  setFuelMode={setFuelMode}
+                  flexMix={flexMix}
+                  setFlexMix={setFlexMix}
+                  turbineStatusConfig={turbineStatusConfig}
+                  setTurbineStatusConfig={setTurbineStatusConfig}
+                />;
       default:
         return <PowerPlant 
                   plantStatus={plantStatus}
-                  powerOutput={powerOutput}
-                  efficiency={efficiency}
                   setPlantStatus={setPlantStatus}
+                  powerOutput={powerOutput}
                   setPowerOutput={setPowerOutput}
+                  efficiency={efficiency}
                   setEfficiency={setEfficiency}
+                  fuelMode={fuelMode}
+                  flexMix={flexMix}
+                  turbineStatusConfig={turbineStatusConfig}
                 />;
     }
   };
