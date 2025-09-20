@@ -36,6 +36,8 @@ export interface Turbine {
   rpm: number;
   temp: number;
   pressure: number;
+  history?: { rpm: number; temp: number; pressure: number }[];
+  needsMaintenance?: boolean;
 }
 
 export interface Alert {

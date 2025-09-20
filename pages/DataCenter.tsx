@@ -2,6 +2,7 @@ import React from 'react';
 import ServerRackStatus from '../components/ServerRackStatus';
 import PowerConsumption from '../components/PowerConsumption';
 import CoolingLoad from '../components/CoolingLoad';
+import DataCenterTreeMap from '../components/DataCenterTreeMap';
 
 const DataCenter: React.FC = () => {
   return (
@@ -14,6 +15,9 @@ const DataCenter: React.FC = () => {
       </div>
       <div className="lg:col-span-3">
         <ServerRackStatus />
+      </div>
+      <div className="lg:col-span-3">
+        <DataCenterTreeMap />
       </div>
     </div>
   );

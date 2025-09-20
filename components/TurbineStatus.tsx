@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Turbine } from '../types';
 import DashboardCard from './DashboardCard';
-import { CogIcon } from './icons';
+import { CogIcon, WrenchScrewdriverIcon } from './icons';
 
 interface TurbineStatusProps {
   turbines: Turbine[];
@@ -45,6 +44,12 @@ const TurbineCard: React.FC<{ turbine: Turbine; isSelected: boolean; onSelect: (
                 <p className="font-mono font-semibold">{turbine.pressure} bar</p>
             </div>
         </div>
+        {turbine.needsMaintenance && (
+            <div className="mt-2 pt-2 border-t border-gray-600 flex items-center justify-center gap-2 text-yellow-400">
+                <WrenchScrewdriverIcon className="w-4 h-4" />
+                <span className="text-xs font-semibold">Manutenção Prevista</span>
+            </div>
+        )}
     </button>
 )
 

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PlantStatus, FuelMode, EmissionData, HistoricalDataPoint, Alert, Turbine, LongHistoricalDataPoint, HistoricalEmissionPoint } from '../types';
 import ControlPanel from '../components/ControlPanel';
@@ -33,6 +31,41 @@ const FUEL_PROFILES = {
 };
 
 type MaximizableCard = 'power' | 'fuel' | 'emissions' | 'turbines' | 'history' | 'alerts';
+
+const analyzeTurbineForMaintenance = (turbine: Turbine): boolean => {
+    if (!turbine.history || turbine.history.length < 15) {
+      return false; // Not enough data
+    }
+
+    const history = turbine.history;
+    let conditionsMet = 0;
+
+    // Condition 1: High Average Temperature
+    const avgTemp = history.reduce((sum, p) => sum + p.temp, 0) / history.length;
+    if (avgTemp > 615) {
+      conditionsMet++;
+    }
+
+    // Condition 2: High RPM Volatility (Standard Deviation)
+    const rpms = history.map(p => p.rpm);
+    const avgRpm = rpms.reduce((sum, r) => sum + r, 0) / rpms.length;
+    const rpmVariance = rpms.reduce((sum, r) => sum + Math.pow(r - avgRpm, 2), 0) / rpms.length;
+    const rpmStdDev = Math.sqrt(rpmVariance);
+    if (rpmStdDev > 18) {
+      conditionsMet++;
+    }
+
+    // Condition 3: Increasing Pressure Trend
+    const firstHalf = history.slice(0, Math.floor(history.length / 2));
+    const secondHalf = history.slice(Math.floor(history.length / 2));
+    const avgPressureFirstHalf = firstHalf.reduce((sum, p) => sum + p.pressure, 0) / firstHalf.length;
+    const avgPressureSecondHalf = secondHalf.reduce((sum, p) => sum + p.pressure, 0) / secondHalf.length;
+    if (avgPressureSecondHalf > avgPressureFirstHalf + 0.5) {
+      conditionsMet++;
+    }
+
+    return conditionsMet >= 2;
+};
 
 const PowerPlant: React.FC<PowerPlantProps> = ({ 
     plantStatus, setPlantStatus, 
@@ -72,7 +105,7 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
       setEfficiency(0);
       setFuelConsumption(0);
       setEmissions({ nox: 0, sox: 0, co: 0, particulates: 0 });
-      setTurbines(prev => prev.map(t => ({ ...t, rpm: 0, temp: 25, pressure: 1 })));
+      setTurbines(prev => prev.map(t => ({ ...t, status: 'inactive', rpm: 0, temp: 25, pressure: 1, history: [], needsMaintenance: false })));
       return;
     };
 
@@ -139,12 +172,32 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
 
             if (configuredStatus === 'active') {
                 const newRpm = t.rpm > 0 ? t.rpm + Math.floor(Math.random() * 50) - 25 : 3500;
-                return {
+                const newTemp = t.temp > 100 ? t.temp + Math.random() * 8 - 4 : 580;
+                const newPressure = t.pressure > 1 ? t.pressure + Math.random() * 0.4 - 0.2 : 20;
+
+                const newHistory = [...(t.history || []).slice(1), { 
+                    rpm: newRpm, 
+                    temp: newTemp,
+                    pressure: newPressure,
+                }];
+                
+                const updatedTurbine: Turbine = {
                     ...t,
                     status: 'active',
                     rpm: Math.max(3000, Math.min(4000, newRpm)),
-                    temp: 580 + Math.floor(Math.random() * 40) - 20,
-                    pressure: 20 + Math.floor(Math.random() * 4) - 2,
+                    temp: Math.max(550, Math.min(650, newTemp)),
+                    pressure: Math.max(18, Math.min(25, newPressure)),
+                    history: newHistory,
+                };
+
+                const needsMaintenance = analyzeTurbineForMaintenance(updatedTurbine);
+                if (needsMaintenance && !t.needsMaintenance) {
+                    addAlert('warning', `Manutenção preditiva sugerida para Turbina #${t.id}.`);
+                }
+
+                return {
+                    ...updatedTurbine,
+                    needsMaintenance,
                 };
             }
             
@@ -153,7 +206,9 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                 status: configuredStatus,
                 rpm: 0,
                 temp: configuredStatus === 'error' ? 950 + Math.random() * 100 : 50,
-                pressure: configuredStatus === 'error' ? 0 : 1
+                pressure: configuredStatus === 'error' ? 0 : 1,
+                history: [],
+                needsMaintenance: false,
             };
         });
     });
@@ -165,9 +220,23 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
       time: new Date(Date.now() - (29 - i) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       power: 2200 + Math.random() * 150 - 75,
     })));
-    setTurbines(Array.from({ length: 5 }, (_, i) => ({
-      id: i + 1, status: 'active', rpm: 3500, temp: 580, pressure: 20,
-    })));
+    setTurbines(Array.from({ length: 5 }, (_, i) => {
+        const isProblematic = i === 2;
+        const history = Array.from({ length: 20 }, (_, j) => ({
+            rpm: 3500 + (Math.random() - 0.5) * (isProblematic ? 80 : 40),
+            temp: 580 + (Math.random() - 0.5) * 30 + (isProblematic ? 40 : 0),
+            pressure: 20 + (Math.random() - 0.5) * 2 + (isProblematic ? (j / 10) : 0),
+        }));
+        return {
+          id: i + 1, 
+          status: 'active', 
+          rpm: 3500, 
+          temp: 580, 
+          pressure: 20,
+          history,
+          needsMaintenance: false,
+        };
+    }));
   }, []);
 
   useEffect(() => {
