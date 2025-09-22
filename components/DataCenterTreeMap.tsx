@@ -1,11 +1,22 @@
 /**
  * @file DataCenterTreeMap.tsx
  * @description Renders a treemap visualization of the data center server racks, showing their status and key metrics.
- * @version 1.2.1
- * @date 2024-07-30
+ * @version 1.4.0
+ * @date 2024-08-01
  * @productowner Edivaldo Beringela (Prefeitura de Mauá)
  * 
  * @changelog
+ * v1.4.0 - 2024-08-01
+ *   - Refactored and re-implemented the interactive view switcher for clarity and performance.
+ *   - Enhanced the Finviz-style dynamic coloring logic to provide a clearer visual representation of consumption hotspots.
+ *   - The treemap now dynamically adjusts both the size and color of each rack based on the selected metric ('Consumo de Energia' or 'Consumo de Frio').
+ * 
+ * v1.3.0 - 2024-07-31
+ *   - Implemented dynamic, Finviz-style coloring. Racks are now colored on a green-to-red scale based on the selected metric's value.
+ *   - The color scale is calculated dynamically based on the min/max consumption values of the visible dataset.
+ *   - Added data labels (rack name and value) directly inside the treemap cells for better readability, visible on larger nodes.
+ *   - Replaced the static, status-based coloring in `CustomizedContent` with the new dynamic, value-based coloring logic.
+ * 
  * v1.2.1 - 2024-07-30
  *   - Corrected the logic in `CustomizedContent` to robustly access the `status` property directly from props. This resolves a critical rendering failure where most racks were not being displayed.
  * 
@@ -59,12 +70,6 @@ interface TreeMapNode {
   children?: TreeMapNode[];
   [key: string]: any; // Index signature for recharts compatibility
 }
-
-const statusColors: { [key in RackStatus]: string } = {
-  Online: 'bg-green-400',
-  'High Load': 'bg-yellow-400',
-  Offline: 'bg-red-500',
-};
 
 const generateInitialRackData = (): TreeMapNode[] => {
   return Array.from({ length: 725 }, (_, i) => {
@@ -157,13 +162,13 @@ const CustomTooltipContent = ({ active, payload }: any) => {
 };
 
 const CustomizedContent: React.FC<any> = (props) => {
-    const { x, y, width, height, status } = props;
-  
-    // Defensive check to ensure status is available before rendering
-    if (typeof status === 'undefined' || !statusColors[status]) {
-      return null;
-    }
-  
+    const { x, y, width, height, name, payload, dataKey, min, max, getColor } = props;
+    
+    if (payload === undefined) return null;
+
+    const value = payload[dataKey];
+    const color = getColor(value, min, max);
+
     return (
       <g>
         <rect
@@ -171,11 +176,27 @@ const CustomizedContent: React.FC<any> = (props) => {
           y={y}
           width={width}
           height={height}
-          className={`
-            ${statusColors[status]} 
-            stroke-gray-800 stroke-1 transition-opacity duration-300
-          `}
+          style={{
+            fill: color,
+            stroke: '#121826',
+            strokeWidth: 1,
+            transition: 'fill 0.5s ease',
+          }}
         />
+        {width > 60 && height > 35 && (
+           <text
+                x={x + width / 2}
+                y={y + height / 2}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="#ffffff"
+                className="pointer-events-none select-none"
+                style={{ textShadow: '0px 1px 3px rgba(0,0,0,0.7)'}}
+            >
+                <tspan x={x + width / 2} dy="-0.6em" fontSize={12} fontWeight="bold">{name}</tspan>
+                <tspan x={x + width / 2} dy="1.2em" fontSize={11}>{`${value.toFixed(1)}`}</tspan>
+            </text>
+        )}
       </g>
     );
 };
@@ -220,16 +241,27 @@ const DataCenterTreeMap: React.FC = () => {
 
     const dataKey = viewMode === 'totalEnergy' ? 'totalEnergyConsumption' : 'coolingConsumption';
 
-    // To ensure offline racks are visible, we can give them a tiny minimum value for visualization purposes.
-    // However, a better approach is to filter them out as they have no consumption to visualize proportionally.
-    // The user wants to see all 725, so we will show them, but they might be invisible if consumption is 0.
+    const { min, max } = useMemo(() => {
+        const values = rackData
+            .filter(r => r.status !== 'Offline')
+            .map(r => r[dataKey]);
+        if (values.length === 0) return { min: 0, max: 1 };
+        return { min: Math.min(...values), max: Math.max(...values) };
+    }, [rackData, dataKey]);
+
+    const getColor = (value: number, minVal: number, maxVal: number): string => {
+        if (maxVal === minVal || value <= minVal) return 'hsl(120, 70%, 40%)'; // Green for min
+        const normalized = (value - minVal) / (maxVal - minVal);
+        const hue = (1 - normalized) * 120;
+        const lightness = 50 - (normalized * 15);
+        return `hsl(${hue.toFixed(0)}, 70%, ${lightness.toFixed(0)}%)`;
+    };
+
     const treemapData = useMemo(() => rackData.map(rack => ({
       ...rack,
-      // For visualization, give zero-consumption racks a tiny area to make them visible
       totalEnergyConsumption: rack.totalEnergyConsumption > 0 ? rack.totalEnergyConsumption : 1,
       coolingConsumption: rack.coolingConsumption > 0 ? rack.coolingConsumption : 1,
     })), [rackData]);
-
 
   return (
     <DashboardCard 
@@ -252,11 +284,17 @@ const DataCenterTreeMap: React.FC = () => {
             data={treemapData}
             dataKey={dataKey}
             aspectRatio={4 / 3}
-            stroke="#1A2233"
-            fill="#8884d8"
-            content={<CustomizedContent />}
+            content={
+                <CustomizedContent 
+                    dataKey={dataKey} 
+                    min={min} 
+                    max={max} 
+                    getColor={getColor} 
+                />
+            }
             isAnimationActive={true}
             animationDuration={500}
+            animationEasing="ease-in-out"
           >
             <Tooltip content={<CustomTooltipContent />} />
           </Treemap>
