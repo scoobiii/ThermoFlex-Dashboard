@@ -220,6 +220,15 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
       time: new Date(Date.now() - (29 - i) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       power: 2200 + Math.random() * 150 - 75,
     })));
+    setHistoricalEmissions(
+      Array.from({ length: 7 }, (_, i) => ({
+        time: `D-${6 - i}`,
+        nox: 10.5 + (Math.random() - 0.5) * 4,
+        sox: 4.2 + (Math.random() - 0.5) * 2,
+        co: 30.1 + (Math.random() - 0.5) * 8,
+        particulates: 7.8 + (Math.random() - 0.5) * 3,
+      }))
+    );
     setTurbines(Array.from({ length: 5 }, (_, i) => {
         const isProblematic = i === 2;
         const history = Array.from({ length: 20 }, (_, j) => ({

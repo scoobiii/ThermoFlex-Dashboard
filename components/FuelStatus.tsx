@@ -113,9 +113,24 @@ const FuelStatus: React.FC<FuelStatusProps> = ({
               <h4 className="text-sm font-semibold text-gray-400 mb-3 text-center">Ajuste de Mix Flexível</h4>
               {showH2Slider && (
                 <div>
-                  <div className="flex justify-between items-baseline mb-1">
+                  <div className="flex justify-between items-center mb-1">
                     <label htmlFor="h2Mix" className="text-sm font-medium text-gray-300">Hidrogênio (H₂)</label>
-                    <span className="text-lg font-mono font-semibold text-emerald-400">{flexMix.h2}%</span>
+                     <div className="flex items-center gap-2">
+                        <input
+                            type="number"
+                            id="h2MixInput"
+                            min="0"
+                            max="100"
+                            value={flexMix.h2}
+                            onChange={(e) => {
+                                const value = Math.max(0, Math.min(100, Number(e.target.value)));
+                                setFlexMix(prev => ({ ...prev, h2: value }));
+                            }}
+                            className="w-20 bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-1.5 text-center font-mono"
+                            aria-label="Valor do mix de Hidrogênio"
+                        />
+                        <span className="text-lg font-mono font-semibold text-emerald-400">%</span>
+                    </div>
                   </div>
                   <input
                     type="range"
@@ -131,9 +146,24 @@ const FuelStatus: React.FC<FuelStatusProps> = ({
               )}
               {showBiodieselSlider && (
                 <div>
-                  <div className="flex justify-between items-baseline mb-1">
+                  <div className="flex justify-between items-center mb-1">
                     <label htmlFor="biodieselMix" className="text-sm font-medium text-gray-300">Biodiesel</label>
-                    <span className="text-lg font-mono font-semibold text-green-500">{flexMix.biodiesel}%</span>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="number"
+                            id="biodieselMixInput"
+                            min="0"
+                            max="100"
+                            value={flexMix.biodiesel}
+                            onChange={(e) => {
+                                const value = Math.max(0, Math.min(100, Number(e.target.value)));
+                                setFlexMix(prev => ({ ...prev, biodiesel: value }));
+                            }}
+                            className="w-20 bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-1.5 text-center font-mono"
+                            aria-label="Valor do mix de Biodiesel"
+                        />
+                        <span className="text-lg font-mono font-semibold text-green-500">%</span>
+                    </div>
                   </div>
                   <input
                     type="range"

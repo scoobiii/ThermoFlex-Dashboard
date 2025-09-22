@@ -69,16 +69,21 @@ const TurbineStatus: React.FC<TurbineStatusProps> = ({
       isMaximized={isMaximized}
       onToggleMaximize={onToggleMaximize}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        {turbines.map(turbine => (
-            <TurbineCard 
-              key={turbine.id} 
-              turbine={turbine}
-              isSelected={selectedTurbineId === turbine.id}
-              onSelect={() => onSelectTurbine(turbine.id)}
-            />
-        ))}
-      </div>
+        <div className="flex flex-col h-full justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {turbines.map(turbine => (
+                    <TurbineCard 
+                    key={turbine.id} 
+                    turbine={turbine}
+                    isSelected={selectedTurbineId === turbine.id}
+                    onSelect={() => onSelectTurbine(turbine.id)}
+                    />
+                ))}
+            </div>
+            <div className="text-xs text-center text-gray-500 mt-4 border-t border-gray-700 pt-2">
+                Modelo: <strong>Siemens SGT-A35 (Aeroderivativa)</strong> | Capacidade ISO: <strong>34 MW por turbina</strong> | Total: <strong>170 MW</strong>
+            </div>
+        </div>
     </DashboardCard>
   );
 };

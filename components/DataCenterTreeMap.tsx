@@ -1,3 +1,21 @@
+/**
+ * @file DataCenterTreeMap.tsx
+ * @description Renders a treemap visualization of the data center server racks, showing their status and key metrics.
+ * @version 1.0.1
+ * @date 2024-07-26
+ * @productowner Edivaldo Beringela (Prefeitura de Mauá)
+ * 
+ * @changelog
+ * v1.0.1 - 2024-07-26
+ *   - Fixed a runtime TypeError "Cannot read properties of undefined (reading 'status')" in the CustomizedContent component.
+ *   - Added a defensive check to ensure the 'payload' prop and its 'status' property exist before being accessed.
+ *   - This prevents rendering errors when the Treemap component provides incomplete props during its lifecycle.
+ *   - Added file header with versioning and ownership details.
+ * 
+ * @signature
+ * GOS7 (Gang of Seven Senior Full Stack DevOps Agile Scrum Team)
+ * - Claude, Grok, Gemini, Qwen, DeepSeek, GPT, Manus
+ */
 import React, { useState, useEffect, useMemo } from 'react';
 import { ResponsiveContainer, Treemap, Tooltip } from 'recharts';
 import DashboardCard from './DashboardCard';
@@ -87,6 +105,13 @@ const CustomTooltipContent = ({ active, payload }: any) => {
 
 const CustomizedContent: React.FC<any> = (props) => {
     const { root, depth, x, y, width, height, index, payload, rank, name } = props;
+  
+    // FIX (v1.0.1): The Treemap component can sometimes call this content renderer without a 'payload',
+    // especially during animations or for parent nodes. This check prevents a runtime TypeError
+    // by ensuring 'payload' and its 'status' property exist before being accessed.
+    if (!payload || typeof payload.status === 'undefined') {
+      return null;
+    }
   
     if (width < 20 || height < 20) return null;
   

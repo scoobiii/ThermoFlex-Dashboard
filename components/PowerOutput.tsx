@@ -53,11 +53,11 @@ const PowerOutput: React.FC<PowerOutputProps> = ({
             <p className="mt-4 text-4xl font-bold text-green-400">{totalEfficiency.toFixed(1)}%</p>
             <p className="text-sm text-gray-400">Eficiência Total Geral</p>
             
-            {efficiencyGain > 0 && (
+            {efficiencyGain > 0.01 && (
                 <div className="mt-2 text-xs text-gray-400 border-t border-gray-700 pt-2">
                     <div className="flex justify-center items-baseline gap-4">
                         <span>Eficiência ISO Padrão: <span className="font-semibold text-gray-300">{baseEfficiency.toFixed(1)}%</span></span>
-                        <span>Ganho (TIAC+Fog): <span className="font-semibold text-green-400">+{efficiencyGain.toFixed(1)}%</span></span>
+                        <span>Ganho (Recuperação de Frio): <span className="font-semibold text-green-400">+{efficiencyGain.toFixed(1)}%</span></span>
                     </div>
                 </div>
             )}
