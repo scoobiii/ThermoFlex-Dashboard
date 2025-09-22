@@ -1,11 +1,16 @@
 /**
  * @file DataCenterTreeMap.tsx
  * @description Renders a treemap visualization of the data center server racks, showing their status and key metrics.
- * @version 1.4.0
- * @date 2024-08-01
+ * @version 1.5.0
+ * @date 2024-08-02
  * @productowner Edivaldo Beringela (Prefeitura de Mauá)
  * 
  * @changelog
+ * v1.5.0 - 2024-08-02
+ *   - Fixed a critical rendering bug in `CustomizedContent` where it was attempting to access a non-existent `payload` prop, causing the entire treemap to render as blank.
+ *   - Modified the component to correctly access data values (e.g., `totalEnergyConsumption`) directly from its props, restoring the visualization.
+ *   - Added explicit handling for 'Offline' racks to render them with a distinct neutral gray color, improving clarity.
+ *
  * v1.4.0 - 2024-08-01
  *   - Refactored and re-implemented the interactive view switcher for clarity and performance.
  *   - Enhanced the Finviz-style dynamic coloring logic to provide a clearer visual representation of consumption hotspots.
@@ -162,11 +167,30 @@ const CustomTooltipContent = ({ active, payload }: any) => {
 };
 
 const CustomizedContent: React.FC<any> = (props) => {
-    const { x, y, width, height, name, payload, dataKey, min, max, getColor } = props;
+    const { x, y, width, height, name, dataKey, min, max, getColor, status } = props;
     
-    if (payload === undefined) return null;
+    // FIX: Access the value for the current dataKey directly from props, not from a nested payload object.
+    const value = props[dataKey];
+    
+    // Handle offline racks with a specific color, and prevent rendering if data is malformed.
+    if (status === 'Offline' || typeof value !== 'number') {
+        return (
+          <g>
+            <rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              style={{
+                fill: '#4b5563', // A neutral gray for offline status
+                stroke: '#121826',
+                strokeWidth: 1,
+              }}
+            />
+          </g>
+        );
+    }
 
-    const value = payload[dataKey];
     const color = getColor(value, min, max);
 
     return (
