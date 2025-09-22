@@ -2,7 +2,7 @@ import { Plant } from '../types';
 
 export const POWER_PLANTS: Plant[] = [
   {
-    name: 'MAUX Bio PowerPlant (standard)',
+    name: 'MAUAX Bio PowerPlant (standard)',
     type: 'standard',
     power: 2500,
     fuel: 'Flex',

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Navigation, { Page } from './components/Navigation';
@@ -24,7 +25,7 @@ interface AppConfig {
 }
 
 const defaultConfig: AppConfig = {
-  selectedPlantName: 'MAUX Bio PowerPlant (standard)',
+  selectedPlantName: 'MAUAX Bio PowerPlant (standard)',
   fuelMode: FuelMode.NaturalGas,
   flexMix: { h2: 20, biodiesel: 30 },
   turbineStatusConfig: {
@@ -95,12 +96,12 @@ const App: React.FC = () => {
       // Don't auto-change fuel mode if it was loaded from storage
       // Only set a default if the current selection is illogical for the plant type
       const isCurrentModeIncompatible = 
-        (plant.name === 'MAUX Bio PowerPlant (standard)' && fuelMode !== FuelMode.FlexNGH2 && fuelMode !== FuelMode.FlexEthanolBiodiesel) ||
+        (plant.name === 'MAUAX Bio PowerPlant (standard)' && fuelMode !== FuelMode.FlexNGH2 && fuelMode !== FuelMode.FlexEthanolBiodiesel) ||
         (!plant.fuel.includes('Gás') && fuelMode === FuelMode.NaturalGas) ||
         (!plant.fuel.includes('Etanol') && fuelMode === FuelMode.Ethanol);
 
       if (isCurrentModeIncompatible) {
-        if (plant.name === 'MAUX Bio PowerPlant (standard)') {
+        if (plant.name === 'MAUAX Bio PowerPlant (standard)') {
           setFuelMode(FuelMode.FlexNGH2);
         } else if (plant.fuel.includes('Gás Natural')) {
           setFuelMode(FuelMode.NaturalGas);
@@ -143,7 +144,12 @@ const App: React.FC = () => {
       case 'MAUAX consortium':
         return <MexEcoBr />;
       case 'Financials':
-        return <Financials />;
+        return <Financials 
+          plantStatus={plantStatus}
+          powerOutput={powerOutput}
+          fuelMode={fuelMode}
+          flexMix={flexMix}
+        />;
       case 'Configuration':
         return <Configuration
           fuelMode={fuelMode}

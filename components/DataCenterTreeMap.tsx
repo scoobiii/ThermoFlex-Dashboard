@@ -1,11 +1,25 @@
 /**
  * @file DataCenterTreeMap.tsx
  * @description Renders a treemap visualization of the data center server racks, showing their status and key metrics.
- * @version 1.0.1
- * @date 2024-07-26
+ * @version 1.2.1
+ * @date 2024-07-30
  * @productowner Edivaldo Beringela (Prefeitura de Mauá)
  * 
  * @changelog
+ * v1.2.1 - 2024-07-30
+ *   - Corrected the logic in `CustomizedContent` to robustly access the `status` property directly from props. This resolves a critical rendering failure where most racks were not being displayed.
+ * 
+ * v1.2.0 - 2024-07-29
+ *   - Fixed a critical rendering bug in `CustomizedContent` where `payload.status` was being accessed instead of `status` from props.
+ * 
+ * v1.1.0 - 2024-07-28
+ *   - Added detailed, granular consumption metrics per rack: CPU, GPU, Memory, I/O, Cooling.
+ *   - Renamed 'energyConsumption' to 'totalEnergyConsumption' for clarity.
+ *   - Updated data generation logic to simulate new consumption metrics.
+ *   - Completely redesigned the tooltip to display the new, detailed data in a structured format.
+ *   - Implemented an interactive view mode switcher (Segmented Control) to allow users to visualize the treemap based on either 'Total Energy' or 'Cooling' consumption.
+ *   - The 'dataKey' of the Treemap component is now dynamic based on the selected view mode.
+ * 
  * v1.0.1 - 2024-07-26
  *   - Fixed a runtime TypeError "Cannot read properties of undefined (reading 'status')" in the CustomizedContent component.
  *   - Added a defensive check to ensure the 'payload' prop and its 'status' property exist before being accessed.
@@ -22,6 +36,7 @@ import DashboardCard from './DashboardCard';
 import { ServerRackIcon } from './icons';
 
 type RackStatus = 'Online' | 'High Load' | 'Offline';
+type TreeMapViewMode = 'totalEnergy' | 'cooling';
 
 interface TreeMapNode {
   name: string;
@@ -30,9 +45,17 @@ interface TreeMapNode {
   memory: number; // GB
   networkIO: number; // Gbps
   temp: number; // °C
-  energyConsumption: number; // kWh
   cpuCores: number;
   utilization: number; // Percentage
+  
+  // New detailed consumption fields
+  cpuConsumption: number; // kWh
+  gpuConsumption: number; // kWh
+  memoryConsumption: number; // kWh
+  ioConsumption: number; // kWh
+  totalEnergyConsumption: number; // kWh
+  coolingConsumption: number; // kW_th
+
   children?: TreeMapNode[];
   [key: string]: any; // Index signature for recharts compatibility
 }
@@ -42,12 +65,6 @@ const statusColors: { [key in RackStatus]: string } = {
   'High Load': 'bg-yellow-400',
   Offline: 'bg-red-500',
 };
-
-const statusBorderColors: { [key in RackStatus]: string } = {
-    Online: 'border-green-600',
-    'High Load': 'border-yellow-600',
-    Offline: 'border-red-700',
-  };
 
 const generateInitialRackData = (): TreeMapNode[] => {
   return Array.from({ length: 725 }, (_, i) => {
@@ -59,9 +76,18 @@ const generateInitialRackData = (): TreeMapNode[] => {
       status = 'High Load';
     }
 
-    const energyConsumption = status === 'Offline' ? 0 : 350 + Math.random() * 100;
     const power = 500; // 500 kW capacity per rack
+    let cpuConsumption = 0, gpuConsumption = 0, memoryConsumption = 0, ioConsumption = 0, totalEnergyConsumption = 0, coolingConsumption = 0;
 
+    if (status !== 'Offline') {
+        cpuConsumption = 100 + Math.random() * (status === 'High Load' ? 80 : 50);
+        gpuConsumption = 200 + Math.random() * (status === 'High Load' ? 150 : 100);
+        memoryConsumption = 20 + Math.random() * 10;
+        ioConsumption = 30 + Math.random() * 15;
+        totalEnergyConsumption = cpuConsumption + gpuConsumption + memoryConsumption + ioConsumption;
+        coolingConsumption = totalEnergyConsumption * 0.20; // Assume 20% of energy becomes thermal load for cooling
+    }
+    
     return {
       name: `Rack-${i + 1}`,
       status: status,
@@ -69,34 +95,61 @@ const generateInitialRackData = (): TreeMapNode[] => {
       memory: status === 'Offline' ? 0 : Math.round(512 + Math.random() * 1536), // 0.5-2TB RAM
       networkIO: status === 'Offline' ? 0 : parseFloat((50 + Math.random() * 350).toFixed(1)), // 50-400 Gbps
       temp: status === 'Offline' ? 18 : Math.round(22 + Math.random() * 10), // 22-32°C
-      energyConsumption: parseFloat(energyConsumption.toFixed(1)),
       cpuCores: 128,
-      utilization: Math.round((energyConsumption / power) * 100),
+      utilization: Math.round((totalEnergyConsumption / power) * 100),
+      cpuConsumption: parseFloat(cpuConsumption.toFixed(1)),
+      gpuConsumption: parseFloat(gpuConsumption.toFixed(1)),
+      memoryConsumption: parseFloat(memoryConsumption.toFixed(1)),
+      ioConsumption: parseFloat(ioConsumption.toFixed(1)),
+      totalEnergyConsumption: parseFloat(totalEnergyConsumption.toFixed(1)),
+      coolingConsumption: parseFloat(coolingConsumption.toFixed(1)),
     };
   });
 };
 
 const CustomTooltipContent = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
+    const data: TreeMapNode = payload[0].payload;
     return (
-      <div className="bg-gray-800 p-3 border border-gray-600 rounded-lg shadow-xl text-sm">
-        <p className="font-bold text-white mb-2">{data.name}</p>
-        <p>
-            <span className={`font-semibold ${
-                data.status === 'Online' ? 'text-green-400' : 
-                data.status === 'High Load' ? 'text-yellow-400' : 'text-red-500'}`
+      <div className="bg-gray-800 p-3 border border-gray-600 rounded-lg shadow-xl text-sm w-64">
+        <div className="flex justify-between items-baseline mb-2">
+            <p className="font-bold text-white">{data.name}</p>
+            <span className={`px-2 py-0.5 text-xs rounded-full ${
+                data.status === 'Online' ? 'bg-green-500/30 text-green-300' : 
+                data.status === 'High Load' ? 'bg-yellow-500/30 text-yellow-300' : 'bg-red-500/30 text-red-300'}`
             }>
-                Status: {data.status}
+                {data.status}
             </span>
-        </p>
-        <p className="text-gray-300">Consumo: <span className="font-mono">{data.energyConsumption.toFixed(1)} kWh</span></p>
-        <p className="text-gray-300">Utilização: <span className="font-mono">{data.utilization}%</span></p>
-        <p className="text-gray-300">Memória: <span className="font-mono">{data.memory} GB</span></p>
-        <p className="text-gray-300">Rede I/O: <span className="font-mono">{data.networkIO} Gbps</span></p>
-        <p className="text-gray-300">Temp: <span className="font-mono">{data.temp} °C</span></p>
-        <p className="text-gray-300">Capacidade: <span className="font-mono">{data.power} kW</span></p>
-        <p className="text-gray-300">CPU: <span className="font-mono">{data.cpuCores} Cores</span></p>
+        </div>
+
+        <div className="border-t border-gray-700 pt-2 mt-2">
+            <h5 className="font-semibold text-cyan-400 text-xs uppercase mb-1">Consumo de Energia</h5>
+            <div className="grid grid-cols-2 gap-x-4">
+                <p className="text-gray-400">CPU:</p><p className="text-gray-200 font-mono text-right">{data.cpuConsumption} kWh</p>
+                <p className="text-gray-400">GPU:</p><p className="text-gray-200 font-mono text-right">{data.gpuConsumption} kWh</p>
+                <p className="text-gray-400">Memória:</p><p className="text-gray-200 font-mono text-right">{data.memoryConsumption} kWh</p>
+                <p className="text-gray-400">I/O:</p><p className="text-gray-200 font-mono text-right">{data.ioConsumption} kWh</p>
+            </div>
+             <div className="flex justify-between font-bold mt-1">
+                <p className="text-cyan-400">Total:</p><p className="text-cyan-400 font-mono">{data.totalEnergyConsumption} kWh</p>
+            </div>
+        </div>
+
+        <div className="border-t border-gray-700 pt-2 mt-2">
+             <div className="flex justify-between">
+                <p className="text-gray-400">Consumo Frio:</p><p className="text-gray-200 font-mono">{data.coolingConsumption} kWₜ</p>
+            </div>
+        </div>
+
+        <div className="border-t border-gray-700 pt-2 mt-2">
+            <h5 className="font-semibold text-gray-400 text-xs uppercase mb-1">Métricas</h5>
+             <div className="grid grid-cols-2 gap-x-4">
+                <p className="text-gray-400">Utilização:</p><p className="text-gray-200 font-mono text-right">{data.utilization}%</p>
+                <p className="text-gray-400">Temp:</p><p className="text-gray-200 font-mono text-right">{data.temp} °C</p>
+                <p className="text-gray-400">Rede:</p><p className="text-gray-200 font-mono text-right">{data.networkIO} Gbps</p>
+                <p className="text-gray-400">Memória:</p><p className="text-gray-200 font-mono text-right">{data.memory} GB</p>
+             </div>
+        </div>
       </div>
     );
   }
@@ -104,16 +157,12 @@ const CustomTooltipContent = ({ active, payload }: any) => {
 };
 
 const CustomizedContent: React.FC<any> = (props) => {
-    const { root, depth, x, y, width, height, index, payload, rank, name } = props;
+    const { x, y, width, height, status } = props;
   
-    // FIX (v1.0.1): The Treemap component can sometimes call this content renderer without a 'payload',
-    // especially during animations or for parent nodes. This check prevents a runtime TypeError
-    // by ensuring 'payload' and its 'status' property exist before being accessed.
-    if (!payload || typeof payload.status === 'undefined') {
+    // Defensive check to ensure status is available before rendering
+    if (typeof status === 'undefined' || !statusColors[status]) {
       return null;
     }
-  
-    if (width < 20 || height < 20) return null;
   
     return (
       <g>
@@ -123,23 +172,71 @@ const CustomizedContent: React.FC<any> = (props) => {
           width={width}
           height={height}
           className={`
-            ${statusColors[payload.status]} 
-            stroke-gray-800 stroke-2 transition-opacity duration-300
+            ${statusColors[status]} 
+            stroke-gray-800 stroke-1 transition-opacity duration-300
           `}
         />
       </g>
     );
 };
 
+const ViewModeSwitcher: React.FC<{
+    viewMode: TreeMapViewMode;
+    setViewMode: (mode: TreeMapViewMode) => void;
+  }> = ({ viewMode, setViewMode }) => (
+    <div className="flex items-center bg-gray-900/50 rounded-lg p-1">
+      <button
+        onClick={() => setViewMode('totalEnergy')}
+        className={`px-3 py-1 text-sm font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-cyan-500 ${
+          viewMode === 'totalEnergy'
+            ? 'bg-cyan-500 text-white shadow-md'
+            : 'text-gray-400 hover:bg-gray-700'
+        }`}
+        aria-pressed={viewMode === 'totalEnergy'}
+      >
+        Consumo de Energia
+      </button>
+      <button
+        onClick={() => setViewMode('cooling')}
+        className={`px-3 py-1 text-sm font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-cyan-500 ${
+            viewMode === 'cooling'
+            ? 'bg-cyan-500 text-white shadow-md'
+            : 'text-gray-400 hover:bg-gray-700'
+        }`}
+        aria-pressed={viewMode === 'cooling'}
+      >
+        Consumo de Frio
+      </button>
+    </div>
+  );
+
 const DataCenterTreeMap: React.FC = () => {
     const [rackData, setRackData] = useState<TreeMapNode[]>([]);
+    const [viewMode, setViewMode] = useState<TreeMapViewMode>('totalEnergy');
     
     useEffect(() => {
         setRackData(generateInitialRackData());
     }, []);
 
+    const dataKey = viewMode === 'totalEnergy' ? 'totalEnergyConsumption' : 'coolingConsumption';
+
+    // To ensure offline racks are visible, we can give them a tiny minimum value for visualization purposes.
+    // However, a better approach is to filter them out as they have no consumption to visualize proportionally.
+    // The user wants to see all 725, so we will show them, but they might be invisible if consumption is 0.
+    const treemapData = useMemo(() => rackData.map(rack => ({
+      ...rack,
+      // For visualization, give zero-consumption racks a tiny area to make them visible
+      totalEnergyConsumption: rack.totalEnergyConsumption > 0 ? rack.totalEnergyConsumption : 1,
+      coolingConsumption: rack.coolingConsumption > 0 ? rack.coolingConsumption : 1,
+    })), [rackData]);
+
+
   return (
-    <DashboardCard title="Distribuição dos Racks no MAUAX DAO DataCloud" icon={<ServerRackIcon className="w-6 h-6"/>}>
+    <DashboardCard 
+      title="Distribuição dos Racks no MAUAX DAO DataCloud" 
+      icon={<ServerRackIcon className="w-6 h-6"/>}
+      action={<ViewModeSwitcher viewMode={viewMode} setViewMode={setViewMode} />}
+    >
       <div className="text-center mb-4">
         <p className="text-gray-400">
             Visualização de <span className="font-bold text-white">725</span> racks NVIDIA 800 VDC (500 kW cada)
@@ -152,8 +249,8 @@ const DataCenterTreeMap: React.FC = () => {
       <div className="w-full h-[65vh]">
         <ResponsiveContainer>
           <Treemap
-            data={rackData}
-            dataKey="power"
+            data={treemapData}
+            dataKey={dataKey}
             aspectRatio={4 / 3}
             stroke="#1A2233"
             fill="#8884d8"

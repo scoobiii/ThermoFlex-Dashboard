@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from 'react';
 import { PlantStatus } from '../types';
-import { FlameIcon, SnowflakeIcon, WrenchScrewdriverIcon, BoltIcon } from '../components/icons';
+import { FlameIcon, SnowflakeIcon, WrenchScrewdriverIcon, BoltIcon, CloudIcon, ComputerDesktopIcon } from '../components/icons';
 import DashboardCard from '../components/DashboardCard';
 
 interface UtilitiesProps {
@@ -81,28 +82,29 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
                 
                 <div className="lg:col-span-3">
                     <DashboardCard title="Distribuição de Frio" icon={<WrenchScrewdriverIcon className="w-6 h-6" />} className="h-full">
-                        <div className="flex flex-col justify-between h-full">
+                        <div className="flex flex-col justify-between h-full space-y-4">
                             <div className="space-y-3">
-                                <div className="bg-gray-700/50 p-2 rounded-lg flex justify-between items-center text-sm">
-                                    <span className="text-gray-300">❄️ TIAC System</span>
-                                    <span className={`font-mono font-semibold ${isOnline ? 'text-white' : 'text-gray-500'}`}>{tiacCooling.toFixed(1)} MW</span>
+                                <div className="flex items-center gap-3">
+                                    <SnowflakeIcon className="w-6 h-6 text-gray-400" />
+                                    <span className="flex-grow text-gray-300">TIAC System</span>
+                                    <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{tiacCooling.toFixed(1)} MW</span>
                                 </div>
-                                <div className="bg-gray-700/50 p-2 rounded-lg flex justify-between items-center text-sm">
-                                    <span className="text-gray-300">💨 Fog System</span>
-                                    <span className={`font-mono font-semibold ${isOnline ? 'text-white' : 'text-gray-500'}`}>{fogCooling.toFixed(1)} MW</span>
+                                <div className="flex items-center gap-3">
+                                    <CloudIcon className="w-6 h-6 text-gray-400" />
+                                    <span className="flex-grow text-gray-300">Fog System</span>
+                                    <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{fogCooling.toFixed(1)} MW</span>
                                 </div>
-                                <div className="bg-gray-700/50 p-2 rounded-lg flex justify-between items-center text-sm">
-                                    <span className="text-gray-300">🖥️ Data Center</span>
-                                    <span className={`font-mono font-semibold ${isOnline ? 'text-white' : 'text-gray-500'}`}>{dataCenterCooling.toFixed(1)} MW</span>
+                                <div className="flex items-center gap-3">
+                                    <ComputerDesktopIcon className="w-6 h-6 text-gray-400" />
+                                    <span className="flex-grow text-gray-300">Data Center</span>
+                                    <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{dataCenterCooling.toFixed(1)} MW</span>
                                 </div>
                             </div>
-                            <div className="border-t border-gray-700 pt-3 mt-3">
-                                 <div className="flex items-center justify-between text-sm">
-                                     <div className="flex items-center gap-2 text-green-400">
-                                         <BoltIcon className="w-5 h-5"/>
-                                         <span className="font-semibold">Economia de Energia</span>
-                                     </div>
-                                     <span className={`font-mono text-lg font-bold ${isOnline ? 'text-green-400' : 'text-gray-500'}`}>{electricalEquivalentSaved.toFixed(1)} MW</span>
+                            <div className="border-t border-gray-700 pt-3">
+                                 <div className="flex items-center gap-3">
+                                    <BoltIcon className="w-6 h-6 text-green-400"/>
+                                    <span className="flex-grow font-semibold text-green-400">Economia de Energia</span>
+                                    <span className={`font-mono text-lg font-bold ${isOnline ? 'text-green-400' : 'text-gray-500'}`}>{electricalEquivalentSaved.toFixed(1)} MW</span>
                                  </div>
                                  <p className="text-xs text-gray-500 text-right">(Equivalente Elétrico)</p>
                             </div>

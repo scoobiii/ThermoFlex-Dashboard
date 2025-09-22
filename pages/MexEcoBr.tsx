@@ -749,7 +749,8 @@ const MexEcoBr: React.FC = () => {
 
         function previousSlide() {
             if (currentSlide > 0) {
-                showSlide(currentSlide + 1);
+                // FIX: Changed from currentSlide + 1 to currentSlide - 1 to correctly navigate to the previous slide.
+                showSlide(currentSlide - 1);
             }
         }
 
