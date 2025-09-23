@@ -12,6 +12,16 @@ export const POWER_PLANTS: Plant[] = [
     description: 'Planta Padrão Bio-Termoelétrica e DataCloud.',
   },
   {
+    name: 'Parque Térmico Pedreira',
+    type: 'new',
+    power: 3000,
+    fuel: 'Flex (Gás Natural, H2, Etanol)',
+    location: 'São Paulo, SP',
+    status: 'Proposta',
+    coordinates: { lat: -23.6678, lng: -46.4614 },
+    description: 'Projeto de usina de trigeração de alta eficiência com datacenter integrado. Inclui Chiller de Absorção, TIAC e sistema Fogging para maximizar a potência e receita.',
+  },
+  {
     name: 'UTE Norte Fluminense',
     type: 'upgrade',
     power: 870,

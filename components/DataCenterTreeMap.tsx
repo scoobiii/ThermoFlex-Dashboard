@@ -1,11 +1,21 @@
 /**
  * @file DataCenterTreeMap.tsx
  * @description Renders a treemap visualization of the data center server racks, showing their status and key metrics.
- * @version 1.5.0
- * @date 2024-08-02
+ * @version 1.7.0
+ * @date 2024-08-04
  * @productowner Edivaldo Beringela (Prefeitura de Mauá)
  * 
  * @changelog
+ * v1.7.0 - 2024-08-04
+ *   - De-correlated cooling and energy consumption data to ensure treemap sizes visibly change when switching KPIs.
+ *   - Introduced a randomized `coolingEfficiencyFactor` for each rack during data generation.
+ *   - This makes the treemap layout dynamically re-organize based on the selected metric, fulfilling the user request for KPI-driven sizing.
+ *
+ * v1.6.0 - 2024-08-03
+ *   - Added data labels (rack name and value) directly inside the treemap cells for better readability, visible on larger nodes.
+ *   - Labels are conditionally rendered based on block size (`width > 60 && height > 35`) to prevent clutter.
+ *   - Text includes a subtle shadow for improved contrast against dynamic background colors.
+ *
  * v1.5.0 - 2024-08-02
  *   - Fixed a critical rendering bug in `CustomizedContent` where it was attempting to access a non-existent `payload` prop, causing the entire treemap to render as blank.
  *   - Modified the component to correctly access data values (e.g., `totalEnergyConsumption`) directly from its props, restoring the visualization.
@@ -19,7 +29,6 @@
  * v1.3.0 - 2024-07-31
  *   - Implemented dynamic, Finviz-style coloring. Racks are now colored on a green-to-red scale based on the selected metric's value.
  *   - The color scale is calculated dynamically based on the min/max consumption values of the visible dataset.
- *   - Added data labels (rack name and value) directly inside the treemap cells for better readability, visible on larger nodes.
  *   - Replaced the static, status-based coloring in `CustomizedContent` with the new dynamic, value-based coloring logic.
  * 
  * v1.2.1 - 2024-07-30
@@ -95,7 +104,11 @@ const generateInitialRackData = (): TreeMapNode[] => {
         memoryConsumption = 20 + Math.random() * 10;
         ioConsumption = 30 + Math.random() * 15;
         totalEnergyConsumption = cpuConsumption + gpuConsumption + memoryConsumption + ioConsumption;
-        coolingConsumption = totalEnergyConsumption * 0.20; // Assume 20% of energy becomes thermal load for cooling
+        
+        // De-correlate cooling from energy by giving each rack a variable efficiency factor.
+        // This makes the treemap sizes visually change when switching KPIs.
+        const coolingEfficiencyFactor = 0.15 + Math.random() * 0.15; // Varying efficiency from 15% to 30%
+        coolingConsumption = totalEnergyConsumption * coolingEfficiencyFactor;
     }
     
     return {
@@ -167,165 +180,107 @@ const CustomTooltipContent = ({ active, payload }: any) => {
 };
 
 const CustomizedContent: React.FC<any> = (props) => {
-    const { x, y, width, height, name, dataKey, min, max, getColor, status } = props;
+    const { x, y, width, height, name, dataKey, getColor, status } = props;
     
-    // FIX: Access the value for the current dataKey directly from props, not from a nested payload object.
     const value = props[dataKey];
     
-    // Handle offline racks with a specific color, and prevent rendering if data is malformed.
-    if (status === 'Offline' || typeof value !== 'number') {
+    if (status === 'Offline') {
         return (
-          <g>
-            <rect
-              x={x}
-              y={y}
-              width={width}
-              height={height}
-              style={{
-                fill: '#4b5563', // A neutral gray for offline status
-                stroke: '#121826',
-                strokeWidth: 1,
-              }}
-            />
-          </g>
+            <g>
+                <rect x={x} y={y} width={width} height={height} style={{ fill: '#4b5563', stroke: '#374151', strokeWidth: 1 }} />
+            </g>
         );
     }
 
-    const color = getColor(value, min, max);
+    const color = getColor(value);
+    const valueUnit = dataKey === 'totalEnergyConsumption' ? 'kWh' : 'kWₜ';
 
     return (
-      <g>
-        <rect
-          x={x}
-          y={y}
-          width={width}
-          height={height}
-          style={{
-            fill: color,
-            stroke: '#121826',
-            strokeWidth: 1,
-            transition: 'fill 0.5s ease',
-          }}
-        />
-        {width > 60 && height > 35 && (
-           <text
-                x={x + width / 2}
-                y={y + height / 2}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#ffffff"
-                className="pointer-events-none select-none"
-                style={{ textShadow: '0px 1px 3px rgba(0,0,0,0.7)'}}
-            >
-                <tspan x={x + width / 2} dy="-0.6em" fontSize={12} fontWeight="bold">{name}</tspan>
-                <tspan x={x + width / 2} dy="1.2em" fontSize={11}>{`${value.toFixed(1)}`}</tspan>
-            </text>
-        )}
-      </g>
+        <g>
+            <rect x={x} y={y} width={width} height={height} style={{ fill: color, stroke: '#1f2937', strokeWidth: 1 }} />
+            {width > 60 && height > 35 && (
+                <text x={x + width / 2} y={y + height / 2} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={12} style={{ textShadow: '0 0 4px rgba(0,0,0,0.7)' }}>
+                    {name}
+                </text>
+            )}
+             {width > 60 && height > 55 && (
+                 <text x={x + width / 2} y={y + height / 2 + 16} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={10} style={{ textShadow: '0 0 4px rgba(0,0,0,0.7)' }}>
+                    {value.toFixed(1)} {valueUnit}
+                </text>
+             )}
+        </g>
     );
 };
 
-const ViewModeSwitcher: React.FC<{
-    viewMode: TreeMapViewMode;
-    setViewMode: (mode: TreeMapViewMode) => void;
-  }> = ({ viewMode, setViewMode }) => (
-    <div className="flex items-center bg-gray-900/50 rounded-lg p-1">
-      <button
-        onClick={() => setViewMode('totalEnergy')}
-        className={`px-3 py-1 text-sm font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-cyan-500 ${
-          viewMode === 'totalEnergy'
-            ? 'bg-cyan-500 text-white shadow-md'
-            : 'text-gray-400 hover:bg-gray-700'
-        }`}
-        aria-pressed={viewMode === 'totalEnergy'}
-      >
-        Consumo de Energia
-      </button>
-      <button
-        onClick={() => setViewMode('cooling')}
-        className={`px-3 py-1 text-sm font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-cyan-500 ${
-            viewMode === 'cooling'
-            ? 'bg-cyan-500 text-white shadow-md'
-            : 'text-gray-400 hover:bg-gray-700'
-        }`}
-        aria-pressed={viewMode === 'cooling'}
-      >
-        Consumo de Frio
-      </button>
-    </div>
-  );
-
 const DataCenterTreeMap: React.FC = () => {
-    const [rackData, setRackData] = useState<TreeMapNode[]>([]);
+    const [data, setData] = useState<TreeMapNode[]>([]);
     const [viewMode, setViewMode] = useState<TreeMapViewMode>('totalEnergy');
-    
+
     useEffect(() => {
-        setRackData(generateInitialRackData());
+        setData(generateInitialRackData());
     }, []);
 
     const dataKey = viewMode === 'totalEnergy' ? 'totalEnergyConsumption' : 'coolingConsumption';
+    const viewTitle = viewMode === 'totalEnergy' ? 'Consumo de Energia (kWh)' : 'Consumo de Frio (kWₜ)';
 
     const { min, max } = useMemo(() => {
-        const values = rackData
-            .filter(r => r.status !== 'Offline')
-            .map(r => r[dataKey]);
-        if (values.length === 0) return { min: 0, max: 1 };
+        if (!data || data.length === 0) return { min: 0, max: 0 };
+        const values = data.filter(d => d.status !== 'Offline').map(d => d[dataKey]);
+        if (values.length === 0) return { min: 0, max: 0 };
         return { min: Math.min(...values), max: Math.max(...values) };
-    }, [rackData, dataKey]);
+    }, [data, dataKey]);
 
-    const getColor = (value: number, minVal: number, maxVal: number): string => {
-        if (maxVal === minVal || value <= minVal) return 'hsl(120, 70%, 40%)'; // Green for min
-        const normalized = (value - minVal) / (maxVal - minVal);
-        const hue = (1 - normalized) * 120;
-        const lightness = 50 - (normalized * 15);
-        return `hsl(${hue.toFixed(0)}, 70%, ${lightness.toFixed(0)}%)`;
+    const getColor = (value: number) => {
+        if (typeof value !== 'number') return '#4b5563'; // Return gray for non-numeric values
+        const range = max - min;
+        if (range === 0) return '#22c55e'; // Green for no variation
+
+        const normalized = (value - min) / range;
+        
+        // Finviz-style Green -> Yellow -> Red
+        const hue = (1 - normalized) * 120; // 120 (green) to 0 (red)
+        return `hsl(${hue}, 80%, 50%)`;
     };
-
-    const treemapData = useMemo(() => rackData.map(rack => ({
-      ...rack,
-      totalEnergyConsumption: rack.totalEnergyConsumption > 0 ? rack.totalEnergyConsumption : 1,
-      coolingConsumption: rack.coolingConsumption > 0 ? rack.coolingConsumption : 1,
-    })), [rackData]);
-
-  return (
-    <DashboardCard 
-      title="Distribuição dos Racks no MAUAX DAO DataCloud" 
-      icon={<ServerRackIcon className="w-6 h-6"/>}
-      action={<ViewModeSwitcher viewMode={viewMode} setViewMode={setViewMode} />}
-    >
-      <div className="text-center mb-4">
-        <p className="text-gray-400">
-            Visualização de <span className="font-bold text-white">725</span> racks NVIDIA 800 VDC (500 kW cada)
-        </p>
-        <p className="text-gray-400">
-          Totalizando <span className="font-bold text-cyan-400">362.5 MW</span> de capacidade de TI
-        </p>
-      </div>
-      
-      <div className="w-full h-[65vh]">
-        <ResponsiveContainer>
-          <Treemap
-            data={treemapData}
-            dataKey={dataKey}
-            aspectRatio={4 / 3}
-            content={
-                <CustomizedContent 
-                    dataKey={dataKey} 
-                    min={min} 
-                    max={max} 
-                    getColor={getColor} 
-                />
+    
+    return (
+        <DashboardCard 
+            title="Treemap de Consumo dos Racks"
+            icon={<ServerRackIcon className="w-6 h-6" />}
+            action={
+                <div className="flex items-center bg-gray-900/50 rounded-lg p-1">
+                    <button
+                        onClick={() => setViewMode('totalEnergy')}
+                        className={`px-3 py-1 text-xs font-semibold rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${viewMode === 'totalEnergy' ? 'bg-cyan-500 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700'}`}
+                    >
+                        Energia
+                    </button>
+                    <button
+                        onClick={() => setViewMode('cooling')}
+                        className={`px-3 py-1 text-xs font-semibold rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${viewMode === 'cooling' ? 'bg-cyan-500 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700'}`}
+                    >
+                        Frio
+                    </button>
+                </div>
             }
-            isAnimationActive={true}
-            animationDuration={500}
-            animationEasing="ease-in-out"
-          >
-            <Tooltip content={<CustomTooltipContent />} />
-          </Treemap>
-        </ResponsiveContainer>
-      </div>
-    </DashboardCard>
-  );
+        >
+            <div className="w-full h-[65vh]">
+                <p className="text-center text-sm text-gray-400 mb-2">Visualizando por: <span className="font-semibold text-white">{viewTitle}</span></p>
+                <ResponsiveContainer width="100%" height="100%">
+                    <Treemap
+                        data={data}
+                        dataKey={dataKey}
+                        stroke="#fff"
+                        fill="#8884d8"
+                        content={<CustomizedContent dataKey={dataKey} getColor={getColor} />}
+                        isAnimationActive={false}
+                        aspectRatio={16/9}
+                    >
+                        <Tooltip content={<CustomTooltipContent />} />
+                    </Treemap>
+                </ResponsiveContainer>
+            </div>
+        </DashboardCard>
+    );
 };
 
 export default DataCenterTreeMap;

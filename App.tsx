@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import Navigation, { Page } from './components/Navigation';
 import PowerPlant from './pages/PowerPlant';
@@ -15,17 +14,22 @@ import { POWER_PLANTS } from './data/plants';
 export type TurbineStatusConfig = { [key: number]: TurbineStatus };
 
 // --- Configuration Persistence ---
-const CONFIG_STORAGE_KEY = 'app-config';
-
-interface AppConfig {
-  selectedPlantName: string;
+// Interface for a single plant's config
+export interface PlantConfig {
   fuelMode: FuelMode;
   flexMix: { h2: number; biodiesel: number };
   turbineStatusConfig: TurbineStatusConfig;
 }
 
-const defaultConfig: AppConfig = {
-  selectedPlantName: 'MAUAX Bio PowerPlant (standard)',
+// Interface for all stored configs
+interface AllConfigs {
+    [plantName: string]: PlantConfig;
+}
+
+const CONFIG_STORAGE_KEY = 'app-all-configs';
+const SELECTED_PLANT_STORAGE_KEY = 'app-selected-plant';
+
+const defaultConfig: PlantConfig = {
   fuelMode: FuelMode.NaturalGas,
   flexMix: { h2: 20, biodiesel: 30 },
   turbineStatusConfig: {
@@ -33,20 +37,30 @@ const defaultConfig: AppConfig = {
   },
 };
 
-const loadConfig = (): AppConfig => {
+const loadAllConfigs = (): AllConfigs => {
   try {
     const savedConfigString = localStorage.getItem(CONFIG_STORAGE_KEY);
     if (savedConfigString) {
-      const savedConfig = JSON.parse(savedConfigString);
-      // Merge with defaults to ensure all keys are present
-      return { ...defaultConfig, ...savedConfig };
+      return JSON.parse(savedConfigString);
     }
   } catch (error) {
-    console.error("Failed to load or parse config from localStorage", error);
+    console.error("Failed to load or parse configs from localStorage", error);
   }
-  return defaultConfig;
+  return {};
 };
 
+const loadSelectedPlant = (): string => {
+    try {
+        const savedPlant = localStorage.getItem(SELECTED_PLANT_STORAGE_KEY);
+        // Validate that the saved plant still exists in our list
+        if (savedPlant && POWER_PLANTS.find(p => p.name === savedPlant)) {
+            return savedPlant;
+        }
+    } catch (error) {
+        console.error("Failed to load selected plant from localStorage", error);
+    }
+    return 'MAUAX Bio PowerPlant (standard)'; // Default value
+}
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('Power Plant');
@@ -58,28 +72,57 @@ const App: React.FC = () => {
   const [maxCapacity, setMaxCapacity] = useState(2500);
   const [efficiencyGain, setEfficiencyGain] = useState(0);
 
-  // --- Configuration Page State (Initialized from localStorage) ---
-  const [selectedPlantName, setSelectedPlantName] = useState<string>(() => loadConfig().selectedPlantName);
-  const [fuelMode, setFuelMode] = useState<FuelMode>(() => loadConfig().fuelMode);
-  const [flexMix, setFlexMix] = useState(() => loadConfig().flexMix);
-  const [turbineStatusConfig, setTurbineStatusConfig] = useState<TurbineStatusConfig>(() => loadConfig().turbineStatusConfig);
+  // --- Configuration State ---
+  const [allConfigs, setAllConfigs] = useState<AllConfigs>(loadAllConfigs);
+  const [selectedPlantName, setSelectedPlantNameState] = useState<string>(loadSelectedPlant);
 
+  const currentConfig = useMemo(() => {
+    return allConfigs[selectedPlantName] || defaultConfig;
+  }, [allConfigs, selectedPlantName]);
 
-  // --- Effect to SAVE config changes to localStorage ---
+  // Persist any changes to allConfigs
   useEffect(() => {
-    const configToSave: AppConfig = {
-      selectedPlantName,
-      fuelMode,
-      flexMix,
-      turbineStatusConfig,
-    };
     try {
-      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(configToSave));
-    } catch (error) {
-      console.error("Failed to save config to localStorage", error);
+        localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(allConfigs));
+    } catch(error) {
+        console.error("Failed to save configs to localStorage", error);
     }
-  }, [selectedPlantName, fuelMode, flexMix, turbineStatusConfig]);
+  }, [allConfigs]);
+  
+  // Wrapped setter to also save to localStorage
+  const setSelectedPlantName = (name: string) => {
+    try {
+        localStorage.setItem(SELECTED_PLANT_STORAGE_KEY, name);
+    } catch (error) {
+        console.error("Failed to save selected plant to localStorage", error);
+    }
+    setSelectedPlantNameState(name);
+  };
 
+  // Functions to update the config for the *current* plant
+  const updateCurrentConfig = (newConfig: Partial<PlantConfig>) => {
+      setAllConfigs(prev => ({
+          ...prev,
+          [selectedPlantName]: {
+              ...(prev[selectedPlantName] || defaultConfig),
+              ...newConfig,
+          }
+      }));
+  };
+
+  const setFuelMode = (fuelMode: FuelMode) => updateCurrentConfig({ fuelMode });
+  const setFlexMix = (updater: React.SetStateAction<{ h2: number; biodiesel: number }>) => {
+      const newFlexMix = typeof updater === 'function' 
+          ? updater(currentConfig.flexMix) 
+          : updater;
+      updateCurrentConfig({ flexMix: newFlexMix });
+  };
+  const setTurbineStatusConfig = (updater: React.SetStateAction<TurbineStatusConfig>) => {
+      const newStatus = typeof updater === 'function'
+          ? updater(currentConfig.turbineStatusConfig)
+          : updater;
+      updateCurrentConfig({ turbineStatusConfig: newStatus });
+  };
 
   useEffect(() => {
     const plant = POWER_PLANTS.find(p => p.name === selectedPlantName);
@@ -93,23 +136,17 @@ const App: React.FC = () => {
         setEfficiencyGain(0); // Reset gain when offline
       }
 
-      // Don't auto-change fuel mode if it was loaded from storage
-      // Only set a default if the current selection is illogical for the plant type
-      const isCurrentModeIncompatible = 
-        (plant.name === 'MAUAX Bio PowerPlant (standard)' && fuelMode !== FuelMode.FlexNGH2 && fuelMode !== FuelMode.FlexEthanolBiodiesel) ||
-        (!plant.fuel.includes('Gás') && fuelMode === FuelMode.NaturalGas) ||
-        (!plant.fuel.includes('Etanol') && fuelMode === FuelMode.Ethanol);
-
-      if (isCurrentModeIncompatible) {
+      // If a plant has no config, set a sensible default
+      if (!allConfigs[selectedPlantName]) {
+        let newFuelMode = FuelMode.NaturalGas;
         if (plant.name === 'MAUAX Bio PowerPlant (standard)') {
-          setFuelMode(FuelMode.FlexNGH2);
-        } else if (plant.fuel.includes('Gás Natural')) {
-          setFuelMode(FuelMode.NaturalGas);
+          newFuelMode = FuelMode.FlexNGH2;
         } else if (plant.fuel.includes('Etanol')) {
-          setFuelMode(FuelMode.Ethanol);
+          newFuelMode = FuelMode.Ethanol;
         } else if (plant.fuel.includes('Biodiesel')) {
-          setFuelMode(FuelMode.Biodiesel);
+          newFuelMode = FuelMode.Biodiesel;
         }
+        updateCurrentConfig({ fuelMode: newFuelMode });
       }
     }
   }, [selectedPlantName, plantStatus]);
@@ -124,10 +161,10 @@ const App: React.FC = () => {
           setPowerOutput={setPowerOutput}
           efficiency={efficiency}
           setEfficiency={setEfficiency}
-          fuelMode={fuelMode}
-          flexMix={flexMix}
+          fuelMode={currentConfig.fuelMode}
+          flexMix={currentConfig.flexMix}
           setFlexMix={setFlexMix}
-          turbineStatusConfig={turbineStatusConfig}
+          turbineStatusConfig={currentConfig.turbineStatusConfig}
           efficiencyGain={efficiencyGain}
         />;
       case 'Utilities':
@@ -147,16 +184,16 @@ const App: React.FC = () => {
         return <Financials 
           plantStatus={plantStatus}
           powerOutput={powerOutput}
-          fuelMode={fuelMode}
-          flexMix={flexMix}
+          fuelMode={currentConfig.fuelMode}
+          flexMix={currentConfig.flexMix}
         />;
       case 'Configuration':
         return <Configuration
-          fuelMode={fuelMode}
+          fuelMode={currentConfig.fuelMode}
           setFuelMode={setFuelMode}
-          flexMix={flexMix}
+          flexMix={currentConfig.flexMix}
           setFlexMix={setFlexMix}
-          turbineStatusConfig={turbineStatusConfig}
+          turbineStatusConfig={currentConfig.turbineStatusConfig}
           setTurbineStatusConfig={setTurbineStatusConfig}
           selectedPlantName={selectedPlantName}
           setSelectedPlantName={setSelectedPlantName}
@@ -169,10 +206,10 @@ const App: React.FC = () => {
           setPowerOutput={setPowerOutput}
           efficiency={efficiency}
           setEfficiency={setEfficiency}
-          fuelMode={fuelMode}
-          flexMix={flexMix}
+          fuelMode={currentConfig.fuelMode}
+          flexMix={currentConfig.flexMix}
           setFlexMix={setFlexMix}
-          turbineStatusConfig={turbineStatusConfig}
+          turbineStatusConfig={currentConfig.turbineStatusConfig}
           efficiencyGain={efficiencyGain}
         />;
     }

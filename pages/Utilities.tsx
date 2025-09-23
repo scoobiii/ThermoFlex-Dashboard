@@ -53,7 +53,7 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
             <div className="grid grid-cols-1 lg:grid-cols-11 gap-6 items-stretch">
                 
                 <div className="lg:col-span-3">
-                    <DashboardCard title="Energia Térmica (Perdas)" icon={<FlameIcon className="w-6 h-6 text-orange-400" />} className="h-full">
+                    <DashboardCard title="Power Losses" icon={<FlameIcon className="w-6 h-6 text-orange-400" />} className="h-full">
                         <div className="flex flex-col items-center justify-center h-full text-center">
                             <p className={`text-5xl font-bold tracking-tight ${isOnline ? 'text-orange-400' : 'text-gray-500'}`}>{wasteHeat.toFixed(0)}</p>
                             <p className="text-lg text-gray-400">MW</p>
@@ -68,10 +68,16 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
 
                 <div className="lg:col-span-3">
                      <DashboardCard title="Chiller de Absorção" icon={<SnowflakeIcon className="w-6 h-6 text-cyan-400" />} className="h-full">
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                            <p className={`text-5xl font-bold tracking-tight ${isOnline ? 'text-cyan-400' : 'text-gray-500'}`}>{coolingProduction.toFixed(0)}</p>
-                            <p className="text-lg text-gray-400">MW</p>
-                             <p className={`mt-4 text-sm font-semibold ${isOnline ? 'text-green-400' : 'text-red-500'}`}>{isOnline ? 'Sistema Ativo' : 'Sistema Inativo'}</p>
+                        <div className="flex flex-col items-center justify-between h-full text-center">
+                             <div>
+                                <p className={`text-5xl font-bold tracking-tight ${isOnline ? 'text-cyan-400' : 'text-gray-500'}`}>{coolingProduction.toFixed(0)}</p>
+                                <p className="text-lg text-gray-400">MW</p>
+                                <p className={`mt-4 text-sm font-semibold ${isOnline ? 'text-green-400' : 'text-red-500'}`}>{isOnline ? 'Sistema Ativo' : 'Sistema Inativo'}</p>
+                             </div>
+                            <div className="text-xs text-gray-500 border-t border-gray-700 w-full pt-2 mt-2">
+                                <p><strong>Quantidade:</strong> 2 | <strong>Fabricante:</strong> Broad</p>
+                                <p><strong>Modelo:</strong> BCT-1500</p>
+                            </div>
                         </div>
                     </DashboardCard>
                 </div>
@@ -82,25 +88,61 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
                 
                 <div className="lg:col-span-3">
                     <DashboardCard title="Distribuição de Frio" icon={<WrenchScrewdriverIcon className="w-6 h-6" />} className="h-full">
-                        <div className="flex flex-col justify-between h-full space-y-4">
+                        <div className="flex flex-col justify-between h-full space-y-3">
                             <div className="space-y-3">
-                                <div className="flex items-center gap-3">
-                                    <SnowflakeIcon className="w-6 h-6 text-gray-400" />
-                                    <span className="flex-grow text-gray-300">TIAC System</span>
-                                    <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{tiacCooling.toFixed(1)} MW</span>
+                                <div className="bg-gray-700/50 p-3 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <SnowflakeIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                        <div className="flex-grow">
+                                            <div className="flex justify-between items-baseline">
+                                                <span className="text-gray-300 font-semibold">TIAC System</span>
+                                                <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{tiacCooling.toFixed(1)} MW</span>
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1 grid grid-cols-2 gap-x-4">
+                                                <span><strong>Quantidade:</strong> 2</span>
+                                                <span><strong>Fabricante:</strong> Stellar</span>
+                                                <span><strong>Modelo:</strong> E-TIAC 2.0</span>
+                                                <span><strong>Capacidade:</strong> 500 MWₜ</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <CloudIcon className="w-6 h-6 text-gray-400" />
-                                    <span className="flex-grow text-gray-300">Fog System</span>
-                                    <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{fogCooling.toFixed(1)} MW</span>
+                                <div className="bg-gray-700/50 p-3 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <CloudIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                        <div className="flex-grow">
+                                            <div className="flex justify-between items-baseline">
+                                                <span className="text-gray-300 font-semibold">Fog System</span>
+                                                <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{fogCooling.toFixed(1)} MW</span>
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1 grid grid-cols-2 gap-x-4">
+                                                <span><strong>Quantidade:</strong> 4</span>
+                                                <span><strong>Fabricante:</strong> Mee Industries</span>
+                                                <span><strong>Modelo:</strong> FogCool 500-H</span>
+                                                <span><strong>Capacidade:</strong> 380 MWₜ</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <ComputerDesktopIcon className="w-6 h-6 text-gray-400" />
-                                    <span className="flex-grow text-gray-300">Data Center</span>
-                                    <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{dataCenterCooling.toFixed(1)} MW</span>
+                                <div className="bg-gray-700/50 p-3 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <ComputerDesktopIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                        <div className="flex-grow">
+                                             <div className="flex justify-between items-baseline">
+                                                <span className="text-gray-300 font-semibold">Data Cloud</span>
+                                                <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{dataCenterCooling.toFixed(1)} MW</span>
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1 grid grid-cols-2 gap-x-4">
+                                                <span><strong>Quantidade:</strong> 120 Racks</span>
+                                                <span><strong>Fabricante:</strong> NVIDIA</span>
+                                                <span><strong>Modelo:</strong> DGX H100 LC</span>
+                                                <span><strong>Capacidade:</strong> 350 MWₜ</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="border-t border-gray-700 pt-3">
+                            <div className="border-t border-gray-700 pt-3 mt-2">
                                  <div className="flex items-center gap-3">
                                     <BoltIcon className="w-6 h-6 text-green-400"/>
                                     <span className="flex-grow font-semibold text-green-400">Economia de Energia</span>

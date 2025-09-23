@@ -18,4 +18,3 @@ View your app in AI Studio: https://ai.studio/apps/drive/1MiXmzCFV_Je2T8hxVZ6pUn
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
-4. Ultima versão : https://scoobiii.github.io/ThermoFlex-Dashboard/

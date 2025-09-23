@@ -72,10 +72,10 @@ const Financials: React.FC<FinancialsProps> = ({
                     { name: 'Créditos de Carbono', value: 0, color: '#10b981' },
                 ],
                 costData: [
-                    { name: 'CAPEX (Amortizado)', value: 4500000, color: '#0891b2' },
+                    { name: 'CAPEX (Amortizado)', value: 12500000, color: '#0891b2' },
                     { name: 'OPEX', value: 0, color: '#34d399' },
                 ],
-                totalCost: 4500000,
+                totalCost: 12500000,
             };
         }
 
@@ -115,7 +115,7 @@ const Financials: React.FC<FinancialsProps> = ({
         const totalRevenue = energyRevenue + cloudRevenue + carbonRevenue;
         
         const costData = [
-            { name: 'CAPEX (Amortizado)', value: 4500000, color: '#0891b2' },
+            { name: 'CAPEX (Amortizado)', value: 12500000, color: '#0891b2' },
             { name: 'OPEX', value: 1800000, color: '#34d399' },
         ];
         const totalCost = costData.reduce((acc, curr) => acc + curr.value, 0);
@@ -300,7 +300,7 @@ const Financials: React.FC<FinancialsProps> = ({
                     <div className="w-full lg:w-1/2 space-y-3 text-sm">
                         <div>
                             <p className="font-semibold text-cyan-400">CAPEX (Amortizado)</p>
-                            <p className="text-gray-300">{formatCurrency(4500000)} - Infraestrutura, Servidores</p>
+                            <p className="text-gray-300">{formatCurrency(12500000)} - Infraestrutura, Servidores</p>
                         </div>
                          <div>
                             <p className="font-semibold text-emerald-400">OPEX</p>

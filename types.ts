@@ -36,6 +36,10 @@ export interface Turbine {
   rpm: number;
   temp: number;
   pressure: number;
+  type: 'Ciclo Rankine' | 'Ciclo Combinado';
+  manufacturer: string;
+  model: string;
+  isoCapacity: number; // in MW
   history?: { rpm: number; temp: number; pressure: number }[];
   needsMaintenance?: boolean;
 }

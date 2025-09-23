@@ -1,15 +1,20 @@
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { HistoricalDataPoint } from '../types';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { HistoricalDataPoint, PlantStatus } from '../types';
 import DashboardCard from './DashboardCard';
+import { BoltIcon, ThermometerIcon, DropletIcon, WarningIcon } from './icons';
 
 interface PowerOutputProps {
   powerOutput: number;
-  baseEfficiency: number;
-  totalEfficiency: number;
+  efficiency: number;
   historicalData: HistoricalDataPoint[];
-  // FIX: Add props for maximizing functionality
+  efficiencyGain: number;
+  plantStatus: PlantStatus;
+  dryBulbTemp: number;
+  wetBulbTemp: number;
+  humidity: number;
+  powerLoss: number;
   isMaximizable?: boolean;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
@@ -27,68 +32,104 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-
 const PowerOutput: React.FC<PowerOutputProps> = ({ 
   powerOutput, 
-  baseEfficiency, 
-  totalEfficiency, 
-  historicalData,
+  efficiency, 
+  historicalData, 
+  efficiencyGain,
+  plantStatus,
+  dryBulbTemp,
+  wetBulbTemp,
+  humidity,
+  powerLoss,
   isMaximizable,
   isMaximized,
   onToggleMaximize,
- }) => {
-  const efficiencyGain = totalEfficiency - baseEfficiency;
+}) => {
+  const isOnline = plantStatus === PlantStatus.Online;
+  const displayEfficiency = isOnline ? efficiency + efficiencyGain : 0;
   
   return (
     <DashboardCard 
-      title="Geração de Energia"
+      title="Produção de Energia" 
+      icon={<BoltIcon className="w-6 h-6" />}
       isMaximizable={isMaximizable}
       isMaximized={isMaximized}
       onToggleMaximize={onToggleMaximize}
     >
       <div className="flex flex-col h-full">
         <div className="text-center">
-            <p className="text-5xl font-bold text-cyan-400 tracking-tight">{powerOutput.toFixed(1)}</p>
-            <p className="text-sm text-gray-400">MW Potência Atual</p>
-            <p className="mt-4 text-4xl font-bold text-green-400">{totalEfficiency.toFixed(1)}%</p>
-            <p className="text-sm text-gray-400">Eficiência Total Geral</p>
-            
-            {efficiencyGain > 0.01 && (
-                <div className="mt-2 text-xs text-gray-400 border-t border-gray-700 pt-2">
-                    <div className="flex justify-center items-baseline gap-4">
-                        <span>Eficiência ISO Padrão: <span className="font-semibold text-gray-300">{baseEfficiency.toFixed(1)}%</span></span>
-                        <span>Ganho (Recuperação de Frio): <span className="font-semibold text-green-400">+{efficiencyGain.toFixed(1)}%</span></span>
+            <p className="text-5xl font-bold tracking-tight text-cyan-400">{powerOutput.toFixed(1)}</p>
+            <p className="text-lg text-gray-400">MW</p>
+        </div>
+        <div className="flex-grow h-24 mt-2 -ml-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={historicalData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}}/>
+              <Area 
+                type="monotone" 
+                dataKey="power" 
+                stroke="#06b6d4" 
+                strokeWidth={2} 
+                fillOpacity={1} 
+                fill="url(#colorPower)" 
+                isAnimationActive={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="my-3 space-y-3">
+            {/* Ambient Conditions */}
+            <div className="grid grid-cols-3 gap-2 text-center text-xs text-gray-400 p-2 bg-gray-900/50 rounded-lg">
+                <div className="flex items-center justify-center gap-1.5">
+                    <ThermometerIcon className="w-4 h-4" />
+                    <span className="truncate">B. Seco: <strong className="text-white font-mono">{dryBulbTemp.toFixed(1)}°C</strong></span>
+                </div>
+                <div className="flex items-center justify-center gap-1.5">
+                    <ThermometerIcon className="w-4 h-4 opacity-70" />
+                    <span className="truncate">B. Úmido: <strong className="text-white font-mono">{wetBulbTemp.toFixed(1)}°C</strong></span>
+                </div>
+                <div className="flex items-center justify-center gap-1.5">
+                    <DropletIcon className="w-4 h-4" />
+                    <span className="truncate">Umidade: <strong className="text-white font-mono">{humidity}%</strong></span>
+                </div>
+            </div>
+
+            {/* Power Loss */}
+            {isOnline && powerLoss > 0.1 && (
+                <div className="p-3 bg-orange-900/50 border-l-4 border-orange-400 rounded-r-lg">
+                    <div className="flex items-center gap-3">
+                        <WarningIcon className="w-6 h-6 text-orange-400 flex-shrink-0" />
+                        <div>
+                            <p className="font-semibold text-orange-400 text-sm">Perda de Potência (Condição Local)</p>
+                            <p className="text-lg font-bold font-mono text-white">-{powerLoss.toFixed(1)} MW</p>
+                        </div>
                     </div>
+                    <p className="text-xs text-gray-400 mt-1 pl-9">
+                       A temperatura acima do padrão ISO (15°C) reduz a eficiência, aumentando o consumo relativo de combustível e emissões.
+                    </p>
                 </div>
             )}
         </div>
-        <div className="flex-grow h-40 mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={historicalData} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
-              <XAxis 
-                dataKey="time" 
-                stroke="#9ca3af" 
-                fontSize={12} 
-                tickLine={false} 
-                axisLine={false}
-                padding={{ left: 10, right: 10 }}
-              />
-              <YAxis 
-                stroke="#9ca3af" 
-                fontSize={12} 
-                tickLine={false} 
-                axisLine={false} 
-                tickFormatter={(value) => `${Math.round(value)}`}
-                unit=" MW"
-                tickCount={5}
-                domain={['dataMin - 100', 'dataMax + 100']}
-                allowDecimals={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="power" stroke="#06b6d4" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+
+        <div className="mt-auto pt-2 border-t border-gray-700 grid grid-cols-2 text-center">
+          <div>
+            <p className="text-sm text-gray-400">Eficiência</p>
+            <p className="font-semibold text-xl text-white">{displayEfficiency.toFixed(1)}%</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-400">Ganho (Utilities)</p>
+            <p className={`font-semibold text-xl ${efficiencyGain > 0 ? 'text-green-400' : 'text-white'}`}>
+                +{efficiencyGain.toFixed(2)}%
+            </p>
+          </div>
         </div>
       </div>
     </DashboardCard>

@@ -3,11 +3,14 @@ import { Turbine } from '../types';
 import DashboardCard from './DashboardCard';
 import { CogIcon, WrenchScrewdriverIcon } from './icons';
 
+type TurbineType = 'all' | 'Ciclo Combinado' | 'Ciclo Rankine';
+
 interface TurbineStatusProps {
   turbines: Turbine[];
   onSelectTurbine: (id: number) => void;
   selectedTurbineId: number | null;
-  // FIX: Add props for maximizing functionality
+  turbineTypeFilter: TurbineType;
+  setTurbineTypeFilter: (type: TurbineType) => void;
   isMaximizable?: boolean;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
@@ -19,6 +22,21 @@ const statusClasses = {
     error: 'text-red-500 border-red-500 animate-pulse'
 }
 
+const FilterButton: React.FC<{label: string, value: TurbineType, activeFilter: TurbineType, setFilter: (type: TurbineType) => void}> = 
+({ label, value, activeFilter, setFilter }) => (
+    <button
+      onClick={() => setFilter(value)}
+      className={`px-3 py-1 text-xs font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${
+        activeFilter === value
+          ? 'bg-cyan-500 text-white shadow-md'
+          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+      }`}
+    >
+      {label}
+    </button>
+);
+
+
 const TurbineCard: React.FC<{ turbine: Turbine; isSelected: boolean; onSelect: () => void }> = ({ turbine, isSelected, onSelect }) => (
     <button 
       onClick={onSelect} 
@@ -26,8 +44,11 @@ const TurbineCard: React.FC<{ turbine: Turbine; isSelected: boolean; onSelect: (
       aria-pressed={isSelected}
       aria-label={`Selecionar Turbina ${turbine.id}`}
     >
-        <div className="flex justify-between items-center mb-2">
-            <h4 className="font-bold text-white">Turbina #{turbine.id}</h4>
+        <div className="flex justify-between items-start mb-2">
+            <div>
+              <h4 className="font-bold text-white">Turbina #{turbine.id}</h4>
+              <p className="text-xs text-gray-400">{turbine.type}</p>
+            </div>
             <span className={`text-xs font-semibold px-2 py-0.5 border rounded-full ${statusClasses[turbine.status]}`}>{turbine.status}</span>
         </div>
         <div className="grid grid-cols-3 text-center">
@@ -57,10 +78,14 @@ const TurbineStatus: React.FC<TurbineStatusProps> = ({
   turbines, 
   onSelectTurbine, 
   selectedTurbineId,
+  turbineTypeFilter,
+  setTurbineTypeFilter,
   isMaximizable,
   isMaximized,
   onToggleMaximize,
 }) => {
+  const totalIsoCapacity = turbines.reduce((acc, t) => acc + t.isoCapacity, 0);
+
   return (
     <DashboardCard 
       title="Status das Turbinas" 
@@ -70,18 +95,30 @@ const TurbineStatus: React.FC<TurbineStatusProps> = ({
       onToggleMaximize={onToggleMaximize}
     >
         <div className="flex flex-col h-full justify-between">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {turbines.map(turbine => (
-                    <TurbineCard 
-                    key={turbine.id} 
-                    turbine={turbine}
-                    isSelected={selectedTurbineId === turbine.id}
-                    onSelect={() => onSelectTurbine(turbine.id)}
-                    />
-                ))}
+            <div>
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                    <span className="text-sm font-semibold text-gray-400">Filtrar:</span>
+                    <FilterButton label="Todos" value="all" activeFilter={turbineTypeFilter} setFilter={setTurbineTypeFilter} />
+                    <FilterButton label="Ciclo Combinado" value="Ciclo Combinado" activeFilter={turbineTypeFilter} setFilter={setTurbineTypeFilter} />
+                    <FilterButton label="Ciclo Rankine" value="Ciclo Rankine" activeFilter={turbineTypeFilter} setFilter={setTurbineTypeFilter} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    {turbines.map(turbine => (
+                        <TurbineCard 
+                        key={turbine.id} 
+                        turbine={turbine}
+                        isSelected={selectedTurbineId === turbine.id}
+                        onSelect={() => onSelectTurbine(turbine.id)}
+                        />
+                    ))}
+                </div>
             </div>
             <div className="text-xs text-center text-gray-500 mt-4 border-t border-gray-700 pt-2">
-                Modelo: <strong>Siemens SGT-A35 (Aeroderivativa)</strong> | Capacidade ISO: <strong>34 MW por turbina</strong> | Total: <strong>170 MW</strong>
+                {turbines.length > 0 ? (
+                    `Exibindo ${turbines.length} turbina(s). Capacidade ISO total: ${totalIsoCapacity} MW`
+                ) : (
+                    'Nenhuma turbina encontrada para este filtro.'
+                )}
             </div>
         </div>
     </DashboardCard>

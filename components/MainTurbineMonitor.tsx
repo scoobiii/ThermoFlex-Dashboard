@@ -82,6 +82,27 @@ const MainTurbineMonitor: React.FC<MainTurbineMonitorProps> = ({ turbine, onClos
                 <MetricDisplay label="Temperatura" value={turbine.temp} unit="°C" />
                 <MetricDisplay label="Pressão" value={turbine.pressure} unit="bar" />
             </div>
+            <div className="mt-4 p-4 bg-gray-900 rounded-lg">
+                <h4 className="text-md font-semibold text-gray-300 mb-2">Especificações Técnicas</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
+                    <div>
+                        <span className="text-gray-400">Fabricante: </span>
+                        <span className="text-white font-semibold">{turbine.manufacturer}</span>
+                    </div>
+                    <div>
+                        <span className="text-gray-400">Modelo: </span>
+                        <span className="text-white font-semibold">{turbine.model}</span>
+                    </div>
+                     <div>
+                        <span className="text-gray-400">Tipo: </span>
+                        <span className="text-white font-semibold">{turbine.type}</span>
+                    </div>
+                     <div>
+                        <span className="text-gray-400">Capacidade ISO: </span>
+                        <span className="text-white font-semibold">{turbine.isoCapacity} MW</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div className="flex-grow mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">

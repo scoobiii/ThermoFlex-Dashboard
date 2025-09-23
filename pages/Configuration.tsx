@@ -4,6 +4,7 @@ import { FuelMode, TurbineStatus } from '../types';
 import { TurbineStatusConfig } from '../App';
 import { POWER_PLANTS } from '../data/plants';
 import ThermalPlantsSummary from '../components/ThermalPlantsSummary';
+import PedreiraProjectAnalysis from '../components/PedreiraProjectAnalysis';
 
 interface ConfigurationProps {
   fuelMode: FuelMode;
@@ -80,10 +81,17 @@ const Configuration: React.FC<ConfigurationProps> = ({
           </div>
         </div>
       </DashboardCard>
+      
+      {selectedPlantName === 'Parque Térmico Pedreira' ? (
+          <div className="lg:col-span-2">
+            <PedreiraProjectAnalysis />
+          </div>
+        ) : (
+          <div className="lg:col-span-2">
+            <ThermalPlantsSummary />
+          </div>
+      )}
 
-      <div className="lg:col-span-2">
-        <ThermalPlantsSummary />
-      </div>
 
       <DashboardCard title="Configuração de Combustível">
         <div className="space-y-4">
