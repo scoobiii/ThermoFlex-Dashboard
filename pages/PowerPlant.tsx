@@ -218,7 +218,18 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
             onToggleMaximize={() => toggleMaximize('power')} 
         />;
       case 'fuel':
-        return <FuelStatus fuelMode={fuelMode} consumption={fuelConsumption} flexMix={flexMix} setFlexMix={setFlexMix} isMaximizable isMaximized={maximizedWidget==='fuel'} onToggleMaximize={() => toggleMaximize('fuel')} />;
+        return <FuelStatus 
+            fuelMode={fuelMode} 
+            consumption={fuelConsumption} 
+            flexMix={flexMix} 
+            setFlexMix={setFlexMix} 
+            isMaximizable 
+            isMaximized={maximizedWidget==='fuel'} 
+            onToggleMaximize={() => toggleMaximize('fuel')}
+            historicalData={historicalDataLong}
+            timeRange={timeRange}
+            setTimeRange={setTimeRange}
+        />;
       case 'emissions':
         return <EmissionsMonitor emissions={emissions} historicalEmissions={historicalEmissions} isMaximizable isMaximized={maximizedWidget==='emissions'} onToggleMaximize={() => toggleMaximize('emissions')} />;
       case 'turbines':

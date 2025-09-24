@@ -60,10 +60,26 @@ const Financials: React.FC<FinancialsProps> = ({
 
     const financialMetrics = useMemo(() => {
         const isOnline = plantStatus === PlantStatus.Online;
+
+        const capexCost = 12500000;
+        const opexFuel = isOnline ? 950000 : 0;
+        const opexMaintenance = isOnline ? 550000 : 0;
+        const opexPersonnel = isOnline ? 300000 : 0;
+        const opexTotal = opexFuel + opexMaintenance + opexPersonnel;
+
+        const costData = [
+            { name: 'CAPEX (Amortizado)', value: capexCost, color: '#0891b2' },
+            { name: 'OPEX: Combustível', value: opexFuel, color: '#34d399' },
+            { name: 'OPEX: Manutenção', value: opexMaintenance, color: '#6ee7b7' },
+            { name: 'OPEX: Pessoal', value: opexPersonnel, color: '#a7f3d0' },
+        ];
+        
+        const totalCost = capexCost + opexTotal;
+
         if (!isOnline) {
             return {
                 totalRevenue: 0,
-                netProfit: 0,
+                netProfit: 0 - totalCost,
                 co2ReducedTons: 0,
                 carbonRevenue: 0,
                 revenueStreamData: [
@@ -71,11 +87,8 @@ const Financials: React.FC<FinancialsProps> = ({
                     { name: 'Serviços de Cloud', value: 0, color: '#8b5cf6' },
                     { name: 'Créditos de Carbono', value: 0, color: '#10b981' },
                 ],
-                costData: [
-                    { name: 'CAPEX (Amortizado)', value: 12500000, color: '#0891b2' },
-                    { name: 'OPEX', value: 0, color: '#34d399' },
-                ],
-                totalCost: 12500000,
+                costData,
+                totalCost,
             };
         }
 
@@ -107,18 +120,12 @@ const Financials: React.FC<FinancialsProps> = ({
         const monthlyKWh = monthlyMWh * 1000;
         const co2ReducedKg = monthlyKWh * (CO2_FACTORS_KG_PER_KWH.baseline - currentCo2Factor);
         
-        // As per user request, carbon credits are only generated for sustainable fuel modes (not 100% Natural Gas).
         const co2ReducedTons = fuelMode === FuelMode.NaturalGas ? 0 : (co2ReducedKg > 0 ? co2ReducedKg / 1000 : 0);
         
         const carbonRevenue = co2ReducedTons * carbonPrice * BRL_USD_RATE;
 
         const totalRevenue = energyRevenue + cloudRevenue + carbonRevenue;
         
-        const costData = [
-            { name: 'CAPEX (Amortizado)', value: 12500000, color: '#0891b2' },
-            { name: 'OPEX', value: 1800000, color: '#34d399' },
-        ];
-        const totalCost = costData.reduce((acc, curr) => acc + curr.value, 0);
         const netProfit = totalRevenue - totalCost;
 
         const revenueStreamData = [
@@ -210,7 +217,7 @@ const Financials: React.FC<FinancialsProps> = ({
                     </div>
                      <div>
                         <p className="text-gray-400 text-sm">Lucro Líquido</p>
-                        <p className="text-2xl font-bold text-green-500">{formatCurrency(financialMetrics.netProfit)}</p>
+                        <p className={`text-2xl font-bold ${financialMetrics.netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(financialMetrics.netProfit)}</p>
                     </div>
                      <div>
                         <p className="text-gray-400 text-sm">ROI Anualizado</p>
@@ -281,11 +288,11 @@ const Financials: React.FC<FinancialsProps> = ({
             </DashboardCard>
 
             <DashboardCard title="Análise de Custos (Mensal)" >
-                <div className="h-full flex flex-col lg:flex-row items-center gap-4">
-                    <div className="w-full lg:w-1/2 h-56 relative">
+                <div className="h-full flex items-center justify-center">
+                    <div className="w-full h-64 relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
-                                <Pie data={financialMetrics.costData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={70} fill="#8884d8" paddingAngle={5}>
+                                <Pie data={financialMetrics.costData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} fill="#8884d8" paddingAngle={5}>
                                     {financialMetrics.costData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
                                 </Pie>
                                 <Legend iconType="circle" iconSize={8} wrapperStyle={{fontSize: "12px"}}/>
@@ -295,18 +302,6 @@ const Financials: React.FC<FinancialsProps> = ({
                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                             <span className="text-gray-400 text-sm">Custo Total</span>
                             <span className="text-2xl font-bold text-white">{formatCurrency(financialMetrics.totalCost).replace('R$', 'R$ ')}</span>
-                        </div>
-                    </div>
-                    <div className="w-full lg:w-1/2 space-y-3 text-sm">
-                        <div>
-                            <p className="font-semibold text-cyan-400">CAPEX (Amortizado)</p>
-                            <p className="text-gray-300">{formatCurrency(12500000)} - Infraestrutura, Servidores</p>
-                        </div>
-                         <div>
-                            <p className="font-semibold text-emerald-400">OPEX</p>
-                            <p className="text-gray-300">{formatCurrency(950000)} - Combustível</p>
-                            <p className="text-gray-300">{formatCurrency(550000)} - Manutenção e Operações</p>
-                            <p className="text-gray-300">{formatCurrency(300000)} - Pessoal</p>
                         </div>
                     </div>
                 </div>
