@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, AreaChart, Area, XAxis, YAxis } from 'recharts';
 import { FuelMode, LongHistoricalDataPoint } from '../types';
@@ -104,7 +103,7 @@ const FuelStatus: React.FC<FuelStatusProps> = ({
     case FuelMode.FlexNGH2:
       chartData = [
         { name: 'Gás Natural', value: 100 - flexMix.h2 },
-        { name: 'H2', value: flexMix.h2 },
+        { name: `H2 (${flexMix.h2}%)`, value: flexMix.h2 },
       ];
       fuelTitle = `GN (${100 - flexMix.h2}%) / H2 (${flexMix.h2}%)`
       break;
@@ -142,7 +141,7 @@ const FuelStatus: React.FC<FuelStatusProps> = ({
                   stroke="none"
                 >
                   {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[entry.name]} />
+                    <Cell key={`cell-${index}`} fill={COLORS[entry.name.split(' ')[0]]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value, name) => [`${value}%`, name]} />

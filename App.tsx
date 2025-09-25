@@ -8,6 +8,7 @@ import Infrastructure from './pages/Infrastructure';
 import Financials from './pages/Financials';
 import Configuration from './pages/Configuration';
 import MexEcoBr from './pages/MexEcoBr';
+import ChillerDashboard from './pages/chiller';
 import { PlantStatus, FuelMode, TurbineStatus } from './types';
 import { POWER_PLANTS } from './data/plants';
 
@@ -71,6 +72,7 @@ const App: React.FC = () => {
   const [efficiency, setEfficiency] = useState(58.5);
   const [maxCapacity, setMaxCapacity] = useState(2500);
   const [efficiencyGain, setEfficiencyGain] = useState(0);
+  const [activeRackCount, setActiveRackCount] = useState(0); // State for active racks
 
   // --- Configuration State ---
   const [allConfigs, setAllConfigs] = useState<AllConfigs>(loadAllConfigs);
@@ -175,7 +177,7 @@ const App: React.FC = () => {
           setEfficiencyGain={setEfficiencyGain}
         />;
       case 'Data Center':
-        return <DataCenter />;
+        return <DataCenter onActiveRackUpdate={setActiveRackCount} />;
       case 'Infrastructure':
         return <Infrastructure />;
       case 'MAUAX consortium':
@@ -186,6 +188,7 @@ const App: React.FC = () => {
           powerOutput={powerOutput}
           fuelMode={currentConfig.fuelMode}
           flexMix={currentConfig.flexMix}
+          activeRackCount={activeRackCount}
         />;
       case 'Configuration':
         return <Configuration
@@ -198,6 +201,8 @@ const App: React.FC = () => {
           selectedPlantName={selectedPlantName}
           setSelectedPlantName={setSelectedPlantName}
         />;
+      case 'Chiller':
+        return <ChillerDashboard />;
       default:
         return <PowerPlant 
           plantStatus={plantStatus}

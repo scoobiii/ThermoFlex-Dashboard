@@ -6,9 +6,15 @@ import CoolingLoad from '../components/CoolingLoad';
 import DataCenterTreeMap from '../components/DataCenterTreeMap';
 
 type DataCenterTab = 'overview' | 'treemap';
+type MaximizedWidget = 'treemap' | null;
 
-const DataCenter: React.FC = () => {
+interface DataCenterProps {
+  onActiveRackUpdate: (count: number) => void;
+}
+
+const DataCenter: React.FC<DataCenterProps> = ({ onActiveRackUpdate }) => {
   const [activeTab, setActiveTab] = useState<DataCenterTab>('overview');
+  const [maximizedWidget, setMaximizedWidget] = useState<MaximizedWidget>(null);
 
   const tabButtonClasses = (tabName: DataCenterTab) =>
     `px-4 py-2 text-sm font-medium rounded-t-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${
@@ -16,6 +22,22 @@ const DataCenter: React.FC = () => {
         ? 'bg-gray-800 text-cyan-400 border-b-2 border-cyan-400'
         : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
     }`;
+  
+  const toggleMaximize = (widget: MaximizedWidget) => {
+    setMaximizedWidget(current => current === widget ? null : widget);
+  }
+
+  if (maximizedWidget === 'treemap') {
+    return (
+        <div className="mt-6 h-[80vh]">
+            <DataCenterTreeMap 
+                isMaximizable 
+                isMaximized={true}
+                onToggleMaximize={() => toggleMaximize('treemap')}
+            />
+        </div>
+    );
+  }
 
   return (
     <div className="mt-6">
@@ -48,13 +70,17 @@ const DataCenter: React.FC = () => {
               <CoolingLoad />
             </div>
             <div className="lg:col-span-3">
-              <ServerRackStatus />
+              <ServerRackStatus onRackDataUpdate={onActiveRackUpdate} />
             </div>
           </div>
         )}
         {activeTab === 'treemap' && (
           <div className="animate-fadeIn">
-             <DataCenterTreeMap />
+             <DataCenterTreeMap 
+                isMaximizable
+                isMaximized={false}
+                onToggleMaximize={() => toggleMaximize('treemap')}
+            />
           </div>
         )}
       </div>

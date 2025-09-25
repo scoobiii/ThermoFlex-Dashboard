@@ -16,6 +16,10 @@ export interface Rack {
   tempHistory: { time: string; temp: number }[];
 }
 
+interface ServerRackStatusProps {
+  onRackDataUpdate: (count: number) => void;
+}
+
 const generateInitialRackData = (): Rack[] => {
   return Array.from({ length: 120 }, (_, i) => {
     const statusRoll = Math.random();
@@ -51,7 +55,7 @@ const statusColors = {
   offline: 'bg-red-500/80 hover:bg-red-400',
 };
 
-const ServerRackStatus: React.FC = () => {
+const ServerRackStatus: React.FC<ServerRackStatusProps> = ({ onRackDataUpdate }) => {
   const [racks, setRacks] = useState<Rack[]>([]);
   const [selectedRack, setSelectedRack] = useState<Rack | null>(null);
 
@@ -109,6 +113,12 @@ const ServerRackStatus: React.FC = () => {
     },
     { online: 0, 'high-load': 0, offline: 0 }
   );
+  
+  useEffect(() => {
+    const activeCount = summary.online + summary['high-load'];
+    onRackDataUpdate(activeCount);
+  }, [summary, onRackDataUpdate]);
+
 
   return (
     <>

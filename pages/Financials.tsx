@@ -11,6 +11,7 @@ interface FinancialsProps {
   powerOutput: number;
   fuelMode: FuelMode;
   flexMix: { h2: number, biodiesel: number };
+  activeRackCount: number;
 }
 
 const initialMonthlyRevenueData = [
@@ -45,6 +46,7 @@ const Financials: React.FC<FinancialsProps> = ({
   powerOutput,
   fuelMode,
   flexMix,
+  activeRackCount,
 }) => {
     const [carbonPrice, setCarbonPrice] = useState(32.50); // USD per ton
     const [monthlyRevenueHistory, setMonthlyRevenueHistory] = useState(initialMonthlyRevenueData);
@@ -60,6 +62,7 @@ const Financials: React.FC<FinancialsProps> = ({
 
     const financialMetrics = useMemo(() => {
         const isOnline = plantStatus === PlantStatus.Online;
+        const REVENUE_PER_RACK_PER_MONTH = 6000; // Example value in BRL
 
         const capexCost = 12500000;
         const opexFuel = isOnline ? 950000 : 0;
@@ -97,7 +100,7 @@ const Financials: React.FC<FinancialsProps> = ({
         
         const monthlyMWh = powerOutput * 24 * 30;
         const energyRevenue = monthlyMWh * ENERGY_PRICE_BRL_PER_MWH;
-        const cloudRevenue = 4200000;
+        const cloudRevenue = activeRackCount * REVENUE_PER_RACK_PER_MONTH;
 
         const CO2_FACTORS_KG_PER_KWH = {
             baseline: 0.4,
@@ -135,7 +138,7 @@ const Financials: React.FC<FinancialsProps> = ({
         ];
 
         return { totalRevenue, netProfit, co2ReducedTons, carbonRevenue, revenueStreamData, costData, totalCost };
-    }, [plantStatus, powerOutput, fuelMode, flexMix, carbonPrice]);
+    }, [plantStatus, powerOutput, fuelMode, flexMix, carbonPrice, activeRackCount]);
 
     useEffect(() => {
         if(financialMetrics.totalRevenue > 0) {

@@ -156,7 +156,7 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [plantStatus, setPowerOutput, setEfficiency, turbineStatusConfig, dryBulbTemp, wetBulbTemp, humidity]); // FIX: removed powerOutput to prevent infinite loop
+  }, [plantStatus, setPowerOutput, setEfficiency, turbineStatusConfig, dryBulbTemp, wetBulbTemp, humidity, powerOutput]); 
 
   useEffect(() => {
     // Generate long historical data based on time range

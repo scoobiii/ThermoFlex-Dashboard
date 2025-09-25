@@ -85,6 +85,12 @@ interface TreeMapNode {
   [key: string]: any; // Index signature for recharts compatibility
 }
 
+interface DataCenterTreeMapProps {
+    isMaximizable?: boolean;
+    isMaximized?: boolean;
+    onToggleMaximize?: () => void;
+}
+
 const generateInitialRackData = (): TreeMapNode[] => {
   return Array.from({ length: 725 }, (_, i) => {
     const statusRoll = Math.random();
@@ -205,14 +211,18 @@ const CustomizedContent: React.FC<any> = (props) => {
             )}
              {width > 60 && height > 55 && (
                  <text x={x + width / 2} y={y + height / 2 + 16} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={10} style={{ textShadow: '0 0 4px rgba(0,0,0,0.7)' }}>
-                    {value.toFixed(1)} {valueUnit}
+                    {typeof value === 'number' ? `${value.toFixed(1)} ${valueUnit}` : ''}
                 </text>
              )}
         </g>
     );
 };
 
-const DataCenterTreeMap: React.FC = () => {
+const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
+    isMaximizable,
+    isMaximized,
+    onToggleMaximize,
+}) => {
     const [data, setData] = useState<TreeMapNode[]>([]);
     const [viewMode, setViewMode] = useState<TreeMapViewMode>('totalEnergy');
 
@@ -246,6 +256,9 @@ const DataCenterTreeMap: React.FC = () => {
         <DashboardCard 
             title="Treemap de Consumo dos Racks"
             icon={<ServerRackIcon className="w-6 h-6" />}
+            isMaximizable={isMaximizable}
+            isMaximized={isMaximized}
+            onToggleMaximize={onToggleMaximize}
             action={
                 <div className="flex items-center bg-gray-900/50 rounded-lg p-1">
                     <button
@@ -263,21 +276,23 @@ const DataCenterTreeMap: React.FC = () => {
                 </div>
             }
         >
-            <div className="w-full h-[65vh]">
+            <div className="w-full h-full flex flex-col">
                 <p className="text-center text-sm text-gray-400 mb-2">Visualizando por: <span className="font-semibold text-white">{viewTitle}</span></p>
-                <ResponsiveContainer width="100%" height="100%">
-                    <Treemap
-                        data={data}
-                        dataKey={dataKey}
-                        stroke="#fff"
-                        fill="#8884d8"
-                        content={<CustomizedContent dataKey={dataKey} getColor={getColor} />}
-                        isAnimationActive={false}
-                        aspectRatio={16/9}
-                    >
-                        <Tooltip content={<CustomTooltipContent />} />
-                    </Treemap>
-                </ResponsiveContainer>
+                <div className="flex-grow">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <Treemap
+                            data={data}
+                            dataKey={dataKey}
+                            stroke="#fff"
+                            fill="#8884d8"
+                            content={<CustomizedContent dataKey={dataKey} getColor={getColor} />}
+                            isAnimationActive={false}
+                            aspectRatio={16/9}
+                        >
+                            <Tooltip content={<CustomTooltipContent />} />
+                        </Treemap>
+                    </ResponsiveContainer>
+                </div>
             </div>
         </DashboardCard>
     );
