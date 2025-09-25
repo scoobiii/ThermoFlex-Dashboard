@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import DashboardCard from '../components/DashboardCard';
 // FIX: Import ChartPieIcon to use as the icon for the DashboardCard.
@@ -97,7 +98,10 @@ const Financials: React.FC<FinancialsProps> = ({
 
         const monthlyKWh = monthlyMWh * 1000;
         const co2ReducedKg = monthlyKWh * (CO2_FACTORS_KG_PER_KWH.baseline - currentCo2Factor);
-        const co2ReducedTons = isOnline && fuelMode !== FuelMode.NaturalGas ? (co2ReducedKg > 0 ? co2ReducedKg / 1000 : 0) : 0;
+
+        const isEffectively100PercentNaturalGas = fuelMode === FuelMode.NaturalGas || (fuelMode === FuelMode.FlexNGH2 && flexMix.h2 === 0);
+        const co2ReducedTons = isOnline && !isEffectively100PercentNaturalGas ? (co2ReducedKg > 0 ? co2ReducedKg / 1000 : 0) : 0;
+        
         const carbonRevenue = co2ReducedTons * carbonPrice * BRL_USD_RATE;
 
         const totalRevenue = energyRevenue + cloudRevenue + carbonRevenue;
@@ -479,6 +483,27 @@ const Financials: React.FC<FinancialsProps> = ({
                     </div>
                 </div>
              </DashboardCard>
+
+            <DashboardCard title="Receita de Serviços Cloud (Mensal)" icon={<ComputerDesktopIcon className="w-6 h-6 text-cyan-400" />} className="lg:col-span-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full">
+                    <div className="text-center">
+                        <p className="text-gray-400 text-base">Receita Mensal Total</p>
+                        <p className="text-6xl font-bold text-cyan-400">
+                            {formatCurrency(financialMetrics.revenueStreamData.find(r => r.name === 'Serviços de Cloud')?.value || 0)}
+                        </p>
+                    </div>
+                    <div className="space-y-4 text-lg md:border-l border-gray-700 md:pl-8">
+                        <div className="flex justify-between items-baseline">
+                            <span className="text-gray-400">Racks Ativos:</span>
+                            <span className="font-semibold text-white font-mono">{activeRackCount}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                            <span className="text-gray-400">Receita / Rack:</span>
+                            <span className="font-semibold text-white font-mono">{formatCurrency(REVENUE_PER_RACK_PER_MONTH)}</span>
+                        </div>
+                    </div>
+                </div>
+            </DashboardCard>
 
             <DashboardCard title="Resumo de Lucro Líquido Mensal (Últimos 12 Meses)" icon={<ChartBarIcon className="w-6 h-6" />} className="lg:col-span-3">
                 <div className="h-80 w-full pt-4">

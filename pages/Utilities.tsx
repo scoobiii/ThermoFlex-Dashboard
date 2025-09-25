@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { PlantStatus } from '../types';
-import { FlameIcon, SnowflakeIcon, WrenchScrewdriverIcon, BoltIcon, CloudIcon, ComputerDesktopIcon } from '../components/icons';
+import { SnowflakeIcon, WrenchScrewdriverIcon, BoltIcon, CloudIcon, ComputerDesktopIcon, ActivityIcon } from '../components/icons';
 import DashboardCard from '../components/DashboardCard';
 import { Page } from '../components/Navigation';
 
@@ -11,6 +11,7 @@ interface UtilitiesProps {
     plantStatus: PlantStatus;
     setEfficiencyGain: (gain: number) => void;
     setCurrentPage: (page: Page) => void;
+    activeRackCount: number;
 }
 
 const SankeyConnector: React.FC = () => (
@@ -21,7 +22,7 @@ const SankeyConnector: React.FC = () => (
     </div>
 );
 
-const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantStatus, setEfficiencyGain, setCurrentPage }) => {
+const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantStatus, setEfficiencyGain, setCurrentPage, activeRackCount }) => {
     
     const isOnline = plantStatus === PlantStatus.Online;
     const [ambientTemp] = useState(32.4);
@@ -32,9 +33,13 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
     const chillerCOP = 0.694;
     const coolingProduction = isOnline ? wasteHeat * chillerCOP : 0;
 
-    const tiacCooling = coolingProduction * 0.4;
-    const fogCooling = coolingProduction * 0.3;
-    const dataCenterCooling = coolingProduction * 0.3;
+    const tiacCooling = coolingProduction * 0.40;
+    const fogCooling = coolingProduction * 0.25;
+    const dataCenterCooling = coolingProduction * 0.35;
+
+    const TOTAL_RACKS = 120;
+    const COOLING_CAPACITY_PER_RACK_MWT = 3.5; // MWt (thermal megawatt)
+    const dataCenterTotalCapacity = TOTAL_RACKS * COOLING_CAPACITY_PER_RACK_MWT;
 
     const conventionalChillerCOP = 5.0;
     const electricalEquivalentSaved = isOnline ? coolingProduction / conventionalChillerCOP : 0;
@@ -55,11 +60,21 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
             <div className="grid grid-cols-1 lg:grid-cols-11 gap-6 items-stretch">
                 
                 <div className="lg:col-span-3">
-                    <DashboardCard title="Power Losses" icon={<FlameIcon className="w-6 h-6 text-orange-400" />} className="h-full">
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                            <p className={`text-5xl font-bold tracking-tight ${isOnline ? 'text-orange-400' : 'text-gray-500'}`}>{wasteHeat.toFixed(0)}</p>
-                            <p className="text-lg text-gray-400">MW</p>
-                            <p className={`mt-4 text-sm font-semibold ${isOnline ? 'text-green-400' : 'text-red-500'}`}>{isOnline ? 'Sistema Ativo' : 'Sistema Inativo'}</p>
+                    <DashboardCard title="Fluxo de Energia da Usina" icon={<ActivityIcon className="w-6 h-6 text-yellow-400" />} className="h-full">
+                        <div className="flex flex-col justify-center h-full space-y-4 text-sm">
+                            <div className="flex justify-between items-baseline">
+                                <span className="text-gray-400">Potência Térmica Total</span>
+                                <span className="font-mono text-lg font-semibold text-white">{powerInput.toFixed(0)} MW</span>
+                            </div>
+                            <div className="flex justify-between items-baseline pl-4">
+                                <span className="text-gray-400">- Potência Elétrica</span>
+                                <span className="font-mono font-semibold text-cyan-400">{powerOutput.toFixed(0)} MW</span>
+                            </div>
+                            <div className="border-t border-gray-700 my-2"></div>
+                            <div className="flex justify-between items-baseline bg-gray-900/50 p-2 rounded-lg">
+                                <span className="font-semibold text-orange-400">Calor Residual (Perdas)</span>
+                                <span className="font-mono text-xl font-bold text-orange-400">{wasteHeat.toFixed(0)} MW</span>
+                            </div>
                         </div>
                     </DashboardCard>
                 </div>
@@ -147,10 +162,10 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
                                                 <span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{dataCenterCooling.toFixed(1)} MW</span>
                                             </div>
                                             <div className="text-xs text-gray-500 mt-1 grid grid-cols-2 gap-x-4">
-                                                <span><strong>Quantidade:</strong> 120 Racks</span>
+                                                <span><strong>Quantidade:</strong> {activeRackCount} / {TOTAL_RACKS} Racks</span>
                                                 <span><strong>Fabricante:</strong> NVIDIA</span>
                                                 <span><strong>Modelo:</strong> DGX H100 LC</span>
-                                                <span><strong>Capacidade:</strong> 350 MWₜ</span>
+                                                <span><strong>Capacidade:</strong> {dataCenterTotalCapacity.toFixed(0)} MWₜ</span>
                                             </div>
                                         </div>
                                     </div>

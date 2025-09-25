@@ -160,14 +160,12 @@ const App: React.FC = () => {
           plantStatus={plantStatus}
           setPlantStatus={setPlantStatus}
           powerOutput={powerOutput}
-          setPowerOutput={setPowerOutput}
           efficiency={efficiency}
-          setEfficiency={setEfficiency}
+          efficiencyGain={efficiencyGain}
           fuelMode={currentConfig.fuelMode}
           flexMix={currentConfig.flexMix}
           setFlexMix={setFlexMix}
           turbineStatusConfig={currentConfig.turbineStatusConfig}
-          efficiencyGain={efficiencyGain}
         />;
       case 'Utilities':
         return <Utilities 
@@ -176,6 +174,7 @@ const App: React.FC = () => {
           efficiency={efficiency}
           setEfficiencyGain={setEfficiencyGain}
           setCurrentPage={setCurrentPage}
+          activeRackCount={activeRackCount}
         />;
       case 'Data Center':
         return <DataCenter onActiveRackUpdate={setActiveRackCount} />;
@@ -195,6 +194,10 @@ const App: React.FC = () => {
         return <Configuration
           selectedPlantName={selectedPlantName}
           setSelectedPlantName={setSelectedPlantName}
+          fuelMode={currentConfig.fuelMode}
+          setFuelMode={setFuelMode}
+          flexMix={currentConfig.flexMix}
+          setFlexMix={setFlexMix}
         />;
       case 'Chiller':
         return <ChillerDashboard />;
@@ -203,14 +206,12 @@ const App: React.FC = () => {
           plantStatus={plantStatus}
           setPlantStatus={setPlantStatus}
           powerOutput={powerOutput}
-          setPowerOutput={setPowerOutput}
           efficiency={efficiency}
-          setEfficiency={setEfficiency}
+          efficiencyGain={efficiencyGain}
           fuelMode={currentConfig.fuelMode}
           flexMix={currentConfig.flexMix}
           setFlexMix={setFlexMix}
           turbineStatusConfig={currentConfig.turbineStatusConfig}
-          efficiencyGain={efficiencyGain}
         />;
     }
   };

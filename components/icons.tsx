@@ -29,7 +29,7 @@ export const WarningIcon: React.FC<IconProps> = (props) => (
 
 export const CogIcon: React.FC<IconProps> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-1.008 1.11-1.233l.28-.112c.552-.222 1.143-.222 1.695 0l.28.112c.55.225 1.02.69 1.11 1.233l.068.411c.06.365.176.71.34 1.037l.166.33c.159.316.376.598.64.83l.264.232c.44.388.756.918.84 1.48l.044.293c.026.175.026.354 0 .529l-.044.293c-.084.562-.399 1.092-.84 1.48l-.264.232c-.264.232-.48.514-.64.83l-.166.33c-.164.327-.28.672-.34 1.037l-.068.411c-.09.543-.56 1.008-1.11 1.233l-.28.112c-.552-.222-1.143-.222-1.695 0l-.28-.112c-.55-.225-1.02-.69-1.11-1.233l-.068-.411a6.532 6.532 0 01-.34-1.037l-.166-.33c-.159-.316-.376-.598-.64-.83l-.264-.232a2.493 2.493 0 01-.84-1.48l-.044-.293a2.496 2.496 0 010-.529l.044-.293c.084-.562.399-1.092.84-1.48l.264-.232c.264-.232.48-.514.64-.83l.166-.33c.164-.327.28-.672.34-1.037l.068-.411z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-1.008 1.11-1.233l.28-.112c.552-.222 1.143-.222 1.695 0l.28.112c.55.225 1.02.69 1.11 1.233l.068.411c.06.365.176.71.34 1.037l.166.33c.159.316.376.598.64.83l.264.232c.44.388.756.918.84 1.48l.044.293c.026.175.026.354 0 .529l-.044.293c-.084.562-.399 1.092-.84 1.48l-.264.232c-.264.232-.48.514-.64.83l-.166.33c-.164.327-.28.672-.34 1.037l-.068.411c-.09.543-.56 1.008-1.11 1.233l-.28.112c-.552-.222-1.143-.222-1.695 0l-.28-.112c-.55-.225-1.02-.69-1.11-1.233l-.068-.411a6.532 6.532 0 01-.34-1.037l-.166-.33c-.159-.316-.376-.598-.64-.83l-.264-.232a2.493 2.493 0 01-.84-1.48l-.044-.293a2.496 2.496 0 010-.529l.044-.293c.084-.562.399-1.092.84-1.48l.264-.232c.264.232.48-.514.64.83l.166-.33c.164-.327.28-.672.34-1.037l.068-.411z" />
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" />
   </svg>
 );
@@ -133,3 +133,30 @@ export const ActivityIcon: React.FC<IconProps> = (props) => (
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
   </svg>
 );
+
+export const FactoryIcon: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M2 20h20"/>
+      <path d="M4 10v10"/>
+      <path d="M8 10v10"/>
+      <path d="M12 10v10"/>
+      <path d="M16 10v10"/>
+      <path d="M20 10v10"/>
+      <path d="M2 9l2-2h16l2 2"/>
+      <path d="M12 2l-2 3h4l-2-3z"/>
+      <path d="M6 6h.01"/>
+      <path d="M18 6h.01"/>
+    </svg>
+  );
+  
+  export const ChevronDownIcon: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    </svg>
+  );
+  
+  export const ChevronUpIcon: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+    </svg>
+  );
