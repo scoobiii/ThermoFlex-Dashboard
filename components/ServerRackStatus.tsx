@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import DashboardCard from './DashboardCard';
 import ServerRackDetailsModal from './ServerRackDetailsModal';
+// FIX: Import ServerRackIcon to use as the icon for the DashboardCard.
+import { ServerRackIcon } from './icons';
 
 export interface Rack {
   id: number;
@@ -49,10 +51,47 @@ const generateInitialRackData = (): Rack[] => {
   });
 };
 
-const statusColors = {
-  online: 'bg-green-500/80 hover:bg-green-400',
-  'high-load': 'bg-yellow-500/80 hover:bg-yellow-400',
-  offline: 'bg-red-500/80 hover:bg-red-400',
+const CompactRackCard: React.FC<{ rack: Rack; onClick: () => void }> = ({ rack, onClick }) => {
+  const statusBorderColor = {
+    online: 'border-green-500/50',
+    'high-load': 'border-yellow-500/70',
+    offline: 'border-red-500/70',
+  };
+
+  const isOffline = rack.status === 'offline';
+  const tempColor = rack.temp > 38 ? 'text-red-400' : 'text-gray-200';
+
+  return (
+    <button
+      onClick={onClick}
+      className={`bg-gray-800 p-2 rounded-lg text-left transition-all duration-200 border-2 ${statusBorderColor[rack.status]} hover:bg-gray-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${isOffline ? 'opacity-60' : ''}`}
+      aria-label={`Detalhes do Rack ${rack.id}`}
+    >
+      <h4 className="font-bold text-white text-sm truncate">Rack {rack.id}</h4>
+      <div className="mt-1 text-xs text-gray-400 space-y-1 font-mono">
+        <div className="flex justify-between">
+          <span>CPU:</span>
+          <span className="font-semibold text-gray-200">{isOffline ? '-' : `${rack.cpuLoad}%`}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>GPU:</span>
+          <span className="font-semibold text-gray-200">{isOffline ? '-' : `${rack.gpuLoad}%`}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>MEM:</span>
+          <span className="font-semibold text-gray-200">{isOffline ? '-' : `${rack.memUsage}%`}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Temp:</span>
+          <span className={`font-semibold ${tempColor}`}>{isOffline ? '-' : `${rack.temp}°C`}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>I/O:</span>
+          <span className="font-semibold text-gray-200 truncate" title={`${rack.networkIO.ingress.toFixed(1)} In / ${rack.networkIO.egress.toFixed(1)} Out Gbps`}>{isOffline ? '-' : `${rack.networkIO.ingress.toFixed(1)}/${rack.networkIO.egress.toFixed(1)}`}</span>
+        </div>
+      </div>
+    </button>
+  );
 };
 
 const ServerRackStatus: React.FC<ServerRackStatusProps> = ({ onRackDataUpdate }) => {
@@ -122,7 +161,7 @@ const ServerRackStatus: React.FC<ServerRackStatusProps> = ({ onRackDataUpdate })
 
   return (
     <>
-      <DashboardCard title="Status dos Racks do Servidor">
+      <DashboardCard title="Status dos Racks do Servidor" icon={<ServerRackIcon className="w-6 h-6" />}>
         <div className="flex justify-center gap-6 mb-4 text-center">
           <div>
             <p className="text-2xl font-bold text-green-400">{summary.online}</p>
@@ -137,16 +176,13 @@ const ServerRackStatus: React.FC<ServerRackStatusProps> = ({ onRackDataUpdate })
             <p className="text-sm text-gray-400">Offline</p>
           </div>
         </div>
-        <div className="grid grid-cols-12 md:grid-cols-20 gap-1.5">
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
           {racks.map(rack => (
-            <button
+            <CompactRackCard
               key={rack.id}
+              rack={rack}
               onClick={() => setSelectedRack(rack)}
-              className={`w-full h-4 rounded-sm transition-colors duration-300 ${statusColors[rack.status]}`}
-              aria-label={`Rack ${rack.id}, Status: ${rack.status}`}
-            >
-              <span className="sr-only">Rack {rack.id}</span>
-            </button>
+            />
           ))}
         </div>
       </DashboardCard>

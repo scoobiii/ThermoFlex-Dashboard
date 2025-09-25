@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { PlantStatus } from '../types';
 import { FlameIcon, SnowflakeIcon, WrenchScrewdriverIcon, BoltIcon, CloudIcon, ComputerDesktopIcon } from '../components/icons';
 import DashboardCard from '../components/DashboardCard';
+import { Page } from '../components/Navigation';
 
 interface UtilitiesProps {
     powerOutput: number;
     efficiency: number;
     plantStatus: PlantStatus;
     setEfficiencyGain: (gain: number) => void;
+    setCurrentPage: (page: Page) => void;
 }
 
 const SankeyConnector: React.FC = () => (
@@ -19,7 +21,7 @@ const SankeyConnector: React.FC = () => (
     </div>
 );
 
-const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantStatus, setEfficiencyGain }) => {
+const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantStatus, setEfficiencyGain, setCurrentPage }) => {
     
     const isOnline = plantStatus === PlantStatus.Online;
     const [ambientTemp] = useState(32.4);
@@ -67,7 +69,19 @@ const Utilities: React.FC<UtilitiesProps> = ({ powerOutput, efficiency, plantSta
                 </div>
 
                 <div className="lg:col-span-3">
-                     <DashboardCard title="Chiller de Absorção" icon={<SnowflakeIcon className="w-6 h-6 text-cyan-400" />} className="h-full">
+                     <DashboardCard 
+                        title="Chiller de Absorção" 
+                        icon={<SnowflakeIcon className="w-6 h-6 text-cyan-400" />} 
+                        className="h-full"
+                        action={
+                            <button
+                                onClick={() => setCurrentPage('Chiller')}
+                                className="px-3 py-1 text-xs font-semibold bg-gray-700 text-gray-300 rounded-md transition-all duration-200 hover:bg-cyan-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500"
+                            >
+                                Ver Detalhes
+                            </button>
+                        }
+                    >
                         <div className="flex flex-col items-center justify-between h-full text-center">
                              <div>
                                 <p className={`text-5xl font-bold tracking-tight ${isOnline ? 'text-cyan-400' : 'text-gray-500'}`}>{coolingProduction.toFixed(0)}</p>

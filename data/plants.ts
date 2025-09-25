@@ -18,7 +18,7 @@ export const POWER_PLANTS: Plant[] = [
     fuel: 'Flex (Gás Natural, H2, Etanol)',
     location: 'São Paulo, SP',
     status: 'Proposta',
-    coordinates: { lat: -23.6678, lng: -46.4614 },
+    coordinates: { lat: -23.716, lng: -46.656 },
     description: 'Projeto de usina de trigeração de alta eficiência com datacenter integrado. Inclui Chiller de Absorção, TIAC e sistema Fogging para maximizar a potência e receita.',
   },
   {
@@ -66,7 +66,7 @@ export const POWER_PLANTS: Plant[] = [
     conversion: 100,
     ethanolDemand: 20,
     status: 'Existente',
-    coordinates: { lat: -21.7639, lng: -43.3497 },
+    coordinates: { lat: -21.69029968170227, lng: -43.45695094318528 },
     description: 'Já opera com etanol, demonstração de viabilidade.',
   },
   {

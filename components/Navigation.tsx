@@ -1,6 +1,6 @@
 import React from 'react';
 
-const navItems = ['Power Plant', 'Utilities', 'Data Center', 'Infrastructure', 'Financials', 'Configuration', 'MAUAX consortium', 'Chiller'];
+const navItems = ['Power Plant', 'Utilities', 'Data Center', 'Infrastructure', 'Financials', 'Configuration', 'MAUAX consortium'];
 export type Page = 'Power Plant' | 'Utilities' | 'Data Center' | 'Infrastructure' | 'Financials' | 'Configuration' | 'MAUAX consortium' | 'Chiller';
 
 interface NavigationProps {

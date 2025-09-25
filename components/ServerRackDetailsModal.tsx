@@ -1,6 +1,7 @@
 import React from 'react';
 import DashboardCard from './DashboardCard';
-import { CloseIcon, ChartPieIcon } from './icons';
+// FIX: Import ServerRackIcon to use as the icon for the DashboardCard.
+import { CloseIcon, ChartPieIcon, ServerRackIcon } from './icons';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Rack } from './ServerRackStatus';
 
@@ -48,6 +49,8 @@ const ServerRackDetailsModal: React.FC<{ rack: Rack; onClose: () => void }> = ({
             >
                 <DashboardCard
                     title={`Detalhes do Rack ${rack.id}`}
+                    // FIX: Added the missing required `icon` prop to satisfy DashboardCardProps.
+                    icon={<ServerRackIcon className="w-6 h-6" />}
                     action={
                         <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors" aria-label="Fechar modal">
                             <CloseIcon className="w-6 h-6" />

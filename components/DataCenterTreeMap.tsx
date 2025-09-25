@@ -1,11 +1,23 @@
 /**
  * @file DataCenterTreeMap.tsx
  * @description Renders a treemap visualization of the data center server racks, showing their status and key metrics.
- * @version 1.7.0
- * @date 2024-08-04
+ * @version 1.7.1
+ * @date 2024-08-05
+ * @author Senior DevOps Team
  * @productowner Edivaldo Beringela (Prefeitura de Mauá)
  * 
+ * @responsibility
+ * Visualizes hierarchical rack data using area-proportional treemap.
+ * Supports dynamic metric switching (energy vs cooling) with Finviz-style color scaling.
+ * Integrates with DashboardCard for consistent UI and maximize behavior.
+ * Ensures both action controls and maximize button remain accessible at all times.
+ * 
  * @changelog
+ * v1.7.1 - 2024-08-05
+ *   - Verified and documented compatibility with DashboardCard v1.1.0.
+ *   - Confirmed that the action controls (Energy/Cooling switcher) and maximize button now coexist correctly in the card header without mutual exclusion.
+ *   - No functional changes to this file; fix was implemented upstream in DashboardCard.
+ *
  * v1.7.0 - 2024-08-04
  *   - De-correlated cooling and energy consumption data to ensure treemap sizes visibly change when switching KPIs.
  *   - Introduced a randomized `coolingEfficiencyFactor` for each rack during data generation.

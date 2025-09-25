@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import DashboardCard from './DashboardCard';
+// FIX: Import necessary icons for DashboardCard.
+import { ActivityIcon, SnowflakeIcon, ThermometerIcon, CloudIcon, ChartBarIcon, InfoIcon } from './icons';
 
 // Using window.mermaid as it's loaded from a script tag in index.html
 declare const mermaid: any;
@@ -90,8 +92,9 @@ const PedreiraProjectAnalysis: React.FC = () => {
         }
     }, []);
 
-    const FinancialInfoCard: React.FC<{title: string; capex: string; opex: string; contribution: string; children?: React.ReactNode}> = ({ title, capex, opex, contribution, children }) => (
-        <DashboardCard title={title}>
+    // FIX: Added `icon` prop to satisfy DashboardCardProps.
+    const FinancialInfoCard: React.FC<{title: string; capex: string; opex: string; contribution: string; icon: React.ReactNode; children?: React.ReactNode}> = ({ title, capex, opex, contribution, icon, children }) => (
+        <DashboardCard title={title} icon={icon}>
             <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                     <div>
@@ -116,7 +119,7 @@ const PedreiraProjectAnalysis: React.FC = () => {
         <div className="space-y-6">
             <h2 className="text-3xl font-bold text-white">Parque Térmico Pedreira - Análise de Projeto</h2>
             
-            <DashboardCard title="Fluxograma do Processo Integrado">
+            <DashboardCard title="Fluxograma do Processo Integrado" icon={<ActivityIcon className="w-6 h-6" />}>
                 <div className="p-4 bg-gray-900 rounded-lg overflow-x-auto">
                     <div className="mermaid text-center" style={{ minWidth: '800px' }}>
                         {mermaidGraph}
@@ -134,6 +137,7 @@ const PedreiraProjectAnalysis: React.FC = () => {
                         capex="$15 - $25 Milhões"
                         opex="$0.3M - $0.5M"
                         contribution="~10,5 MW de Frio 'Grátis'"
+                        icon={<SnowflakeIcon className="w-6 h-6" />}
                     >
                         <p>Este é o coração do sistema de trigeração. Sua função é converter calor residual (gratuito) em frio (valioso). Transforma um passivo (calor) em um ativo (refrigeração) que será "vendido" internamente para os outros sistemas (TIAC, Fogging, Datacenter).</p>
                     </FinancialInfoCard>
@@ -143,6 +147,7 @@ const PedreiraProjectAnalysis: React.FC = () => {
                         capex="$8 - $12 Milhões"
                         opex="$0.1M - $0.2M"
                         contribution="+15% a 25% Potência"
+                        icon={<ThermometerIcon className="w-6 h-6" />}
                     >
                         <p>Usa o frio do chiller para garantir que a turbina opere sempre em sua máxima potência de base, independentemente do clima. Evita a perda de centenas de MW em dias quentes, garantindo a entrega da capacidade máxima quando a demanda (e o preço) é maior.</p>
                     </FinancialInfoCard>
@@ -152,13 +157,14 @@ const PedreiraProjectAnalysis: React.FC = () => {
                         capex="$10 - $18 Milhões"
                         opex="$0.2M - $0.4M"
                         contribution="+10% a 20% Potência"
+                        icon={<CloudIcon className="w-6 h-6" />}
                     >
                         <p>Injeta uma névoa ultrafina para dar um "boost" de potência, aumentando a geração para além da capacidade nominal. Gera centenas de MW adicionais "on-demand", permitindo capturar picos de preço no mercado ou cumprir metas de despacho mais altas.</p>
                     </FinancialInfoCard>
                 </div>
             </div>
 
-            <DashboardCard title="Consolidação de Receitas Anuais">
+            <DashboardCard title="Consolidação de Receitas Anuais" icon={<ChartBarIcon className="w-6 h-6" />}>
                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
                      <div>
                         <p className="text-sm text-gray-400">Venda de Energia Elétrica</p>
@@ -179,7 +185,7 @@ const PedreiraProjectAnalysis: React.FC = () => {
                  </div>
             </DashboardCard>
 
-            <DashboardCard title="Conclusão Financeira">
+            <DashboardCard title="Conclusão Financeira" icon={<InfoIcon className="w-6 h-6" />}>
                 <div className="space-y-3 text-gray-300">
                     <p><strong className="text-white">Investimento Total em Eficiência:</strong> O CAPEX combinado dos sistemas Chiller + TIAC + Fogging é de aproximadamente <span className="font-semibold text-yellow-400">$33 a $55 milhões</span>.</p>
                     <p><strong className="text-white">Retorno do Investimento em Eficiência:</strong> Esses sistemas, juntos, podem aumentar a receita de energia em mais de 25% em dias quentes (aumento de potência de >400 MW) e habilitar as receitas do datacenter e de créditos de carbono. O retorno sobre este investimento específico é extremamente rápido, muitas vezes <span className="font-semibold text-green-400">inferior a 2 anos</span>.</p>

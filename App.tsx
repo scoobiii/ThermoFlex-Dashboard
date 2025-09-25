@@ -175,6 +175,7 @@ const App: React.FC = () => {
           powerOutput={powerOutput}
           efficiency={efficiency}
           setEfficiencyGain={setEfficiencyGain}
+          setCurrentPage={setCurrentPage}
         />;
       case 'Data Center':
         return <DataCenter onActiveRackUpdate={setActiveRackCount} />;
@@ -192,12 +193,6 @@ const App: React.FC = () => {
         />;
       case 'Configuration':
         return <Configuration
-          fuelMode={currentConfig.fuelMode}
-          setFuelMode={setFuelMode}
-          flexMix={currentConfig.flexMix}
-          setFlexMix={setFlexMix}
-          turbineStatusConfig={currentConfig.turbineStatusConfig}
-          setTurbineStatusConfig={setTurbineStatusConfig}
           selectedPlantName={selectedPlantName}
           setSelectedPlantName={setSelectedPlantName}
         />;

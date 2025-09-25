@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Alert } from '../types';
 import DashboardCard from './DashboardCard';
@@ -40,6 +41,8 @@ const Alerts: React.FC<AlertsProps> = ({
   return (
     <DashboardCard 
       title="Alertas Recentes"
+      // FIX: Added the missing required `icon` prop to satisfy DashboardCardProps.
+      icon={<WarningIcon className="w-6 h-6" />}
       isMaximizable={isMaximizable}
       isMaximized={isMaximized}
       onToggleMaximize={onToggleMaximize}

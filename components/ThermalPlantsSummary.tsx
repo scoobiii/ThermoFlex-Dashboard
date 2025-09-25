@@ -1,6 +1,8 @@
 import React from 'react';
 import DashboardCard from './DashboardCard';
 import { POWER_PLANTS } from '../data/plants';
+// FIX: Import FlameIcon to use as the icon for the DashboardCard.
+import { FlameIcon } from './icons';
 
 const MetricItem: React.FC<{ value: string | number; label: string }> = ({ value, label }) => (
   <div className="text-center p-2">
@@ -18,7 +20,7 @@ const ThermalPlantsSummary: React.FC = () => {
   const newConstructions = thermalPlants.filter(p => p.status === 'Proposta').length;
 
   return (
-    <DashboardCard title="Resumo das Térmicas">
+    <DashboardCard title="Resumo das Térmicas" icon={<FlameIcon className="w-6 h-6" />}>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 h-full items-center">
         <MetricItem value={totalPlants} label="Total de Usinas" />
         <MetricItem value={totalPlants} label="Compatíveis Etanol" />

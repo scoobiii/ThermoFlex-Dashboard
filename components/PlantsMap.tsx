@@ -4,21 +4,23 @@ import { MapPinIcon } from './icons';
 import { Plant } from '../types';
 
 interface PlantsMapProps {
-  selectedPlant: Plant | undefined;
+  coordinates: Plant['coordinates'] | undefined;
 }
 
-const PlantsMap: React.FC<PlantsMapProps> = ({ selectedPlant }) => {
+const PlantsMap: React.FC<PlantsMapProps> = ({ coordinates }) => {
   const mapEmbedUrl = useMemo(() => {
-    const baseMapUrl = "https://www.google.com/maps/d/embed?mid=1hTRtS-GB3L-tG6_Spv2ce1E2Twv1_A0&ehbc=2E312F";
-    // Default view centered on Southeast Brazil
-    let finalUrl = `${baseMapUrl}&ll=-22.95,-44.85&z=7`; 
+    const baseUrl = "https://maps.google.com/maps?&output=embed&t=k";
 
-    if (selectedPlant && selectedPlant.coordinates && selectedPlant.coordinates.lat !== 0) {
-      const { lat, lng } = selectedPlant.coordinates;
-      finalUrl = `${baseMapUrl}&ll=${lat},${lng}&z=12`;
+    // If coordinates are provided and valid, center the map on them with a pin.
+    if (coordinates && coordinates.lat !== 0) {
+      const { lat, lng } = coordinates;
+      // The 'q' parameter sets the marker, and 'll' centers the map.
+      return `${baseUrl}&z=12&q=${lat},${lng}&ll=${lat},${lng}`;
     }
-    return finalUrl;
-  }, [selectedPlant]);
+
+    // Otherwise, show a default, wider view centered on Southeast Brazil.
+    return `${baseUrl}&z=7&ll=-22.95,-44.85`;
+  }, [coordinates]);
 
   return (
     <DashboardCard title="Mapa das Usinas" icon={<MapPinIcon className="w-6 h-6" />}>
