@@ -30,7 +30,7 @@ const RPMCustomTooltip = ({ active, payload, label }: any) => {
       return (
         <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
           <p className="label text-sm text-gray-300">{`${label}`}</p>
-          <p className="intro text-sm" style={{color: payload[0].fill}}>{`RPM: ${payload[0].value}`}</p>
+          <p className="intro text-sm" style={{color: payload[0].fill}}>{`RPM: ${Math.round(payload[0].value)}`}</p>
         </div>
       );
     }
@@ -78,9 +78,9 @@ const MainTurbineMonitor: React.FC<MainTurbineMonitorProps> = ({ turbine, onClos
                 Status: {statusInfo[turbine.status].text}
             </div>
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
-                <MetricDisplay label="Rotação" value={turbine.rpm} unit="RPM" />
-                <MetricDisplay label="Temperatura" value={turbine.temp} unit="°C" />
-                <MetricDisplay label="Pressão" value={turbine.pressure} unit="bar" />
+                <MetricDisplay label="Rotação" value={Math.round(turbine.rpm)} unit="RPM" />
+                <MetricDisplay label="Temperatura" value={Math.round(turbine.temp)} unit="°C" />
+                <MetricDisplay label="Pressão" value={Math.round(turbine.pressure)} unit="bar" />
             </div>
             <div className="mt-4 p-4 bg-gray-900 rounded-lg">
                 <h4 className="text-md font-semibold text-gray-300 mb-2">Especificações Técnicas</h4>

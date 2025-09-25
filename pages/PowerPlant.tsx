@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
     PlantStatus, 
@@ -71,11 +72,11 @@ const initialAlerts: Alert[] = [
 ];
 
 const initialTurbines: Omit<Turbine, 'status'>[] = [
-    { id: 1, rpm: 3600, temp: 950, pressure: 18, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500, needsMaintenance: false },
-    { id: 2, rpm: 3605, temp: 955, pressure: 18.2, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500, needsMaintenance: false },
-    { id: 3, rpm: 3598, temp: 965, pressure: 17.9, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500, needsMaintenance: true },
-    { id: 4, rpm: 3600, temp: 940, pressure: 18.1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500, needsMaintenance: false },
-    { id: 5, rpm: 0, temp: 80, pressure: 1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500, needsMaintenance: false },
+    { id: 1, rpm: 3600, temp: 950, pressure: 18, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500 },
+    { id: 2, rpm: 3605, temp: 955, pressure: 18.2, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500 },
+    { id: 3, rpm: 3598, temp: 965, pressure: 17.9, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500 },
+    { id: 4, rpm: 3600, temp: 940, pressure: 18.1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500 },
+    { id: 5, rpm: 0, temp: 80, pressure: 1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500 },
 ];
 
 type MaximizedWidget = 'power' | 'fuel' | 'emissions' | 'turbines' | 'alerts' | 'history' | null;
@@ -170,15 +171,42 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
         setHistoricalEmissions(generateHistoricalEmissions());
 
         const interval = setInterval(() => {
-            // Update turbines
+            // Update turbines with predictive maintenance logic
             setTurbines(prev => prev.map(t => {
-                if (t.status !== 'active') return t;
+                if (t.status !== 'active') {
+                    // Keep existing status for non-active turbines
+                    return t;
+                }
+
+                // 1. Generate new values with slightly more variance to trigger alerts
+                const newRpm = 3590 + Math.random() * 25; // 3590-3615
+                const newTemp = 935 + Math.random() * 40; // 935-975
+                const newPressure = 17.7 + Math.random() * 0.6; // 17.7-18.3
+
+                // 2. Predictive Maintenance Check
+                // Analyzing the change from the previous state (t) to the new state.
+                // This uses the previous data point as "historical data".
+                let needsMaintenance = t.needsMaintenance || false;
+
+                // Critical temperature spike
+                const tempAlert = newTemp > 968;
+                // High RPM deviation from previous value (instability)
+                const rpmAlert = Math.abs(newRpm - t.rpm) > 10;
+                // Pressure outside of optimal range
+                const pressureAlert = newPressure < 17.8 || newPressure > 18.25;
+                
+                // If temp is critical, or if two other minor alerts trigger, flag for maintenance.
+                if (tempAlert || (rpmAlert && pressureAlert)) {
+                    needsMaintenance = true;
+                }
+
                 return {
                     ...t,
-                    rpm: 3595 + Math.random() * 10,
-                    temp: 940 + Math.random() * 25,
-                    pressure: 17.8 + Math.random() * 0.4
-                }
+                    rpm: newRpm,
+                    temp: newTemp,
+                    pressure: newPressure,
+                    needsMaintenance: needsMaintenance,
+                };
             }));
             
             // Update ambient conditions
@@ -197,6 +225,7 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
         setTurbines(initialTurbines.map(t => ({
             ...t,
             status: turbineStatusConfig[t.id] || 'inactive',
+            needsMaintenance: t.needsMaintenance || false, // Initialize with false
         })));
     }, [turbineStatusConfig]);
 
@@ -213,8 +242,11 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
     }, [ambient.dry, powerOutput, plantStatus]);
 
     const filteredTurbines = useMemo(() => {
-        if (turbineTypeFilter === 'all') return turbines;
-        return turbines.filter(t => t.type === turbineTypeFilter);
+        const visibleTurbines = turbines.filter(t => t.status !== 'inactive');
+        if (turbineTypeFilter === 'all') {
+            return visibleTurbines;
+        }
+        return visibleTurbines.filter(t => t.type === turbineTypeFilter);
     }, [turbines, turbineTypeFilter]);
 
     const selectedTurbine = useMemo(() => {

@@ -9,8 +9,9 @@ import Financials from './pages/Financials';
 import Configuration from './pages/Configuration';
 import MexEcoBr from './pages/MexEcoBr';
 import ChillerDashboard from './pages/chiller';
-import { PlantStatus, FuelMode, TurbineStatus } from './types';
-import { POWER_PLANTS } from './data/plants';
+import PowerPlantSystem from './pages/PowerPlantSystem';
+import { PlantStatus, FuelMode, TurbineStatus, Plant } from './types';
+import { POWER_PLANTS as initialPowerPlants } from './data/plants';
 
 export type TurbineStatusConfig = { [key: number]: TurbineStatus };
 
@@ -29,12 +30,13 @@ interface AllConfigs {
 
 const CONFIG_STORAGE_KEY = 'app-all-configs';
 const SELECTED_PLANT_STORAGE_KEY = 'app-selected-plant';
+const PLANTS_STORAGE_KEY = 'app-available-plants';
 
 const defaultConfig: PlantConfig = {
   fuelMode: FuelMode.NaturalGas,
   flexMix: { h2: 20, biodiesel: 30 },
   turbineStatusConfig: {
-    1: 'active', 2: 'active', 3: 'active', 4: 'active', 5: 'active',
+    1: 'active', 2: 'active', 3: 'active', 4: 'active', 5: 'inactive',
   },
 };
 
@@ -50,18 +52,17 @@ const loadAllConfigs = (): AllConfigs => {
   return {};
 };
 
-const loadSelectedPlant = (): string => {
+const loadAvailablePlants = (): Plant[] => {
     try {
-        const savedPlant = localStorage.getItem(SELECTED_PLANT_STORAGE_KEY);
-        // Validate that the saved plant still exists in our list
-        if (savedPlant && POWER_PLANTS.find(p => p.name === savedPlant)) {
-            return savedPlant;
+        const savedPlantsString = localStorage.getItem(PLANTS_STORAGE_KEY);
+        if (savedPlantsString) {
+            return JSON.parse(savedPlantsString);
         }
     } catch (error) {
-        console.error("Failed to load selected plant from localStorage", error);
+        console.error("Failed to load plants from localStorage", error);
     }
-    return 'MAUAX Bio PowerPlant (standard)'; // Default value
-}
+    return initialPowerPlants;
+};
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('Power Plant');
@@ -76,13 +77,24 @@ const App: React.FC = () => {
 
   // --- Configuration State ---
   const [allConfigs, setAllConfigs] = useState<AllConfigs>(loadAllConfigs);
-  const [selectedPlantName, setSelectedPlantNameState] = useState<string>(loadSelectedPlant);
+  const [availablePlants, setAvailablePlants] = useState<Plant[]>(loadAvailablePlants);
+  const [selectedPlantName, setSelectedPlantNameState] = useState<string>(() => {
+    const savedPlant = localStorage.getItem(SELECTED_PLANT_STORAGE_KEY);
+    if (savedPlant && availablePlants.find(p => p.name === savedPlant)) {
+        return savedPlant;
+    }
+    return availablePlants[0]?.name || 'MAUAX Bio PowerPlant (standard)';
+  });
 
   const currentConfig = useMemo(() => {
     return allConfigs[selectedPlantName] || defaultConfig;
   }, [allConfigs, selectedPlantName]);
+  
+  const selectedPlant = useMemo(() => {
+    return availablePlants.find(p => p.name === selectedPlantName) || availablePlants[0];
+  }, [availablePlants, selectedPlantName]);
 
-  // Persist any changes to allConfigs
+  // Persist any changes to allConfigs, selected plant, or available plants
   useEffect(() => {
     try {
         localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(allConfigs));
@@ -90,8 +102,15 @@ const App: React.FC = () => {
         console.error("Failed to save configs to localStorage", error);
     }
   }, [allConfigs]);
+
+  useEffect(() => {
+    try {
+        localStorage.setItem(PLANTS_STORAGE_KEY, JSON.stringify(availablePlants));
+    } catch(error) {
+        console.error("Failed to save plants to localStorage", error);
+    }
+  }, [availablePlants]);
   
-  // Wrapped setter to also save to localStorage
   const setSelectedPlantName = (name: string) => {
     try {
         localStorage.setItem(SELECTED_PLANT_STORAGE_KEY, name);
@@ -101,7 +120,6 @@ const App: React.FC = () => {
     setSelectedPlantNameState(name);
   };
 
-  // Functions to update the config for the *current* plant
   const updateCurrentConfig = (newConfig: Partial<PlantConfig>) => {
       setAllConfigs(prev => ({
           ...prev,
@@ -126,8 +144,32 @@ const App: React.FC = () => {
       updateCurrentConfig({ turbineStatusConfig: newStatus });
   };
 
+  const addPlant = () => {
+    setAvailablePlants(prev => {
+      const newProjectName = `Novo Projeto ${prev.filter(p => p.name.startsWith("Novo Projeto")).length + 1}`;
+      const newPlant: Plant = {
+        name: newProjectName,
+        power: 100,
+        fuel: 'Gás Natural',
+        identifier: { type: 'location', value: 'Não definido' },
+        description: 'Edite os detalhes deste novo projeto.',
+        status: 'Proposta',
+        type: 'new',
+        coordinates: { lat: 0, lng: 0 },
+      };
+      // Automatically select the new plant
+      setSelectedPlantName(newPlant.name);
+      return [...prev, newPlant];
+    });
+  };
+
+  const updatePlant = (plantNameToUpdate: string, updatedPlant: Plant) => {
+    setAvailablePlants(prev => prev.map(p => p.name === plantNameToUpdate ? updatedPlant : p));
+  };
+
+
   useEffect(() => {
-    const plant = POWER_PLANTS.find(p => p.name === selectedPlantName);
+    const plant = availablePlants.find(p => p.name === selectedPlantName);
     if (plant) {
       setMaxCapacity(plant.power);
       
@@ -138,7 +180,6 @@ const App: React.FC = () => {
         setEfficiencyGain(0); // Reset gain when offline
       }
 
-      // If a plant has no config, set a sensible default
       if (!allConfigs[selectedPlantName]) {
         let newFuelMode = FuelMode.NaturalGas;
         if (plant.name === 'MAUAX Bio PowerPlant (standard)') {
@@ -150,8 +191,11 @@ const App: React.FC = () => {
         }
         updateCurrentConfig({ fuelMode: newFuelMode });
       }
+    } else if (availablePlants.length > 0) {
+        // If selected plant doesn't exist (e.g., deleted), select the first one
+        setSelectedPlantName(availablePlants[0].name);
     }
-  }, [selectedPlantName, plantStatus]);
+  }, [selectedPlantName, plantStatus, availablePlants]);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -175,6 +219,7 @@ const App: React.FC = () => {
           setEfficiencyGain={setEfficiencyGain}
           setCurrentPage={setCurrentPage}
           activeRackCount={activeRackCount}
+          selectedPlant={selectedPlant}
         />;
       case 'Data Center':
         return <DataCenter onActiveRackUpdate={setActiveRackCount} />;
@@ -198,9 +243,18 @@ const App: React.FC = () => {
           setFuelMode={setFuelMode}
           flexMix={currentConfig.flexMix}
           setFlexMix={setFlexMix}
+          plantStatus={plantStatus}
+          setPlantStatus={setPlantStatus}
+          turbineStatusConfig={currentConfig.turbineStatusConfig}
+          setTurbineStatusConfig={setTurbineStatusConfig}
+          availablePlants={availablePlants}
+          addPlant={addPlant}
+          updatePlant={updatePlant}
         />;
       case 'Chiller':
         return <ChillerDashboard />;
+      case 'PowerPlantSystem':
+        return <PowerPlantSystem />;
       default:
         return <PowerPlant 
           plantStatus={plantStatus}

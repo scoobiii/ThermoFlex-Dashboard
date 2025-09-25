@@ -59,13 +59,26 @@ export interface LongHistoricalDataPoint {
 
 export interface Plant {
   name: string;
-  type: 'standard' | 'upgrade' | 'new';
-  power: number; // in MW
+  power: number; // capacity in MW
   fuel: string;
-  location: string;
+
+  // Fields for custom projects from original data/plants.ts
+  type?: 'standard' | 'upgrade' | 'new';
+  status?: 'standard' | 'Existente' | 'Proposta';
+  description?: string;
   conversion?: number; // percentage
   ethanolDemand?: number; // m³/h
-  status: 'standard' | 'Existente' | 'Proposta';
-  coordinates: { lat: number; lng: number };
-  description: string;
+  coordinates?: { lat: number; lng: number };
+  identifier?: {
+    type: 'location' | 'license';
+    value: string;
+  };
+
+  // Fields for real UTEs from national inventory
+  location?: string;
+  cycle?: string; // 'Ciclo Combinado', etc.
+  generation2023?: number | null; // GWh
+  emissions2023?: number | null; // mil tCO₂e
+  efficiency?: number | null; // %
+  rate?: number | null; // tCO₂e/GWh
 }

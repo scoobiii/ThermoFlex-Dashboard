@@ -54,15 +54,15 @@ const TurbineCard: React.FC<{ turbine: Turbine; isSelected: boolean; onSelect: (
         <div className="grid grid-cols-3 text-center">
             <div>
                 <p className="text-xs text-gray-400">RPM</p>
-                <p className="font-mono font-semibold">{turbine.rpm}</p>
+                <p className="font-mono font-semibold">{Math.round(turbine.rpm)}</p>
             </div>
              <div>
                 <p className="text-xs text-gray-400">Temp (°C)</p>
-                <p className="font-mono font-semibold">{turbine.temp}</p>
+                <p className="font-mono font-semibold">{Math.round(turbine.temp)}</p>
             </div>
              <div>
                 <p className="text-xs text-gray-400">Pressão</p>
-                <p className="font-mono font-semibold">{turbine.pressure} bar</p>
+                <p className="font-mono font-semibold">{Math.round(turbine.pressure)} bar</p>
             </div>
         </div>
         {turbine.needsMaintenance && (

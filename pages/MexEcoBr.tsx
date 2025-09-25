@@ -3,6 +3,8 @@ import React from 'react';
 const MexEcoBr: React.FC = () => {
 
   const pageHtml = `
+
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -767,6 +769,9 @@ const MexEcoBr: React.FC = () => {
     </script>
 </body>
 </html>
+
+
+
 `;
 
   return (
