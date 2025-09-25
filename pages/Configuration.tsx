@@ -84,7 +84,7 @@ const Configuration: React.FC<ConfigurationProps> = ({
         </div>
       </DashboardCard>
       
-      <PlantsMap />
+      <PlantsMap selectedPlant={selectedPlant} />
 
       <div className="lg:col-span-2">
         {selectedPlantName === 'Parque Térmico Pedreira' ? (
