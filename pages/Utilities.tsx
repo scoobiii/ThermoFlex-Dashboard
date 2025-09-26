@@ -1,4 +1,6 @@
-import React, { useEffect } from 'react';
+
+
+import React, { useEffect, useState } from 'react';
 import { Plant, PlantStatus } from '../types';
 import { SnowflakeIcon, WrenchScrewdriverIcon, BoltIcon, CloudIcon, ComputerDesktopIcon, ActivityIcon, MapPinIcon, GasIcon, ChartBarIcon, WarningIcon } from '../components/icons';
 import DashboardCard from '../components/DashboardCard';
@@ -26,6 +28,7 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
     
     const isOnline = plantStatus === PlantStatus.Online;
     const [ambientTemp] = React.useState(32.4);
+    const [coolingDistribution, setCoolingDistribution] = useState({ tiac: 40, fog: 25, dataCenter: 35 });
 
     const powerInput = isOnline && efficiency > 0 ? powerOutput / (efficiency / 100) : 0;
     const wasteHeat = isOnline ? powerInput - powerOutput : 0;
@@ -33,15 +36,16 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
     const chillerCOP = 0.694;
     const coolingProduction = isOnline ? wasteHeat * chillerCOP : 0;
 
-    const tiacCooling = coolingProduction * 0.40;
-    const fogCooling = coolingProduction * 0.25;
-    const dataCenterCooling = coolingProduction * 0.35;
+    const tiacCooling = coolingProduction * (coolingDistribution.tiac / 100);
+    const fogCooling = coolingProduction * (coolingDistribution.fog / 100);
+    const dataCenterCooling = coolingProduction * (coolingDistribution.dataCenter / 100);
 
     const TOTAL_RACKS = 120;
     const COOLING_CAPACITY_PER_RACK_MWT = 3.5; // MWt (thermal megawatt)
     const dataCenterTotalCapacity = TOTAL_RACKS * COOLING_CAPACITY_PER_RACK_MWT;
+    const potentialActiveRacks = dataCenterCooling / COOLING_CAPACITY_PER_RACK_MWT;
 
-    const conventionalChillerCOP = 5.0;
+    const conventionalChillerCOP = 0.4; // Updated to reflect superior value of trigeneration
     const electricalEquivalentSaved = isOnline ? coolingProduction / conventionalChillerCOP : 0;
 
     useEffect(() => {
@@ -55,6 +59,37 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
         }
     }, [isOnline, ambientTemp, tiacCooling, fogCooling, setEfficiencyGain]);
 
+    const handleDistributionChange = (system: 'tiac' | 'fog', value: number) => {
+        const otherSystem = system === 'tiac' ? 'fog' : 'tiac';
+        const currentOtherValue = coolingDistribution[otherSystem];
+        
+        if (value + currentOtherValue > 100) {
+            const newOtherValue = 100 - value;
+            setCoolingDistribution({
+                ...coolingDistribution,
+                [system]: value,
+                [otherSystem]: newOtherValue,
+                dataCenter: 0
+            });
+        } else {
+            setCoolingDistribution({
+                ...coolingDistribution,
+                [system]: value,
+                dataCenter: 100 - value - currentOtherValue
+            });
+        }
+    };
+    
+    const Slider: React.FC<{label: string, value: number, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void}> = ({label, value, onChange}) => (
+        <div>
+            <div className="flex justify-between items-center text-xs mb-1">
+                <label className="font-medium text-gray-300">{label}</label>
+                <span className="font-mono font-semibold text-white bg-gray-900/50 px-2 py-0.5 rounded">{value.toFixed(0)}%</span>
+            </div>
+            <input type="range" min="0" max="100" value={value} onChange={onChange} className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
+        </div>
+    );
+
     return (
         <div className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-11 gap-6 items-stretch">
@@ -65,10 +100,10 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
                         className="h-full"
                         action={
                             <button
-                                onClick={() => setCurrentPage('PowerPlantSystem')}
+                                onClick={() => setCurrentPage('Power Plant Sankey')}
                                 className="px-3 py-1 text-xs font-semibold bg-gray-700 text-gray-300 rounded-md transition-all duration-200 hover:bg-cyan-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500"
                             >
-                                Ver Inventário
+                                Detalhes do Fluxo
                             </button>
                         }
                     >
@@ -109,7 +144,7 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
                         <div className="flex flex-col items-center justify-between h-full text-center">
                              <div>
                                 <p className={`text-5xl font-bold tracking-tight ${isOnline ? 'text-cyan-400' : 'text-gray-500'}`}>{coolingProduction.toFixed(0)}</p>
-                                <p className="text-lg text-gray-400">MW</p>
+                                <p className="text-lg text-gray-400">MW de Frio</p>
                                 <p className={`mt-4 text-sm font-semibold ${isOnline ? 'text-green-400' : 'text-red-500'}`}>{isOnline ? 'Sistema Ativo' : 'Sistema Inativo'}</p>
                              </div>
                             <div className="text-xs text-gray-500 border-t border-gray-700 w-full pt-2 mt-2">
@@ -123,14 +158,36 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
                 <div className="lg:col-span-1 hidden lg:flex"> <SankeyConnector /> </div>
                 
                 <div className="lg:col-span-3">
-                    <DashboardCard title="Distribuição de Frio" icon={<WrenchScrewdriverIcon className="w-6 h-6" />} className="h-full">
+                    <DashboardCard title="Alinhamento Frio-Eletricidade" icon={<WrenchScrewdriverIcon className="w-6 h-6" />} className="h-full">
                         <div className="flex flex-col justify-between h-full space-y-3">
-                            <div className="space-y-3">
-                                <div className="bg-gray-700/50 p-3 rounded-lg"><div className="flex items-center gap-3"><SnowflakeIcon className="w-5 h-5 text-gray-400 flex-shrink-0" /><div className="flex-grow"><div className="flex justify-between items-baseline"><span className="text-gray-300 font-semibold">TIAC System</span><span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{tiacCooling.toFixed(1)} MW</span></div><div className="text-xs text-gray-500 mt-1 grid grid-cols-2 gap-x-4"><span><strong>Quantidade:</strong> 2</span><span><strong>Fabricante:</strong> Stellar</span><span><strong>Modelo:</strong> E-TIAC 2.0</span><span><strong>Capacidade:</strong> 500 MWₜ</span></div></div></div></div>
-                                <div className="bg-gray-700/50 p-3 rounded-lg"><div className="flex items-center gap-3"><CloudIcon className="w-5 h-5 text-gray-400 flex-shrink-0" /><div className="flex-grow"><div className="flex justify-between items-baseline"><span className="text-gray-300 font-semibold">Fog System</span><span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{fogCooling.toFixed(1)} MW</span></div><div className="text-xs text-gray-500 mt-1 grid grid-cols-2 gap-x-4"><span><strong>Quantidade:</strong> 4</span><span><strong>Fabricante:</strong> Mee Industries</span><span><strong>Modelo:</strong> FogCool 500-H</span><span><strong>Capacidade:</strong> 380 MWₜ</span></div></div></div></div>
-                                <div className="bg-gray-700/50 p-3 rounded-lg"><div className="flex items-center gap-3"><ComputerDesktopIcon className="w-5 h-5 text-gray-400 flex-shrink-0" /><div className="flex-grow"><div className="flex justify-between items-baseline"><span className="text-gray-300 font-semibold">Data Cloud</span><span className={`font-mono font-semibold text-lg ${isOnline ? 'text-white' : 'text-gray-500'}`}>{dataCenterCooling.toFixed(1)} MW</span></div><div className="text-xs text-gray-500 mt-1 grid grid-cols-2 gap-x-4"><span><strong>Quantidade:</strong> {activeRackCount} / {TOTAL_RACKS} Racks</span><span><strong>Fabricante:</strong> NVIDIA</span><span><strong>Modelo:</strong> DGX H100 LC</span><span><strong>Capacidade:</strong> {dataCenterTotalCapacity.toFixed(0)} MWₜ</span></div></div></div></div>
+                             <div className="space-y-3">
+                                <Slider label="TIAC System" value={coolingDistribution.tiac} onChange={e => handleDistributionChange('tiac', parseInt(e.target.value))} />
+                                <Slider label="Fog System" value={coolingDistribution.fog} onChange={e => handleDistributionChange('fog', parseInt(e.target.value))} />
+                                <button
+                                    onClick={() => setCurrentPage('Fog System Details')}
+                                    className="w-full mt-2 text-center px-3 py-2 text-xs font-semibold bg-gray-700 text-cyan-400 rounded-md transition-all duration-200 hover:bg-cyan-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500"
+                                >
+                                    Ver Detalhes do Sistema Fogging
+                                </button>
                             </div>
-                            <div className="border-t border-gray-700 pt-3 mt-2"><div className="flex items-center gap-3"><BoltIcon className="w-6 h-6 text-green-400"/><span className="flex-grow font-semibold text-green-400">Economia de Energia</span><span className={`font-mono text-lg font-bold ${isOnline ? 'text-green-400' : 'text-gray-500'}`}>{electricalEquivalentSaved.toFixed(1)} MW</span></div><p className="text-xs text-gray-500 text-right">(Equivalente Elétrico)</p></div>
+                            
+                            <div className="space-y-3 border-t border-gray-700 pt-3">
+                                <div className="bg-gray-700/50 p-2 rounded-lg text-center">
+                                    <p className="text-xs text-gray-400">Alocado para Data Cloud</p>
+                                    <p className="font-mono text-lg font-semibold text-white">{coolingDistribution.dataCenter.toFixed(0)}% ({dataCenterCooling.toFixed(1)} MW)</p>
+                                    <p className="text-xs text-gray-500">Potencial para <strong className="text-white">{Math.floor(potentialActiveRacks)}/{TOTAL_RACKS}</strong> Racks</p>
+                                </div>
+                            </div>
+                            
+                            <div className="border-t border-gray-700 pt-3 mt-auto">
+                                <div className="flex items-center gap-3"><BoltIcon className="w-8 h-8 text-green-400"/>
+                                    <div>
+                                        <span className="font-semibold text-green-400 text-base">Economia de Energia (Trigeração)</span>
+                                        <p className="text-xs text-gray-500">(Equivalente Elétrico)</p>
+                                    </div>
+                                    <span className={`font-mono text-3xl font-bold ml-auto ${isOnline ? 'text-green-400' : 'text-gray-500'}`}>{electricalEquivalentSaved.toFixed(0)} MW</span>
+                                </div>
+                            </div>
                         </div>
                     </DashboardCard>
                 </div>

@@ -10,6 +10,8 @@ import Configuration from './pages/Configuration';
 import MexEcoBr from './pages/MexEcoBr';
 import ChillerDashboard from './pages/chiller';
 import PowerPlantSystem from './pages/PowerPlantSystem';
+import GasTurbineDiagram from './components/GasTurbineDiagram';
+import PowerPlantSankey from './components/PowerPlantSankey'; // Import new component
 import { PlantStatus, FuelMode, TurbineStatus, Plant } from './types';
 import { POWER_PLANTS as initialPowerPlants } from './data/plants';
 
@@ -21,6 +23,16 @@ export interface PlantConfig {
   fuelMode: FuelMode;
   flexMix: { h2: number; biodiesel: number };
   turbineStatusConfig: TurbineStatusConfig;
+  turbineMaintenanceScores: { [key: number]: number };
+}
+
+// Interface for resource visibility config
+export interface ResourceConfig {
+    water: boolean;
+    gas: boolean;
+    ethanol: boolean;
+    biodiesel: boolean;
+    h2: boolean;
 }
 
 // Interface for all stored configs
@@ -29,6 +41,7 @@ interface AllConfigs {
 }
 
 const CONFIG_STORAGE_KEY = 'app-all-configs';
+const RESOURCE_CONFIG_KEY = 'app-resource-config';
 const SELECTED_PLANT_STORAGE_KEY = 'app-selected-plant';
 const PLANTS_STORAGE_KEY = 'app-available-plants';
 
@@ -38,6 +51,15 @@ const defaultConfig: PlantConfig = {
   turbineStatusConfig: {
     1: 'active', 2: 'active', 3: 'active', 4: 'active', 5: 'inactive',
   },
+  turbineMaintenanceScores: { 1: 10, 2: 15, 3: 85, 4: 20, 5: 5 },
+};
+
+const defaultResourceConfig: ResourceConfig = {
+    water: true,
+    gas: true,
+    ethanol: true,
+    biodiesel: true,
+    h2: true,
 };
 
 const loadAllConfigs = (): AllConfigs => {
@@ -50,6 +72,18 @@ const loadAllConfigs = (): AllConfigs => {
     console.error("Failed to load or parse configs from localStorage", error);
   }
   return {};
+};
+
+const loadResourceConfig = (): ResourceConfig => {
+    try {
+        const savedConfigString = localStorage.getItem(RESOURCE_CONFIG_KEY);
+        if (savedConfigString) {
+            return JSON.parse(savedConfigString);
+        }
+    } catch (error) {
+        console.error("Failed to load resource config from localStorage", error);
+    }
+    return defaultResourceConfig;
 };
 
 const loadAvailablePlants = (): Plant[] => {
@@ -77,6 +111,7 @@ const App: React.FC = () => {
 
   // --- Configuration State ---
   const [allConfigs, setAllConfigs] = useState<AllConfigs>(loadAllConfigs);
+  const [resourceConfig, setResourceConfigState] = useState<ResourceConfig>(loadResourceConfig);
   const [availablePlants, setAvailablePlants] = useState<Plant[]>(loadAvailablePlants);
   const [selectedPlantName, setSelectedPlantNameState] = useState<string>(() => {
     const savedPlant = localStorage.getItem(SELECTED_PLANT_STORAGE_KEY);
@@ -130,6 +165,15 @@ const App: React.FC = () => {
       }));
   };
 
+  const setResourceConfig = (newConfig: ResourceConfig) => {
+    try {
+        localStorage.setItem(RESOURCE_CONFIG_KEY, JSON.stringify(newConfig));
+    } catch (error) {
+        console.error("Failed to save resource config to localStorage", error);
+    }
+    setResourceConfigState(newConfig);
+  };
+
   const setFuelMode = (fuelMode: FuelMode) => updateCurrentConfig({ fuelMode });
   const setFlexMix = (updater: React.SetStateAction<{ h2: number; biodiesel: number }>) => {
       const newFlexMix = typeof updater === 'function' 
@@ -142,6 +186,13 @@ const App: React.FC = () => {
           ? updater(currentConfig.turbineStatusConfig)
           : updater;
       updateCurrentConfig({ turbineStatusConfig: newStatus });
+  };
+  
+  const setTurbineMaintenanceScores = (updater: React.SetStateAction<{ [key: number]: number }>) => {
+      const newScores = typeof updater === 'function' 
+          ? updater(currentConfig.turbineMaintenanceScores || {}) 
+          : updater;
+      updateCurrentConfig({ turbineMaintenanceScores: newScores });
   };
 
   const addPlant = () => {
@@ -202,7 +253,6 @@ const App: React.FC = () => {
       case 'Power Plant':
         return <PowerPlant 
           plantStatus={plantStatus}
-          setPlantStatus={setPlantStatus}
           powerOutput={powerOutput}
           efficiency={efficiency}
           efficiencyGain={efficiencyGain}
@@ -210,8 +260,15 @@ const App: React.FC = () => {
           flexMix={currentConfig.flexMix}
           setFlexMix={setFlexMix}
           turbineStatusConfig={currentConfig.turbineStatusConfig}
+          turbineMaintenanceScores={currentConfig.turbineMaintenanceScores || {}}
+          setTurbineMaintenanceScores={setTurbineMaintenanceScores}
+          resourceConfig={resourceConfig}
         />;
       case 'Utilities':
+      case 'Fluxo de Energia da Usina':
+      case 'Chiller Absorção -> Tiac':
+      case 'Chiller Absorção -> Fog':
+      case 'Chiller Absorção -> Data Cloud':
         return <Utilities 
           plantStatus={plantStatus}
           powerOutput={powerOutput}
@@ -247,18 +304,31 @@ const App: React.FC = () => {
           setPlantStatus={setPlantStatus}
           turbineStatusConfig={currentConfig.turbineStatusConfig}
           setTurbineStatusConfig={setTurbineStatusConfig}
+          turbineMaintenanceScores={currentConfig.turbineMaintenanceScores || {}}
+          setTurbineMaintenanceScores={setTurbineMaintenanceScores}
           availablePlants={availablePlants}
           addPlant={addPlant}
           updatePlant={updatePlant}
+          resourceConfig={resourceConfig}
+          setResourceConfig={setResourceConfig}
         />;
       case 'Chiller':
+      case 'Chiller Absorção':
         return <ChillerDashboard />;
+      case 'inventario UTE':
       case 'PowerPlantSystem':
         return <PowerPlantSystem />;
+      case 'Fog System Details':
+        return <GasTurbineDiagram />;
+      case 'Power Plant Sankey':
+        return <PowerPlantSankey 
+            powerOutput={powerOutput}
+            efficiency={efficiency}
+            setCurrentPage={setCurrentPage}
+        />;
       default:
         return <PowerPlant 
           plantStatus={plantStatus}
-          setPlantStatus={setPlantStatus}
           powerOutput={powerOutput}
           efficiency={efficiency}
           efficiencyGain={efficiencyGain}
@@ -266,6 +336,9 @@ const App: React.FC = () => {
           flexMix={currentConfig.flexMix}
           setFlexMix={setFlexMix}
           turbineStatusConfig={currentConfig.turbineStatusConfig}
+          turbineMaintenanceScores={currentConfig.turbineMaintenanceScores || {}}
+          setTurbineMaintenanceScores={setTurbineMaintenanceScores}
+          resourceConfig={resourceConfig}
         />;
     }
   };

@@ -1,17 +1,21 @@
 /**
  * @file DataCenter.tsx
  * @description Main page component for the Data Center monitoring dashboard, managing tab navigation between Overview and Treemap views, and handling widget maximization state.
- * @version 1.2.0
- * @date 2024-08-05
+ * @version 1.3.0
+ * @date 2024-08-06
  * @author Senior DevOps Team
  * @productowner Edivaldo Beringela (Prefeitura de Mauá)
  * 
  * @responsibility
  * Orchestrates the top-level layout and state of the data center monitoring interface.
- * Manages tab switching (Overview ↔ Treemap) and full-screen maximization of the Treemap widget.
+ * Manages tab switching (Overview ↔ Treemap ↔ Energy Flow) and full-screen maximization of the Treemap widget.
  * Ensures seamless integration between child components and consistent user experience.
  * 
  * @changelog
+ * v1.3.0 - 2024-08-06
+ *   - Added a new 'Fluxo de Energia' tab that displays a Sankey diagram of the data center's power distribution and PUE.
+ *   - Integrated the new `EnergyFlowSankey` component.
+ * 
  * v1.2.0 - 2024-08-05
  *   - Updated to integrate with DashboardCard v1.1.0 and DataCenterTreeMap v1.7.1.
  *   - Verified that maximization of the Treemap widget no longer hides action controls (e.g., Energy/Cooling switcher).
@@ -34,8 +38,9 @@ import ServerRackStatus from '../components/ServerRackStatus';
 import PowerConsumption from '../components/PowerConsumption';
 import CoolingLoad from '../components/CoolingLoad';
 import DataCenterTreeMap from '../components/DataCenterTreeMap';
+import EnergyFlowSankey from '../components/EnergyFlowSankey';
 
-type DataCenterTab = 'overview' | 'treemap';
+type DataCenterTab = 'overview' | 'treemap' | 'energyflow';
 type MaximizedWidget = 'treemap' | null;
 
 interface DataCenterProps {
@@ -89,6 +94,13 @@ const DataCenter: React.FC<DataCenterProps> = ({ onActiveRackUpdate }) => {
           >
             Treemap de Consumo
           </button>
+          <button
+            onClick={() => setActiveTab('energyflow')}
+            className={tabButtonClasses('energyflow')}
+            aria-current={activeTab === 'energyflow' ? 'page' : undefined}
+          >
+            Fluxo de Energia
+          </button>
         </nav>
       </div>
 
@@ -114,6 +126,11 @@ const DataCenter: React.FC<DataCenterProps> = ({ onActiveRackUpdate }) => {
               onToggleMaximize={() => toggleMaximize('treemap')}
             />
           </div>
+        )}
+        {activeTab === 'energyflow' && (
+            <div className="animate-fadeIn">
+                <EnergyFlowSankey />
+            </div>
         )}
       </div>
 

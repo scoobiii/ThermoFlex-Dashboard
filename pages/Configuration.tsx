@@ -4,16 +4,17 @@ import ThermalPlantsSummary from '../components/ThermalPlantsSummary';
 import PlantsMap from '../components/PlantsMap';
 import { WrenchScrewdriverIcon, PlusIcon, FactoryIcon } from '../components/icons';
 import { FuelMode, Plant, PlantStatus, Turbine, TurbineStatus as TurbineStatusEnum } from '../types';
-import { TurbineStatusConfig } from '../App';
+import { TurbineStatusConfig, ResourceConfig } from '../App';
 
 type TurbineType = 'all' | 'Ciclo Combinado' | 'Ciclo Rankine';
 
+// FIX: Replaced deprecated 'needsMaintenance' with 'maintenanceScore' to align with the Turbine type.
 const baseTurbines: Omit<Turbine, 'status'>[] = [
-    { id: 1, rpm: 3600, temp: 950, pressure: 18, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500, needsMaintenance: false },
-    { id: 2, rpm: 3605, temp: 955, pressure: 18.2, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500, needsMaintenance: false },
-    { id: 3, rpm: 3598, temp: 965, pressure: 17.9, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500, needsMaintenance: true },
-    { id: 4, rpm: 3600, temp: 940, pressure: 18.1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500, needsMaintenance: false },
-    { id: 5, rpm: 0, temp: 80, pressure: 1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500, needsMaintenance: false },
+    { id: 1, rpm: 3600, temp: 950, pressure: 18, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500, maintenanceScore: 10 },
+    { id: 2, rpm: 3605, temp: 955, pressure: 18.2, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500, maintenanceScore: 15 },
+    { id: 3, rpm: 3598, temp: 965, pressure: 17.9, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500, maintenanceScore: 85 },
+    { id: 4, rpm: 3600, temp: 940, pressure: 18.1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500, maintenanceScore: 20 },
+    { id: 5, rpm: 0, temp: 80, pressure: 1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500, maintenanceScore: 5 },
 ];
 
 interface ConfigurationProps {
@@ -27,9 +28,13 @@ interface ConfigurationProps {
   setPlantStatus: (status: PlantStatus) => void;
   turbineStatusConfig: TurbineStatusConfig;
   setTurbineStatusConfig: (updater: React.SetStateAction<TurbineStatusConfig>) => void;
+  turbineMaintenanceScores: { [key: number]: number };
+  setTurbineMaintenanceScores: (updater: React.SetStateAction<{ [key: number]: number }>) => void;
   availablePlants: Plant[];
   addPlant: () => void;
   updatePlant: (plantNameToUpdate: string, updatedPlant: Plant) => void;
+  resourceConfig: ResourceConfig;
+  setResourceConfig: (config: ResourceConfig) => void;
 }
 
 const Configuration: React.FC<ConfigurationProps> = ({
@@ -43,9 +48,13 @@ const Configuration: React.FC<ConfigurationProps> = ({
   setPlantStatus,
   turbineStatusConfig,
   setTurbineStatusConfig,
+  turbineMaintenanceScores,
+  setTurbineMaintenanceScores,
   availablePlants,
   addPlant,
   updatePlant,
+  resourceConfig,
+  setResourceConfig,
 }) => {
   const selectedPlantRaw = availablePlants.find(p => p.name === selectedPlantName);
 
@@ -56,7 +65,9 @@ const Configuration: React.FC<ConfigurationProps> = ({
       return {
         ...selectedPlantRaw,
         identifier: {
-          type: 'location',
+          // FIX: Explicitly cast the identifier type to prevent it from being widened to 'string', which
+          // would make the object incompatible with the 'Plant' type.
+          type: 'location' as 'location' | 'license',
           value: selectedPlantRaw.location || 'Não definido',
         }
       };
@@ -79,19 +90,19 @@ const Configuration: React.FC<ConfigurationProps> = ({
 
     let updatedPlant = { ...selectedPlant };
     
-    // FIX: Explicitly handle 'type' property update to preserve its strict union type.
-    // The previous generic update `[subField]: value` widened `identifier.type` to `string`,
-    // causing a type mismatch with the `Plant` interface.
+    // FIX: Explicitly handle updates to the 'identifier' property to preserve its strict union type.
+    // A generic update using a computed property `[subField]: value` would widen `identifier.type` to `string`,
+    // causing a type mismatch with the `Plant` interface. This explicit handling prevents that.
     if (field.startsWith('identifier.')) {
         const subField = field.split('.')[1] as keyof NonNullable<Plant['identifier']>;
         if (subField === 'type') {
             updatedPlant.identifier = {
-                ...updatedPlant.identifier,
+                ...updatedPlant.identifier!,
                 type: value as 'location' | 'license',
             };
         } else {
             updatedPlant.identifier = {
-                ...updatedPlant.identifier,
+                ...updatedPlant.identifier!,
                 value: value,
             };
         }
@@ -114,6 +125,13 @@ const Configuration: React.FC<ConfigurationProps> = ({
     setTurbineStatusConfig(prev => ({ ...prev, [turbineId]: status }));
   };
   
+  const handleResourceToggle = (resourceKey: keyof ResourceConfig) => {
+    setResourceConfig({
+        ...resourceConfig,
+        [resourceKey]: !resourceConfig[resourceKey]
+    });
+  };
+
   const FormInput: React.FC<{label: string, value: string, name: keyof Plant, type?: string}> = ({ label, value, name, type = 'text' }) => (
       <div>
           <label className="block text-sm font-medium text-gray-400 mb-1">{label}</label>
@@ -125,6 +143,14 @@ const Configuration: React.FC<ConfigurationProps> = ({
           />
       </div>
   );
+
+  const resourceLabels: { [key in keyof ResourceConfig]: string } = {
+    water: 'Água',
+    gas: 'Gás Natural',
+    ethanol: 'Etanol',
+    biodiesel: 'Biodiesel',
+    h2: 'Hidrogênio (H₂)',
+  };
 
   return (
     <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -200,6 +226,26 @@ const Configuration: React.FC<ConfigurationProps> = ({
           )}
         </DashboardCard>
         
+         <DashboardCard title="Configuração de Insumos" icon={<WrenchScrewdriverIcon className="w-6 h-6"/>}>
+            <div className="space-y-3">
+                <p className="text-xs text-gray-400">Selecione os insumos para exibir no painel de Gestão de Recursos.</p>
+                {Object.keys(resourceConfig).map((key) => (
+                    <div key={key} className="flex items-center justify-between bg-gray-700/50 p-2 rounded-lg">
+                        <span className="font-medium text-white text-sm">{resourceLabels[key as keyof ResourceConfig]}</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={resourceConfig[key as keyof ResourceConfig]}
+                                onChange={() => handleResourceToggle(key as keyof ResourceConfig)}
+                                className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-cyan-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                        </label>
+                    </div>
+                ))}
+            </div>
+         </DashboardCard>
+
         {selectedPlant && (
             <DashboardCard title="Detalhes do Projeto" icon={<FactoryIcon className="w-6 h-6" />}>
                 <div className="space-y-3">
@@ -247,15 +293,6 @@ const Configuration: React.FC<ConfigurationProps> = ({
             </DashboardCard>
         )}
 
-        <DashboardCard title="Gestão de Projetos" icon={<WrenchScrewdriverIcon className="w-6 h-6"/>}>
-            <button 
-                onClick={addPlant}
-                className="w-full h-full flex items-center justify-center gap-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors text-cyan-400 font-semibold p-4"
-            >
-                <PlusIcon className="w-5 h-5"/>
-                Criar Novo Projeto Padrão
-            </button>
-        </DashboardCard>
       </div>
       
       <div className="lg:col-span-1">
@@ -284,21 +321,52 @@ const Configuration: React.FC<ConfigurationProps> = ({
               </div>
               <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
                   {filteredTurbines.map(turbine => (
-                      <div key={turbine.id} className="bg-gray-700/50 p-2 rounded-lg flex items-center justify-between">
-                          <span className="font-medium text-white text-sm">Turbina #{turbine.id} <span className="text-gray-400 text-xs">({turbine.type})</span></span>
-                          <div className="flex items-center bg-gray-900/50 rounded-md p-0.5">
-                            {(['active', 'inactive', 'error'] as TurbineStatusEnum[]).map(status => (
-                                <button key={status} onClick={() => handleTurbineStatusChange(turbine.id, status)}
-                                className={`px-2 py-0.5 text-xs font-semibold rounded transition-all ${ turbineStatusConfig[turbine.id] === status ? 'bg-cyan-500 text-white shadow-sm' : 'text-gray-400 hover:bg-gray-600'}`}
-                                >{status === 'active' ? 'Ativa' : status === 'inactive' ? 'Inativa' : 'Falha'}</button>
-                            ))}
+                      <div key={turbine.id} className="bg-gray-700/50 p-3 rounded-lg flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                            <span className="font-medium text-white text-sm">Turbina #{turbine.id} <span className="text-gray-400 text-xs">({turbine.type})</span></span>
+                            <div className="flex items-center bg-gray-900/50 rounded-md p-0.5">
+                                {(['active', 'inactive', 'error'] as TurbineStatusEnum[]).map(status => (
+                                    <button key={status} onClick={() => handleTurbineStatusChange(turbine.id, status)}
+                                    className={`px-2 py-0.5 text-xs font-semibold rounded transition-all ${ turbineStatusConfig[turbine.id] === status ? 'bg-cyan-500 text-white shadow-sm' : 'text-gray-400 hover:bg-gray-600'}`}
+                                    >{status === 'active' ? 'Ativa' : status === 'inactive' ? 'Inativa' : 'Falha'}</button>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <label htmlFor={`maintenance-score-${turbine.id}`} className="text-xs text-gray-400">Score de Manutenção</label>
+                            <span className="text-sm font-mono font-semibold text-white">{turbineMaintenanceScores[turbine.id] || 0}</span>
                           </div>
+                            <input 
+                                type="range"
+                                id={`maintenance-score-${turbine.id}`}
+                                min="0"
+                                max="100"
+                                value={turbineMaintenanceScores[turbine.id] || 0}
+                                onChange={(e) => {
+                                    const newScore = Number(e.target.value);
+                                    setTurbineMaintenanceScores(prev => ({...prev, [turbine.id]: newScore}));
+                                }}
+                                className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                            />
+                        </div>
                       </div>
                   ))}
               </div>
             </div>
           </div>
         </DashboardCard>
+         <div className="mt-6">
+            <DashboardCard title="Gestão de Projetos" icon={<WrenchScrewdriverIcon className="w-6 h-6"/>}>
+                <button 
+                    onClick={addPlant}
+                    className="w-full h-full flex items-center justify-center gap-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors text-cyan-400 font-semibold p-4"
+                >
+                    <PlusIcon className="w-5 h-5"/>
+                    Criar Novo Projeto Padrão
+                </button>
+            </DashboardCard>
+        </div>
       </div>
 
       <div className="lg:col-span-1">

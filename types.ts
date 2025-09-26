@@ -41,7 +41,7 @@ export interface Turbine {
   model: string;
   isoCapacity: number; // in MW
   history?: { rpm: number; temp: number; pressure: number }[];
-  needsMaintenance?: boolean;
+  maintenanceScore: number; // Replaces needsMaintenance
 }
 
 export interface Alert {

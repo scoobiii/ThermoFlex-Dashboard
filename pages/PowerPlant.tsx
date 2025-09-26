@@ -11,21 +11,19 @@ import {
     LongHistoricalDataPoint,
     TurbineStatus as TurbineStatusEnum
 } from '../types';
-import { TurbineStatusConfig } from '../App';
+import { TurbineStatusConfig, ResourceConfig } from '../App';
 
-import ControlPanel from '../components/ControlPanel';
 import PowerOutput from '../components/PowerOutput';
 import FuelStatus from '../components/FuelStatus';
 import EmissionsMonitor from '../components/EmissionsMonitor';
 import TurbineStatus from '../components/TurbineStatus';
 import MainTurbineMonitor from '../components/MainTurbineMonitor';
-import Alerts from '../components/Alerts';
 import HistoricalData from '../components/HistoricalData';
+import ResourceManagement from '../components/ResourceManagement';
 
 // --- PROPS INTERFACE ---
 interface PowerPlantProps {
   plantStatus: PlantStatus;
-  setPlantStatus: (status: PlantStatus) => void;
   powerOutput: number;
   efficiency: number;
   efficiencyGain: number;
@@ -33,6 +31,18 @@ interface PowerPlantProps {
   flexMix: { h2: number, biodiesel: number };
   setFlexMix: React.Dispatch<React.SetStateAction<{ h2: number; biodiesel: number }>>;
   turbineStatusConfig: TurbineStatusConfig;
+  turbineMaintenanceScores: { [key: number]: number };
+  setTurbineMaintenanceScores: React.Dispatch<React.SetStateAction<{ [key: number]: number }>>;
+  resourceConfig: ResourceConfig;
+}
+
+export interface ResourceDataPoint {
+    time: string;
+    water: number;
+    gas: number;
+    ethanol: number;
+    biodiesel: number;
+    h2: number;
 }
 
 // --- MOCK DATA GENERATION ---
@@ -56,6 +66,19 @@ const generateHistoricalData = (range: '24h' | '7d'): LongHistoricalDataPoint[] 
     }));
 };
 
+const generateHistoricalResourceData = (range: '24h' | '7d'): ResourceDataPoint[] => {
+    const points = range === '24h' ? 24 : 7;
+    return Array.from({ length: points }, (_, i) => ({
+        time: generateTimeLabel(i, range),
+        water: 110 + Math.random() * 20, // m³/h
+        gas: 8200 + Math.random() * 600, // m³/h
+        ethanol: 50 + Math.random() * 10, // m³/h
+        biodiesel: 40 + Math.random() * 8, // m³/h
+        h2: 10 + Math.random() * 5, // kg/h
+    }));
+};
+
+
 const generateHistoricalEmissions = (): HistoricalEmissionPoint[] => {
     return Array.from({ length: 7 }, (_, i) => ({
         time: `D-${6-i}`,
@@ -71,7 +94,7 @@ const initialAlerts: Alert[] = [
     { id: 2, level: 'info', message: 'Manutenção preventiva da Turbina #5 agendada para 2024-08-10.', timestamp: '2024-08-05 09:30:00' },
 ];
 
-const initialTurbines: Omit<Turbine, 'status'>[] = [
+const initialTurbines: Omit<Turbine, 'status' | 'maintenanceScore'>[] = [
     { id: 1, rpm: 3600, temp: 950, pressure: 18, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500 },
     { id: 2, rpm: 3605, temp: 955, pressure: 18.2, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500 },
     { id: 3, rpm: 3598, temp: 965, pressure: 17.9, type: 'Ciclo Combinado', manufacturer: 'Siemens', model: 'SGT-9000HL', isoCapacity: 500 },
@@ -79,21 +102,23 @@ const initialTurbines: Omit<Turbine, 'status'>[] = [
     { id: 5, rpm: 0, temp: 80, pressure: 1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500 },
 ];
 
-type MaximizedWidget = 'power' | 'fuel' | 'emissions' | 'turbines' | 'alerts' | 'history' | null;
+type MaximizedWidget = 'power' | 'fuel' | 'emissions' | 'turbines' | 'history' | 'resources' | null;
 type TurbineTypeFilter = 'all' | 'Ciclo Combinado' | 'Ciclo Rankine';
 
 
 // --- MAIN DASHBOARD COMPONENT ---
 const PowerPlant: React.FC<PowerPlantProps> = ({
     plantStatus,
-    setPlantStatus,
     powerOutput,
     efficiency,
     efficiencyGain,
     fuelMode,
     flexMix,
     setFlexMix,
-    turbineStatusConfig
+    turbineStatusConfig,
+    turbineMaintenanceScores,
+    setTurbineMaintenanceScores,
+    resourceConfig
 }) => {
     // --- STATE MANAGEMENT ---
     const [maximizedWidget, setMaximizedWidget] = useState<MaximizedWidget>(null);
@@ -108,6 +133,21 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
     const [historicalEmissions, setHistoricalEmissions] = useState<HistoricalEmissionPoint[]>([]);
     const [turbineTypeFilter, setTurbineTypeFilter] = useState<TurbineTypeFilter>('all');
     
+    // Resource management state
+    const [resourceData, setResourceData] = useState({
+        waterConsumption: 120,
+        gasConsumption: 8500,
+        ethanolConsumption: 55,
+        biodieselConsumption: 42,
+        h2Consumption: 12,
+        waterStorage: { level: 8500, capacity: 10000 },
+        gasStorage: { level: 45000, capacity: 50000 },
+        ethanolStorage: { level: 15000, capacity: 20000 },
+        biodieselStorage: { level: 12000, capacity: 15000 },
+        h2Storage: { level: 500, capacity: 1000 },
+    });
+    const [historicalResourceData, setHistoricalResourceData] = useState<ResourceDataPoint[]>([]);
+
     // Ambient conditions state
     const [ambient, setAmbient] = useState({ dry: 28.5, wet: 22.1, humidity: 65 });
 
@@ -116,6 +156,7 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
     // Update historical data when time range changes
     useEffect(() => {
         setHistoricalData(generateHistoricalData(timeRange));
+        setHistoricalResourceData(generateHistoricalResourceData(timeRange));
     }, [timeRange]);
 
     // Update emissions based on fuel mode changes
@@ -165,51 +206,72 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
             particulates: Math.max(0, baseEmissions.particulates + (Math.random() - 0.5) * 1)
         });
     }, [fuelMode, flexMix, plantStatus]);
+
+    // Simulate real-time data for resources
+    useEffect(() => {
+        const resourceInterval = setInterval(() => {
+            if (plantStatus === PlantStatus.Online) {
+                setResourceData(prev => ({
+                    waterConsumption: Math.max(100, Math.min(150, prev.waterConsumption + (Math.random() - 0.5) * 5)),
+                    gasConsumption: Math.max(8000, Math.min(9000, prev.gasConsumption + (Math.random() - 0.5) * 200)),
+                    ethanolConsumption: Math.max(45, Math.min(65, prev.ethanolConsumption + (Math.random() - 0.5) * 2)),
+                    biodieselConsumption: Math.max(35, Math.min(50, prev.biodieselConsumption + (Math.random() - 0.5) * 2)),
+                    h2Consumption: Math.max(8, Math.min(15, prev.h2Consumption + (Math.random() - 0.5) * 1)),
+                    waterStorage: {
+                        ...prev.waterStorage,
+                        level: Math.max(0, Math.min(prev.waterStorage.capacity, prev.waterStorage.level + (Math.random() - 0.51) * 10)), // slight negative bias
+                    },
+                    gasStorage: {
+                        ...prev.gasStorage,
+                        level: Math.max(0, Math.min(prev.gasStorage.capacity, prev.gasStorage.level + (Math.random() - 0.51) * 50)), // slight negative bias
+                    },
+                    ethanolStorage: {
+                        ...prev.ethanolStorage,
+                        level: Math.max(0, Math.min(prev.ethanolStorage.capacity, prev.ethanolStorage.level + (Math.random() - 0.51) * 20)),
+                    },
+                    biodieselStorage: {
+                        ...prev.biodieselStorage,
+                        level: Math.max(0, Math.min(prev.biodieselStorage.capacity, prev.biodieselStorage.level + (Math.random() - 0.51) * 15)),
+                    },
+                    h2Storage: {
+                        ...prev.h2Storage,
+                        level: Math.max(0, Math.min(prev.h2Storage.capacity, prev.h2Storage.level + (Math.random() - 0.51) * 5)),
+                    }
+                }));
+            } else {
+                setResourceData(prev => ({
+                    ...prev,
+                    waterConsumption: 0,
+                    gasConsumption: 0,
+                    ethanolConsumption: 0,
+                    biodieselConsumption: 0,
+                    h2Consumption: 0,
+                }));
+            }
+        }, 3000);
+        return () => clearInterval(resourceInterval);
+    }, [plantStatus]);
     
     // Simulate real-time data updates for turbines and ambient conditions
     useEffect(() => {
         setHistoricalEmissions(generateHistoricalEmissions());
 
         const interval = setInterval(() => {
-            // Update turbines with predictive maintenance logic
             setTurbines(prev => prev.map(t => {
-                if (t.status !== 'active') {
-                    // Keep existing status for non-active turbines
-                    return t;
-                }
+                if (t.status !== 'active') return { ...t, rpm: 0, temp: 80, pressure: 1 };
 
-                // 1. Generate new values with slightly more variance to trigger alerts
-                const newRpm = 3590 + Math.random() * 25; // 3590-3615
-                const newTemp = 935 + Math.random() * 40; // 935-975
-                const newPressure = 17.7 + Math.random() * 0.6; // 17.7-18.3
-
-                // 2. Predictive Maintenance Check
-                // Analyzing the change from the previous state (t) to the new state.
-                // This uses the previous data point as "historical data".
-                let needsMaintenance = t.needsMaintenance || false;
-
-                // Critical temperature spike
-                const tempAlert = newTemp > 968;
-                // High RPM deviation from previous value (instability)
-                const rpmAlert = Math.abs(newRpm - t.rpm) > 10;
-                // Pressure outside of optimal range
-                const pressureAlert = newPressure < 17.8 || newPressure > 18.25;
+                const newRpm = 3590 + Math.random() * 25;
+                const newTemp = 935 + Math.random() * 40;
+                const newPressure = 17.7 + Math.random() * 0.6;
                 
-                // If temp is critical, or if two other minor alerts trigger, flag for maintenance.
-                if (tempAlert || (rpmAlert && pressureAlert)) {
-                    needsMaintenance = true;
-                }
-
                 return {
                     ...t,
                     rpm: newRpm,
                     temp: newTemp,
                     pressure: newPressure,
-                    needsMaintenance: needsMaintenance,
                 };
             }));
             
-            // Update ambient conditions
             setAmbient(prev => ({
                 dry: Math.max(10, Math.min(40, prev.dry + (Math.random() - 0.5) * 0.5)),
                 wet: Math.max(8, Math.min(35, prev.wet + (Math.random() - 0.5) * 0.4)),
@@ -225,9 +287,17 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
         setTurbines(initialTurbines.map(t => ({
             ...t,
             status: turbineStatusConfig[t.id] || 'inactive',
-            needsMaintenance: t.needsMaintenance || false, // Initialize with false
+            maintenanceScore: turbineMaintenanceScores[t.id] || 0,
         })));
-    }, [turbineStatusConfig]);
+    }, [turbineStatusConfig, turbineMaintenanceScores]);
+
+    // --- HANDLERS ---
+    const handlePerformMaintenance = (turbineId: number) => {
+        setTurbineMaintenanceScores(prev => ({
+            ...prev,
+            [turbineId]: 0,
+        }));
+    };
 
 
     // --- COMPUTED VALUES ---
@@ -262,9 +332,9 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
         switch(maximizedWidget) {
             case 'power': return <PowerOutput powerOutput={powerOutput} efficiency={efficiency} historicalData={shortHistoricalData} efficiencyGain={efficiencyGain} plantStatus={plantStatus} dryBulbTemp={ambient.dry} wetBulbTemp={ambient.wet} humidity={ambient.humidity} powerLoss={powerLoss} {...commonProps} />;
             case 'fuel': return <FuelStatus fuelMode={fuelMode} consumption={historicalData.slice(-1)[0]?.consumption || 0} flexMix={flexMix} setFlexMix={setFlexMix} historicalData={historicalData} timeRange={timeRange} setTimeRange={setTimeRange} {...commonProps} />;
-            case 'emissions': return <EmissionsMonitor emissions={emissions} historicalEmissions={historicalEmissions} {...commonProps} />;
-            case 'turbines': return <TurbineStatus turbines={filteredTurbines} onSelectTurbine={setSelectedTurbineId} selectedTurbineId={selectedTurbineId} turbineTypeFilter={turbineTypeFilter} setTurbineTypeFilter={setTurbineTypeFilter} {...commonProps} />;
-            case 'alerts': return <Alerts alerts={alerts} onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))} onClearAll={() => setAlerts([])} {...commonProps} />;
+            case 'emissions': return <EmissionsMonitor emissions={emissions} historicalEmissions={historicalEmissions} alerts={alerts} onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))} onClearAll={() => setAlerts([])} {...commonProps} />;
+            case 'resources': return <ResourceManagement {...resourceData} historicalData={historicalResourceData} resourceConfig={resourceConfig} {...commonProps} />;
+            case 'turbines': return <TurbineStatus turbines={filteredTurbines} onSelectTurbine={setSelectedTurbineId} selectedTurbineId={selectedTurbineId} turbineTypeFilter={turbineTypeFilter} setTurbineTypeFilter={setTurbineTypeFilter} onPerformMaintenance={handlePerformMaintenance} {...commonProps} />;
             case 'history': return <HistoricalData data={historicalData} timeRange={timeRange} setTimeRange={setTimeRange} {...commonProps} />;
             default: return null;
         }
@@ -280,9 +350,8 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
 
     return (
         <div className="mt-6">
-            <ControlPanel plantStatus={plantStatus} setPlantStatus={setPlantStatus} />
             <div className="mt-6 grid grid-cols-12 gap-6">
-                <div className="col-span-12 lg:col-span-4 h-full">
+                <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
                     <PowerOutput 
                         powerOutput={powerOutput} 
                         efficiency={efficiency} 
@@ -297,7 +366,7 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                         onToggleMaximize={() => setMaximizedWidget('power')}
                     />
                 </div>
-                <div className="col-span-12 lg:col-span-4 h-full">
+                <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
                     <FuelStatus 
                         fuelMode={fuelMode}
                         consumption={historicalData.slice(-1)[0]?.consumption || 380}
@@ -310,16 +379,28 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                         setTimeRange={setTimeRange}
                     />
                 </div>
-                <div className="col-span-12 lg:col-span-4 h-full">
+                <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
                     <EmissionsMonitor 
                         emissions={emissions} 
                         historicalEmissions={historicalEmissions} 
+                        alerts={alerts}
+                        onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))}
+                        onClearAll={() => setAlerts([])}
                         isMaximizable
                         onToggleMaximize={() => setMaximizedWidget('emissions')}
                     />
                 </div>
+                <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
+                    <ResourceManagement
+                        {...resourceData}
+                        historicalData={historicalResourceData}
+                        resourceConfig={resourceConfig}
+                        isMaximizable
+                        onToggleMaximize={() => setMaximizedWidget('resources')}
+                    />
+                </div>
                 
-                <div className="col-span-12 lg:col-span-8">
+                <div className="col-span-12">
                     {selectedTurbine ? (
                         <MainTurbineMonitor 
                             turbine={selectedTurbine} 
@@ -336,18 +417,9 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                             onToggleMaximize={() => setMaximizedWidget('turbines')}
                             turbineTypeFilter={turbineTypeFilter}
                             setTurbineTypeFilter={setTurbineTypeFilter}
+                            onPerformMaintenance={handlePerformMaintenance}
                         />
                     )}
-                </div>
-
-                <div className="col-span-12 lg:col-span-4">
-                    <Alerts 
-                        alerts={alerts} 
-                        onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))}
-                        onClearAll={() => setAlerts([])}
-                        isMaximizable
-                        onToggleMaximize={() => setMaximizedWidget('alerts')}
-                    />
                 </div>
 
                 <div className="col-span-12">

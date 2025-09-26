@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter } from 'recharts';
-import { BoltIcon as Power, FactoryIcon as Factory, CogIcon as Settings, InfoIcon as Info, ChevronDownIcon as ChevronDown, ChevronUpIcon as ChevronUp, ChartBarIcon as BarChart3, TrendingUpIcon as TrendingUp, MagnifyingGlassIcon as Search } from '../components/icons';
+import { BoltIcon as Power, FactoryIcon as Factory, CogIcon as Settings, InfoIcon as Info, ChevronDownIcon as ChevronDown, ChevronUpIcon as ChevronUp, ChartBarIcon as BarChart3, TrendingUpIcon as TrendingUp, MagnifyingGlassIcon as Search, CloseIcon } from '../components/icons';
 import { POWER_PLANTS } from '../data/plants';
+
+const Metric = ({ label, value, unit, icon: Icon, colorClass = "text-blue-600" }) => (
+  <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+    <div className="flex items-center space-x-2">
+      <Icon className={`w-5 h-5 ${colorClass}`} />
+      <span className="text-sm text-gray-600 font-medium">{label}</span>
+    </div>
+    <span className={`text-lg font-bold font-mono ${colorClass}`}>
+      {value != null ? `${value.toLocaleString('pt-BR')} ${unit || ''}`.trim() : 'N/A'}
+    </span>
+  </div>
+);
 
 const PowerPlantSystem = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPlant, setSelectedPlant] = useState('all');
   const [expandedSections, setExpandedSections] = useState({
     plants: true,
     analytics: true,
@@ -25,12 +38,17 @@ const PowerPlantSystem = () => {
 
   const filteredPlants = plantsData.filter(plant => {
     const matchesFilter = selectedFilter === 'all' || 
-                         plant.fuel.toLowerCase().includes(selectedFilter.toLowerCase()) ||
-                         (plant.cycle && plant.cycle.toLowerCase().includes(selectedFilter.toLowerCase()));
-    const matchesSearch = plant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (plant.fuel && plant.fuel.toLowerCase().includes(selectedFilter.toLowerCase()));
+    
+    const matchesSearch = searchTerm === '' ||
+                         plant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (plant.location && plant.location.toLowerCase().includes(searchTerm.toLowerCase()));
+
     return matchesFilter && matchesSearch;
   });
+
+  const highlightedPlant = selectedPlant === 'all' ? null : plantsData.find(p => p.name === selectedPlant);
+
 
   // Dados para gráficos de análise
   const fuelTypeData = [
@@ -95,6 +113,15 @@ const PowerPlantSystem = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 text-gray-800">
+        <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn { 
+          animation: fadeIn 0.3s ease-in-out; 
+        }
+      `}</style>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -107,38 +134,102 @@ const PowerPlantSystem = () => {
 
         {/* Filtros e Busca */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1 relative">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar por usina ou localização..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Search Input */}
+            <div>
+              <label htmlFor="search-plant" className="block text-sm font-medium text-gray-700 mb-1">Buscar por nome/local</label>
+              <div className="relative">
+                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  id="search-plant"
+                  type="text"
+                  placeholder="Ex: Parnaíba, Macaé..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="flex space-x-2">
-              {['all', 'Gás Natural', 'Carvão Mineral', 'Óleo Combustível'].map(filter => (
-                <button
-                  key={filter}
-                  onClick={() => setSelectedFilter(filter)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    selectedFilter === filter 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {filter === 'all' ? 'Todas' : filter}
-                </button>
-              ))}
+
+            {/* Fuel Type Dropdown */}
+            <div>
+              <label htmlFor="fuel-filter" className="block text-sm font-medium text-gray-700 mb-1">Filtrar por Combustível</label>
+              <select
+                id="fuel-filter"
+                value={selectedFilter}
+                onChange={(e) => setSelectedFilter(e.target.value)}
+                className="w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos os Combustíveis</option>
+                <option value="Gás Natural">Gás Natural</option>
+                <option value="Carvão Mineral">Carvão Mineral</option>
+                <option value="Óleo Combustível">Óleo Combustível</option>
+              </select>
             </div>
-          </div>
-          <div className="mt-4 flex justify-between text-sm text-gray-600">
-            <span>Total de usinas: {filteredPlants.length}</span>
-            <span>Geração total 2023: {filteredPlants.reduce((sum, p) => sum + (p.generation2023 || 0), 0).toLocaleString()} GWh</span>
+
+            {/* Locate Plant Dropdown */}
+            <div>
+              <label htmlFor="locate-plant" className="block text-sm font-medium text-gray-700 mb-1">Destacar Usina Específica</label>
+              <select
+                id="locate-plant"
+                value={selectedPlant}
+                onChange={(e) => setSelectedPlant(e.target.value)}
+                className="w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Nenhuma destacada</option>
+                {plantsData.sort((a, b) => a.name.localeCompare(b.name)).map(plant => (
+                  <option key={plant.name} value={plant.name}>
+                    {plant.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
+
+        {highlightedPlant && (
+          <div className="mb-8">
+            <div className="bg-white rounded-lg shadow-lg border-2 border-blue-500 p-6 animate-fadeIn">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center space-x-3">
+                  <Info className="w-8 h-8 text-blue-600" />
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Destaque: {highlightedPlant.name}</h2>
+                    <p className="text-gray-500">{highlightedPlant.location}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedPlant('all')}
+                  className="p-2 rounded-full text-gray-500 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="Fechar destaque"
+                >
+                  <CloseIcon className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-lg text-gray-800 mb-3">Visão Geral e Descrição ("Visão")</h4>
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <p><strong>Combustível:</strong> {highlightedPlant.fuel}</p>
+                    <p><strong>Tecnologia:</strong> {highlightedPlant.cycle}</p>
+                    {highlightedPlant.description && (
+                      <p className="pt-2 italic border-t border-gray-200 mt-2">{highlightedPlant.description}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-lg text-gray-800 mb-3">Indicadores Chave ("Números") - 2023</h4>
+                  <Metric label="Capacidade" value={highlightedPlant.power} unit="MW" icon={Power} colorClass="text-blue-600" />
+                  <Metric label="Geração" value={highlightedPlant.generation2023} unit="GWh" icon={TrendingUp} colorClass="text-green-600" />
+                  <Metric label="Emissões" value={highlightedPlant.emissions2023} unit="mil tCO₂e" icon={Factory} colorClass="text-red-600" />
+                  <Metric label="Eficiência" value={highlightedPlant.efficiency} unit="%" icon={Settings} colorClass="text-purple-600" />
+                  <Metric label="Taxa de Emissão" value={highlightedPlant.rate} unit="tCO₂e/GWh" icon={BarChart3} colorClass="text-orange-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Coluna Esquerda - Análise Geral */}
@@ -262,7 +353,7 @@ const PowerPlantSystem = () => {
               onToggle={() => toggleSection('plants')}
             >
               <div className="space-y-3 mt-4 max-h-[500px] overflow-y-auto pr-2">
-                {filteredPlants.map((plant, index) => (
+                {filteredPlants.length > 0 ? filteredPlants.map((plant, index) => (
                   <div key={index} className={`p-4 rounded-lg border ${getFuelBgColor(plant.fuel)}`}>
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-semibold text-gray-800">{plant.name}</h4>
@@ -284,21 +375,11 @@ const PowerPlantSystem = () => {
                         <p className="text-gray-500">Emissões 2023</p>
                         <p className="font-bold text-red-600">{plant.emissions2023?.toLocaleString() || 'N/A'} mil tCO₂e</p>
                       </div>
-                      {plant.efficiency && (
-                        <div className="bg-white p-2 rounded">
-                          <p className="text-gray-500">Eficiência</p>
-                          <p className="font-bold text-green-600">{plant.efficiency}%</p>
-                        </div>
-                      )}
-                      {plant.rate && (
-                        <div className="bg-white p-2 rounded">
-                          <p className="text-gray-500">Taxa Emissão</p>
-                          <p className="font-bold text-orange-600">{plant.rate} tCO₂e/GWh</p>
-                        </div>
-                      )}
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-center text-gray-500 py-8">Nenhuma usina encontrada com os filtros atuais.</p>
+                )}
               </div>
             </SectionCard>
           </div>
