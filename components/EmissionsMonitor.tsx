@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Alert, EmissionData, HistoricalEmissionPoint } from '../types';
 import DashboardCard from './DashboardCard';
 import { WarningIcon, InfoIcon, CloseIcon } from './icons';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 interface EmissionsMonitorProps {
   emissions: EmissionData;
@@ -48,8 +48,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
         <p className="label text-sm text-gray-300">{`Dia: ${label}`}</p>
         {payload.map((p, i) => (
-          <p key={i} style={{ color: p.color }} className="text-sm">
-            {`${p.name}: ${p.value.toFixed(1)} kg/h`}
+          <p key={i} style={{ color: p.stroke }} className="text-sm">
+            {`${p.dataKey.includes('forecast') ? 'Previsto' : 'Histórico'}: ${p.value.toFixed(1)} kg/h`}
           </p>
         ))}
       </div>
@@ -72,6 +72,16 @@ const alertConfig = {
         color: 'border-l-4 border-blue-400'
     }
 }
+
+const LegendItem: React.FC<{ color: string; text: string }> = ({ color, text }) => (
+  <div className="flex items-center space-x-2">
+    <div className="flex items-center">
+      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }}></div>
+      <div className="w-3 h-px" style={{ backgroundColor: color }}></div>
+    </div>
+    <span style={{ color }}>{text}</span>
+  </div>
+);
 
 
 const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({ 
@@ -149,30 +159,35 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
   const renderEmissionsView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 h-full">
         <div className="space-y-4 my-auto">
-            <EmissionBar label="NOx" value={emissions.nox} max={25} unit="kg/h" />
+            <EmissionBar label="NOx" value={emissions.nox} max={30} unit="kg/h" />
             <EmissionBar label="SOx" value={emissions.sox} max={10} unit="kg/h" />
             <EmissionBar label="CO" value={emissions.co} max={50} unit="kg/h" />
         </div>
-        <div className="w-full h-full min-h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
-                    <XAxis dataKey="time" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} unit=" kg/h" domain={[0, 'dataMax + 10']} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}}/>
-                    
-                    {/* Historical Lines */}
-                    <Line type="monotone" dataKey="nox" name="NOx Histórico" stroke="#f87171" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="sox" name="SOx Histórico" stroke="#fbbf24" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="co" name="CO Histórico" stroke="#facc15" strokeWidth={2} dot={false} />
-
-                    {/* Forecast Lines */}
-                    <Line type="monotone" dataKey="forecastNox" name="NOx Previsto" stroke="#f87171" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-                    <Line type="monotone" dataKey="forecastSox" name="SOx Previsto" stroke="#fbbf24" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-                    <Line type="monotone" dataKey="forecastCo" name="CO Previsto" stroke="#facc15" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-                </LineChart>
-            </ResponsiveContainer>
+        <div className="w-full h-full flex flex-col">
+            <div className="flex-grow min-h-[180px] -ml-4">
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
+                        <XAxis dataKey="time" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} interval={chartData.length - 2} tickFormatter={(value, index) => index === 0 ? 'D-1' : 'D+7'} />
+                        <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} unit=" kg/h" domain={[0, 40]} ticks={[0, 10, 20, 30]} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Line type="monotone" dataKey="co" stroke="#facc15" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="forecastCo" stroke="#facc15" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                        <Line type="monotone" dataKey="nox" stroke="#f87171" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="forecastNox" stroke="#f87171" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                        <Line type="monotone" dataKey="sox" stroke="#fbbf24" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="forecastSox" stroke="#fbbf24" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                    </LineChart>
+                </ResponsiveContainer>
+            </div>
+             <div className="space-y-1 text-xs font-semibold pl-4 mt-2">
+                <LegendItem color="#facc15" text="CO Histórico" />
+                <LegendItem color="#facc15" text="CO Previsto" />
+                <LegendItem color="#f87171" text="NOx Histórico" />
+                <LegendItem color="#f87171" text="NOx Previsto" />
+                <LegendItem color="#fbbf24" text="SOx Histórico" />
+                <LegendItem color="#fbbf24" text="SOx Previsto" />
+            </div>
         </div>
     </div>
   );

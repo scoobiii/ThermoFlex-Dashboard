@@ -20,6 +20,7 @@ import TurbineStatus from '../components/TurbineStatus';
 import MainTurbineMonitor from '../components/MainTurbineMonitor';
 import HistoricalData from '../components/HistoricalData';
 import ResourceManagement from '../components/ResourceManagement';
+import NuclearPlantInfo from '../components/NuclearPlantInfo';
 
 // --- PROPS INTERFACE ---
 interface PowerPlantProps {
@@ -151,9 +152,9 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
 
     // Update emissions based on fuel mode changes
     useEffect(() => {
-        if (plantStatus !== PlantStatus.Online) {
+        if (plantStatus !== PlantStatus.Online || fuelMode === FuelMode.Nuclear) {
             setEmissions({ nox: 0, sox: 0, co: 0, particulates: 0 });
-            // Also set historical to 0 when offline for consistency
+            // Also set historical to 0 for consistency
             setHistoricalEmissions(Array.from({ length: 7 }, (_, i) => ({
                 time: `D-${6-i}`, nox: 0, sox: 0, co: 0, particulates: 0
             })));
@@ -359,7 +360,10 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
         switch(maximizedWidget) {
             case 'power': return <PowerOutput powerOutput={powerOutput} efficiency={efficiency} historicalData={shortHistoricalData} efficiencyGain={efficiencyGain} plantStatus={plantStatus} dryBulbTemp={ambient.dry} wetBulbTemp={ambient.wet} humidity={ambient.humidity} powerLoss={powerLoss} {...commonProps} />;
             case 'fuel': return <FuelStatus fuelMode={fuelMode} consumption={historicalData.slice(-1)[0]?.consumption || 0} flexMix={flexMix} setFlexMix={setFlexMix} historicalData={historicalData} timeRange={timeRange} setTimeRange={setTimeRange} {...commonProps} />;
-            case 'emissions': return <EmissionsMonitor emissions={emissions} historicalEmissions={historicalEmissions} alerts={alerts} onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))} onClearAll={() => setAlerts([])} {...commonProps} />;
+            case 'emissions': 
+                return fuelMode === FuelMode.Nuclear 
+                  ? <NuclearPlantInfo {...commonProps} />
+                  : <EmissionsMonitor emissions={emissions} historicalEmissions={historicalEmissions} alerts={alerts} onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))} onClearAll={() => setAlerts([])} {...commonProps} />;
             case 'resources': return <ResourceManagement {...resourceData} historicalData={historicalResourceData} resourceConfig={resourceConfig} {...commonProps} />;
             case 'turbines': return <TurbineStatus turbines={filteredTurbines} onSelectTurbine={setSelectedTurbineId} selectedTurbineId={selectedTurbineId} turbineTypeFilter={turbineTypeFilter} setTurbineTypeFilter={setTurbineTypeFilter} onPerformMaintenance={handlePerformMaintenance} {...commonProps} />;
             case 'history': return <HistoricalData data={historicalData} timeRange={timeRange} setTimeRange={setTimeRange} {...commonProps} />;
@@ -407,15 +411,22 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                     />
                 </div>
                 <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
-                    <EmissionsMonitor 
-                        emissions={emissions} 
-                        historicalEmissions={historicalEmissions} 
-                        alerts={alerts}
-                        onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))}
-                        onClearAll={() => setAlerts([])}
-                        isMaximizable
-                        onToggleMaximize={() => setMaximizedWidget('emissions')}
-                    />
+                   {fuelMode === FuelMode.Nuclear ? (
+                        <NuclearPlantInfo
+                            isMaximizable
+                            onToggleMaximize={() => setMaximizedWidget('emissions')}
+                        />
+                    ) : (
+                        <EmissionsMonitor 
+                            emissions={emissions} 
+                            historicalEmissions={historicalEmissions} 
+                            alerts={alerts}
+                            onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))}
+                            onClearAll={() => setAlerts([])}
+                            isMaximizable
+                            onToggleMaximize={() => setMaximizedWidget('emissions')}
+                        />
+                    )}
                 </div>
                 <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
                     <ResourceManagement
