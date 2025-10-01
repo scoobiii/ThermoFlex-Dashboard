@@ -441,7 +441,7 @@ const MexEcoBr: React.FC = () => {
                 <div class="info-card">
                     <h4>Mauá 100% Solar</h4>
                     <p>Autonomia energética total e um mercado de energia descentralizado e democrático, reduzindo custos e dependências externas.</p>
-                    <a href="https://scoobiii.github.io/ThermoFlex-Dashboard" class="link">MEX DAO</a>
+                    <a href="https://github.com/scoobiii/ThermoFlex-Dashboard" class="link">MEX DAO</a>
                                         
                 </div>
                 <div class="info-card">
@@ -792,7 +792,7 @@ const MexEcoBr: React.FC = () => {
 
         const previousSlide = () => {
             if (currentSlide > 0) {
-                showSlide(currentSlide - 1);
+                showSlide(currentSlide + 1);
             }
         };
 

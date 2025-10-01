@@ -18,7 +18,9 @@ import { POWER_PLANTS as initialPowerPlants } from './data/plants';
 
 export type TurbineStatusConfig = { [key: number]: TurbineStatus };
 
-// --- Configuration Persistence ---
+// --- Configuration Persistence with localStorage ---
+// This section handles saving and loading user preferences to ensure they persist across browser sessions.
+
 // Interface for a single plant's config
 export interface PlantConfig {
   fuelMode: FuelMode;
@@ -41,11 +43,13 @@ interface AllConfigs {
     [plantName: string]: PlantConfig;
 }
 
-const CONFIG_STORAGE_KEY = 'app-all-configs';
-const RESOURCE_CONFIG_KEY = 'app-resource-config';
-const SELECTED_PLANT_STORAGE_KEY = 'app-selected-plant';
-const PLANTS_STORAGE_KEY = 'app-available-plants';
+// Storage Keys
+const CONFIG_STORAGE_KEY = 'app-all-configs'; // Stores all plant-specific settings
+const RESOURCE_CONFIG_KEY = 'app-resource-config'; // Stores resource visibility
+const SELECTED_PLANT_STORAGE_KEY = 'app-selected-plant'; // Stores the last selected plant
+const PLANTS_STORAGE_KEY = 'app-available-plants'; // Stores the list of plants, including user-added ones
 
+// Default configuration for a new or unconfigured plant
 const defaultConfig: PlantConfig = {
   fuelMode: FuelMode.NaturalGas,
   flexMix: { h2: 20, biodiesel: 30 },
@@ -55,6 +59,7 @@ const defaultConfig: PlantConfig = {
   turbineMaintenanceScores: { 1: 10, 2: 15, 3: 85, 4: 20, 5: 5 },
 };
 
+// Default resource visibility settings
 const defaultResourceConfig: ResourceConfig = {
     water: true,
     gas: true,
@@ -63,18 +68,24 @@ const defaultResourceConfig: ResourceConfig = {
     h2: true,
 };
 
+// Loader function for all plant configurations
 const loadAllConfigs = (): AllConfigs => {
   try {
+    // Attempt to retrieve saved configurations from localStorage.
     const savedConfigString = localStorage.getItem(CONFIG_STORAGE_KEY);
     if (savedConfigString) {
+      // If data exists, parse it from JSON and return.
       return JSON.parse(savedConfigString);
     }
   } catch (error) {
+    // Log any errors during loading/parsing and fall back to a default state.
     console.error("Failed to load or parse configs from localStorage", error);
   }
+  // Return an empty object if no saved data is found or an error occurs.
   return {};
 };
 
+// Loader function for resource visibility
 const loadResourceConfig = (): ResourceConfig => {
     try {
         const savedConfigString = localStorage.getItem(RESOURCE_CONFIG_KEY);
@@ -87,6 +98,7 @@ const loadResourceConfig = (): ResourceConfig => {
     return defaultResourceConfig;
 };
 
+// Loader function for the list of available plants
 const loadAvailablePlants = (): Plant[] => {
     try {
         const savedPlantsString = localStorage.getItem(PLANTS_STORAGE_KEY);
@@ -119,18 +131,20 @@ const App: React.FC = () => {
   const [efficiencyGain, setEfficiencyGain] = useState(0);
   const [activeRackCount, setActiveRackCount] = useState(0); // State for active racks
 
-  // --- Configuration State ---
+  // --- Configuration State (Initialized from localStorage) ---
   const [allConfigs, setAllConfigs] = useState<AllConfigs>(loadAllConfigs);
   const [resourceConfig, setResourceConfigState] = useState<ResourceConfig>(loadResourceConfig);
   const [availablePlants, setAvailablePlants] = useState<Plant[]>(loadAvailablePlants);
   const [selectedPlantName, setSelectedPlantNameState] = useState<string>(() => {
     const savedPlant = localStorage.getItem(SELECTED_PLANT_STORAGE_KEY);
-    if (savedPlant && availablePlants.find(p => p.name === savedPlant)) {
+    // Ensure the saved plant still exists in the list before selecting it.
+    if (savedPlant && loadAvailablePlants().find(p => p.name === savedPlant)) {
         return savedPlant;
     }
-    return availablePlants[0]?.name || 'MAUAX Bio PowerPlant (standard)';
+    return loadAvailablePlants()[0]?.name || 'MAUAX Bio PowerPlant (standard)';
   });
 
+  // Derived state for the currently selected plant's configuration
   const currentConfig = useMemo(() => {
     return allConfigs[selectedPlantName] || defaultConfig;
   }, [allConfigs, selectedPlantName]);
@@ -139,25 +153,33 @@ const App: React.FC = () => {
     return availablePlants.find(p => p.name === selectedPlantName) || availablePlants[0];
   }, [availablePlants, selectedPlantName]);
 
-  // Persist any changes to allConfigs, selected plant, or available plants
+  // --- Automatic Persistence Effects ---
+  // These effects automatically save the relevant state to localStorage whenever it changes.
+  
+  // Persist all plant configurations (fuel mode, flex mix, turbine status, etc.)
   useEffect(() => {
     try {
         localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(allConfigs));
     } catch(error) {
-        console.error("Failed to save configs to localStorage", error);
+        console.error("Failed to save all plant configs to localStorage", error);
     }
   }, [allConfigs]);
 
+  // Persist the list of available plants (including user-added ones)
   useEffect(() => {
     try {
         localStorage.setItem(PLANTS_STORAGE_KEY, JSON.stringify(availablePlants));
     } catch(error) {
-        console.error("Failed to save plants to localStorage", error);
+        console.error("Failed to save available plants to localStorage", error);
     }
   }, [availablePlants]);
   
+  // --- State Setters with Persistence ---
+  // These functions update state and explicitly save to localStorage.
+  
   const setSelectedPlantName = (name: string) => {
     try {
+        // Save the newly selected plant name to localStorage immediately.
         localStorage.setItem(SELECTED_PLANT_STORAGE_KEY, name);
     } catch (error) {
         console.error("Failed to save selected plant to localStorage", error);
@@ -165,6 +187,7 @@ const App: React.FC = () => {
     setSelectedPlantNameState(name);
   };
 
+  // Generic updater for the current plant's configuration, which triggers the persistence effect.
   const updateCurrentConfig = (newConfig: Partial<PlantConfig>) => {
       setAllConfigs(prev => ({
           ...prev,
@@ -206,13 +229,16 @@ const App: React.FC = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, [currentPage]); // Re-add listener to capture `currentPage` correctly for `setPreviousPage`
 
+  // --- Configuration Setter Functions ---
   const setFuelMode = (fuelMode: FuelMode) => updateCurrentConfig({ fuelMode });
+  
   const setFlexMix = (updater: React.SetStateAction<{ h2: number; biodiesel: number }>) => {
       const newFlexMix = typeof updater === 'function' 
           ? updater(currentConfig.flexMix) 
           : updater;
       updateCurrentConfig({ flexMix: newFlexMix });
   };
+  
   const setTurbineStatusConfig = (updater: React.SetStateAction<TurbineStatusConfig>) => {
       const newStatus = typeof updater === 'function'
           ? updater(currentConfig.turbineStatusConfig)
@@ -263,6 +289,7 @@ const App: React.FC = () => {
         setPowerOutput(0);
       }
 
+      // If no configuration exists for the selected plant, create a default one.
       if (!allConfigs[selectedPlantName]) {
         let newFuelMode = FuelMode.NaturalGas;
         if (plant.name === 'MAUAX Bio PowerPlant (standard)') {
