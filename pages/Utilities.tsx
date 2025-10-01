@@ -10,7 +10,6 @@ interface UtilitiesProps {
     powerOutput: number;
     efficiency: number;
     plantStatus: PlantStatus;
-    setEfficiencyGain: (gain: number) => void;
     setCurrentPage: (page: Page) => void;
     activeRackCount: number;
     selectedPlant: Plant;
@@ -24,7 +23,7 @@ const SankeyConnector: React.FC = () => (
     </div>
 );
 
-const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ powerOutput, efficiency, plantStatus, setEfficiencyGain, setCurrentPage, activeRackCount }) => {
+const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ powerOutput, efficiency, plantStatus, setCurrentPage, activeRackCount }) => {
     
     const isOnline = plantStatus === PlantStatus.Online;
     const [ambientTemp] = React.useState(32.4);
@@ -47,17 +46,6 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
 
     const conventionalChillerCOP = 0.4; // Updated to reflect superior value of trigeneration
     const electricalEquivalentSaved = isOnline ? coolingProduction / conventionalChillerCOP : 0;
-
-    useEffect(() => {
-        const ISO_TEMP_THRESHOLD = 25;
-        if (isOnline && ambientTemp > ISO_TEMP_THRESHOLD) {
-            const tiacGain = tiacCooling / 300;
-            const fogGain = fogCooling / 400;
-            setEfficiencyGain(tiacGain + fogGain);
-        } else {
-            setEfficiencyGain(0);
-        }
-    }, [isOnline, ambientTemp, tiacCooling, fogCooling, setEfficiencyGain]);
 
     const handleDistributionChange = (system: 'tiac' | 'fog', value: number) => {
         const otherSystem = system === 'tiac' ? 'fog' : 'tiac';

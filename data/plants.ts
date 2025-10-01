@@ -175,7 +175,7 @@ export const POWER_PLANTS: Plant[] = [
     cycle: "Ciclo Rankine (Nuclear)",
     generation2023: 12151,
     emissions2023: 0,
-    efficiency: 35,
+    efficiency: 34,
     rate: 0,
     identifier: { type: 'location', value: 'Angra dos Reis, RJ' },
     location: 'Angra dos Reis, RJ',

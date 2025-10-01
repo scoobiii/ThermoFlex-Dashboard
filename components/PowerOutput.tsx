@@ -119,19 +119,35 @@ const PowerOutput: React.FC<PowerOutputProps> = ({
             )}
         </div>
 
-        <div className="mt-auto pt-2 border-t border-gray-700 grid grid-cols-2 text-center">
+        <div className="mt-auto pt-2 border-t border-gray-700 grid grid-cols-3 text-center divide-x divide-gray-700">
           <div>
-            <p className="text-sm text-gray-400">Eficiência</p>
-            <p className="font-semibold text-xl text-white">{displayEfficiency.toFixed(1)}%</p>
+            <p className="text-sm text-gray-400">Eficiência Base</p>
+            <p className="font-semibold text-xl text-white">{isOnline ? efficiency.toFixed(1) : '0.0'}%</p>
           </div>
           <div>
             <p className="text-sm text-gray-400">Ganho (Utilities)</p>
-            <p className={`font-semibold text-xl ${efficiencyGain > 0 ? 'text-green-400' : 'text-white'}`}>
+            <p 
+              key={efficiencyGain.toFixed(2)}
+              className={`font-semibold text-xl animate-pulse-gain ${efficiencyGain > 0.005 ? 'text-green-400' : 'text-white'}`}>
                 +{efficiencyGain.toFixed(2)}%
             </p>
           </div>
+          <div>
+            <p className="text-sm text-gray-400">Eficiência Total</p>
+            <p className="font-semibold text-xl text-cyan-400">{displayEfficiency.toFixed(1)}%</p>
+          </div>
         </div>
       </div>
+      <style>{`
+        @keyframes pulse-gain {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); }
+        }
+        .animate-pulse-gain {
+          animation: pulse-gain 0.5s ease-out;
+        }
+      `}</style>
     </DashboardCard>
   );
 };

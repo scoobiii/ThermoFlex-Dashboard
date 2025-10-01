@@ -255,12 +255,12 @@ const App: React.FC = () => {
     const plant = availablePlants.find(p => p.name === selectedPlantName);
     if (plant) {
       setMaxCapacity(plant.power);
+      setEfficiency(plant.efficiency ?? 58.5);
       
       if (plantStatus === PlantStatus.Online) {
         setPowerOutput(plant.power * (0.85 + Math.random() * 0.1));
       } else {
         setPowerOutput(0);
-        setEfficiencyGain(0); // Reset gain when offline
       }
 
       if (!allConfigs[selectedPlantName]) {
@@ -281,6 +281,49 @@ const App: React.FC = () => {
         setSelectedPlantName(availablePlants[0].name);
     }
   }, [selectedPlantName, plantStatus, availablePlants]);
+
+  useEffect(() => {
+    const isOnline = plantStatus === PlantStatus.Online;
+    if (!isOnline) {
+        setEfficiencyGain(0);
+        return;
+    }
+
+    const isTrigenerationProject = 
+        selectedPlant.type === 'standard' || 
+        selectedPlant.name === 'Parque Térmico Pedreira';
+
+    const currentEfficiency = selectedPlant.efficiency ?? efficiency;
+    if (currentEfficiency <= 0) {
+      setEfficiencyGain(0);
+      return;
+    }
+    const powerInput = powerOutput / (currentEfficiency / 100);
+    const wasteHeat = powerInput - powerOutput;
+    
+    if ((isTrigenerationProject || selectedPlant.fuel === 'Nuclear') && wasteHeat > 0) {
+        const chillerCOP = 0.694;
+        const coolingProduction = wasteHeat * chillerCOP;
+
+        const coolingDistribution = { tiac: 40, fog: 25, dataCenter: 35 };
+        const tiacCooling = coolingProduction * (coolingDistribution.tiac / 100);
+        const fogCooling = coolingProduction * (coolingDistribution.fog / 100);
+        const dataCenterCooling = coolingProduction * (coolingDistribution.dataCenter / 100);
+
+        const ambientTemp = 28.5;
+        const ISO_TEMP_THRESHOLD = 25;
+        if (ambientTemp > ISO_TEMP_THRESHOLD) {
+            const tiacGain = tiacCooling / 300;
+            const fogGain = fogCooling / 400;
+            const dataCenterGain = dataCenterCooling / 1000;
+            setEfficiencyGain(tiacGain + fogGain + dataCenterGain);
+        } else {
+            setEfficiencyGain(0);
+        }
+    } else {
+        setEfficiencyGain(0);
+    }
+  }, [plantStatus, powerOutput, selectedPlant, efficiency]);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -307,7 +350,6 @@ const App: React.FC = () => {
           plantStatus={plantStatus}
           powerOutput={powerOutput}
           efficiency={efficiency}
-          setEfficiencyGain={setEfficiencyGain}
           setCurrentPage={setCurrentPage}
           activeRackCount={activeRackCount}
           selectedPlant={selectedPlant}
