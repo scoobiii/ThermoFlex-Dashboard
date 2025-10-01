@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import DashboardCard from '../components/DashboardCard';
 import ThermalPlantsSummary from '../components/ThermalPlantsSummary';
 import PlantsMap from '../components/PlantsMap';
@@ -85,6 +85,42 @@ const Configuration: React.FC<ConfigurationProps> = ({
     return baseTurbines.filter(t => t.type === turbineTypeFilter);
   }, [turbineTypeFilter]);
   
+  // Effect to synchronize resource config with fuel mode
+  useEffect(() => {
+    const newConfig: ResourceConfig = {
+      water: resourceConfig.water, // Preserve user's choice for water
+      gas: false,
+      ethanol: false,
+      biodiesel: false,
+      h2: false,
+    };
+
+    switch (fuelMode) {
+      case FuelMode.NaturalGas:
+        newConfig.gas = true;
+        break;
+      case FuelMode.Ethanol:
+        newConfig.ethanol = true;
+        break;
+      case FuelMode.Biodiesel:
+        newConfig.biodiesel = true;
+        break;
+      case FuelMode.FlexNGH2:
+        newConfig.gas = true;
+        newConfig.h2 = true;
+        break;
+      case FuelMode.FlexEthanolBiodiesel:
+        newConfig.ethanol = true;
+        newConfig.biodiesel = true;
+        break;
+    }
+    
+    // Update state only if there's a change to avoid unnecessary re-renders
+    if (JSON.stringify(newConfig) !== JSON.stringify(resourceConfig)) {
+        setResourceConfig(newConfig);
+    }
+  }, [fuelMode, resourceConfig.water, setResourceConfig]);
+
   const handlePlantUpdate = (field: keyof Plant | `identifier.${keyof NonNullable<Plant['identifier']>}`, value: string) => {
     if (!selectedPlant || !selectedPlantRaw) return;
 
@@ -229,20 +265,25 @@ const Configuration: React.FC<ConfigurationProps> = ({
          <DashboardCard title="Configuração de Insumos" icon={<WrenchScrewdriverIcon className="w-6 h-6"/>}>
             <div className="space-y-3">
                 <p className="text-xs text-gray-400">Selecione os insumos para exibir no painel de Gestão de Recursos.</p>
-                {Object.keys(resourceConfig).map((key) => (
-                    <div key={key} className="flex items-center justify-between bg-gray-700/50 p-2 rounded-lg">
-                        <span className="font-medium text-white text-sm">{resourceLabels[key as keyof ResourceConfig]}</span>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={resourceConfig[key as keyof ResourceConfig]}
-                                onChange={() => handleResourceToggle(key as keyof ResourceConfig)}
-                                className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-cyan-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
-                        </label>
-                    </div>
-                ))}
+                {Object.keys(resourceConfig).map((key) => {
+                    const resourceKey = key as keyof ResourceConfig;
+                    const isDisabled = resourceKey !== 'water';
+                    return (
+                        <div key={key} className={`flex items-center justify-between bg-gray-700/50 p-2 rounded-lg ${isDisabled ? 'opacity-60' : ''}`}>
+                            <span className="font-medium text-white text-sm">{resourceLabels[resourceKey]}</span>
+                            <label className={`relative inline-flex items-center ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                                <input
+                                    type="checkbox"
+                                    checked={resourceConfig[resourceKey]}
+                                    onChange={() => handleResourceToggle(resourceKey)}
+                                    className="sr-only peer"
+                                    disabled={isDisabled}
+                                />
+                                <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-cyan-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                            </label>
+                        </div>
+                    );
+                })}
             </div>
          </DashboardCard>
 

@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import DashboardCard from '../components/DashboardCard';
 // FIX: Import ChartPieIcon to use as the icon for the DashboardCard.
@@ -83,6 +84,7 @@ const Financials: React.FC<FinancialsProps> = ({
             [FuelMode.NaturalGas]: 0.2,
             [FuelMode.Ethanol]: 0.1,
             [FuelMode.Biodiesel]: 0.12,
+            [FuelMode.Nuclear]: 0,
         };
         
         let currentCo2Factor = CO2_FACTORS_KG_PER_KWH[FuelMode.NaturalGas];
@@ -99,8 +101,8 @@ const Financials: React.FC<FinancialsProps> = ({
         const monthlyKWh = monthlyMWh * 1000;
         const co2ReducedKg = monthlyKWh * (CO2_FACTORS_KG_PER_KWH.baseline - currentCo2Factor);
 
-        const isEffectively100PercentNaturalGas = fuelMode === FuelMode.NaturalGas || (fuelMode === FuelMode.FlexNGH2 && flexMix.h2 === 0);
-        const co2ReducedTons = isOnline && !isEffectively100PercentNaturalGas ? (co2ReducedKg > 0 ? co2ReducedKg / 1000 : 0) : 0;
+        const isBaselineFossilFuel = (fuelMode === FuelMode.NaturalGas || (fuelMode === FuelMode.FlexNGH2 && flexMix.h2 === 0));
+        const co2ReducedTons = isOnline && !isBaselineFossilFuel ? (co2ReducedKg > 0 ? co2ReducedKg / 1000 : 0) : 0;
         
         const carbonRevenue = co2ReducedTons * carbonPrice * BRL_USD_RATE;
 

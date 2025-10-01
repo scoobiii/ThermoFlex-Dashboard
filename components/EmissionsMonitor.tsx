@@ -87,33 +87,64 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
   const [view, setView] = useState<'emissions' | 'alerts'>('emissions');
   
   const forecastData = useMemo(() => {
-    if (!historicalEmissions || historicalEmissions.length === 0) {
-        return [];
-    }
+    if (!historicalEmissions || historicalEmissions.length === 0) return [];
+    
     const lastPoint = historicalEmissions[historicalEmissions.length - 1];
-    const forecast: HistoricalEmissionPoint[] = [];
+    if (!lastPoint) return [];
 
-    let currentNox = lastPoint.nox;
-    let currentSox = lastPoint.sox;
-    let currentCo = lastPoint.co;
-    let currentParticulates = lastPoint.particulates;
+    const forecast: HistoricalEmissionPoint[] = [];
+    let { nox, sox, co, particulates } = lastPoint;
 
     for (let i = 1; i <= 7; i++) {
-        currentNox *= 1.05;
-        currentSox *= 1.05;
-        currentCo *= 1.02;
-        currentParticulates *= 1.02;
+        nox *= (1 + (Math.random() - 0.3) * 0.1); // Fluctuate forecast
+        sox *= (1 + (Math.random() - 0.3) * 0.1);
+        co *= (1 + (Math.random() - 0.4) * 0.05);
+        particulates *= (1 + (Math.random() - 0.4) * 0.05);
 
         forecast.push({
             time: `D+${i}`,
-            nox: currentNox,
-            sox: currentSox,
-            co: currentCo,
-            particulates: currentParticulates,
+            nox: Math.max(0, nox),
+            sox: Math.max(0, sox),
+            co: Math.max(0, co),
+            particulates: Math.max(0, particulates),
         });
     }
     return forecast;
   }, [historicalEmissions]);
+  
+  const chartData = useMemo(() => {
+    if (!historicalEmissions || historicalEmissions.length === 0) return [];
+    
+    const historicalPart = historicalEmissions.map(h => ({ ...h }));
+    const lastHistoricalPoint = historicalPart[historicalPart.length - 1];
+
+    const forecastPart = [
+        { 
+            time: lastHistoricalPoint.time,
+            forecastNox: lastHistoricalPoint.nox,
+            forecastSox: lastHistoricalPoint.sox,
+            forecastCo: lastHistoricalPoint.co,
+        },
+        ...forecastData.map(f => ({
+            time: f.time,
+            forecastNox: f.nox,
+            forecastSox: f.sox,
+            forecastCo: f.co,
+        }))
+    ];
+
+    const allTimes = [...new Set([...historicalPart.map(p => p.time), ...forecastPart.map(p => p.time)])];
+    
+    return allTimes.map(time => {
+        const historicalPoint = historicalPart.find(p => p.time === time);
+        const forecastPoint = forecastPart.find(p => p.time === time);
+        return {
+            time,
+            ...(historicalPoint && { nox: historicalPoint.nox, sox: historicalPoint.sox, co: historicalPoint.co }),
+            ...(forecastPoint && { forecastNox: forecastPoint.forecastNox, forecastSox: forecastPoint.forecastSox, forecastCo: forecastPoint.forecastCo })
+        };
+    });
+  }, [historicalEmissions, forecastData]);
 
   const renderEmissionsView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 h-full">
@@ -124,15 +155,22 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
         </div>
         <div className="w-full h-full min-h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[...historicalEmissions, ...forecastData]} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
                     <XAxis dataKey="time" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} unit=" kg/h" domain={[0, 'dataMax + 10']} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}}/>
-                    <Line type="monotone" dataKey="nox" name="NOx" stroke="#ef4444" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="sox" name="SOx" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="co" name="CO" stroke="#eab308" strokeWidth={2} dot={false} />
+                    
+                    {/* Historical Lines */}
+                    <Line type="monotone" dataKey="nox" name="NOx Histórico" stroke="#f87171" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="sox" name="SOx Histórico" stroke="#fbbf24" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="co" name="CO Histórico" stroke="#facc15" strokeWidth={2} dot={false} />
+
+                    {/* Forecast Lines */}
+                    <Line type="monotone" dataKey="forecastNox" name="NOx Previsto" stroke="#f87171" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                    <Line type="monotone" dataKey="forecastSox" name="SOx Previsto" stroke="#fbbf24" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                    <Line type="monotone" dataKey="forecastCo" name="CO Previsto" stroke="#facc15" strokeWidth={2} dot={false} strokeDasharray="5 5" />
                 </LineChart>
             </ResponsiveContainer>
         </div>

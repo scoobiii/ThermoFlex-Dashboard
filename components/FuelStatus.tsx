@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, AreaChart, Area, XAxis, YAxis } from 'recharts';
 import { FuelMode, LongHistoricalDataPoint } from '../types';
@@ -23,6 +24,7 @@ const COLORS: { [key: string]: string } = {
   'H2': '#34d399',
   'Etanol': '#6ee7b7',
   'Biodiesel': '#22c55e',
+  'Nuclear': '#a855f7',
 };
 
 // --- Reusable Components ---
@@ -99,6 +101,9 @@ const FuelStatus: React.FC<FuelStatusProps> = ({
       break;
     case FuelMode.Biodiesel:
       chartData = [{ name: 'Biodiesel', value: 100 }];
+      break;
+    case FuelMode.Nuclear:
+      chartData = [{ name: 'Nuclear', value: 100 }];
       break;
     case FuelMode.FlexNGH2:
       chartData = [

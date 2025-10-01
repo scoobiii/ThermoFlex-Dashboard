@@ -5,6 +5,8 @@ const MexEcoBr: React.FC = () => {
   const pageHtml = `
 
 
+
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -180,6 +182,7 @@ const MexEcoBr: React.FC = () => {
             margin-top: auto;
             transition: background-color 0.3s ease;
             text-align: center;
+            cursor: pointer;
         }
 
         .link:hover {
@@ -382,7 +385,7 @@ const MexEcoBr: React.FC = () => {
                 <li><strong>Segurança Social:</strong> Projetos como a Secretaria de Energia Social que geram estabilidade interna.</li>
                 <li><strong>Segurança Jurídica:</strong> Um arcabouço legislativo moderno que atrai e protege o investimento.</li>
             </ul>
-            <a href="https://scoobiii.github.io/mex-dashboard/" class="link" target="_blank">Análise: MEX Inteligência</a>
+            <a href="https://scoobiii.github.io/mex-dashboard/" class="link">Análise: MEX Inteligência</a>
         </div>
 
         <!-- Slide 4: Os Pilares da Resiliência -->
@@ -399,54 +402,52 @@ const MexEcoBr: React.FC = () => {
                 <div class="info-card">
                     <h4>Termo de Abertura (TAP)</h4>
                     <p>O documento formal que autoriza o início do projeto, delineando seus objetivos, escopo e stakeholders principais.</p>
-                    <a href="https://github.com/scoobiii/mex-maua-2333/blob/main/docs/tap.pdf" class="link" target="_blank">Acessar TAP</a>
+                    <a href="https://github.com/scoobiii/mex-maua-2333/blob/main/docs/tap.pdf" class="link">Acessar TAP</a>
                 </div>
                 <div class="info-card">
                     <h4>Contrato de Parceria</h4>
                     <p>A minuta do acordo jurídico que estabelece as bases da colaboração público-privada, definindo papéis e responsabilidades.</p>
-                    <a href="https://github.com/scoobiii/mex-maua-2333/blob/main/docs/contrato_parceria.pdf" class="link" target="_blank">Ver Minuta</a>
+                    <a href="https://github.com/scoobiii/mex-maua-2333/blob/main/docs/contrato_parceria.pdf" class="link">Ver Minuta</a>
                 </div>
                 <div class="info-card">
                     <h4>Cronograma do Projeto</h4>
                     <p>O planejamento detalhado das fases, marcos e entregas do projeto, garantindo a gestão do tempo e dos recursos.</p>
-                    <a href="https://github.com/scoobiii/mex-maua-2333/blob/main/docs/cronograma.pdf" class="link" target="_blank">Ver Cronograma</a>
+                    <a href="https://github.com/scoobiii/mex-maua-2333/blob/main/docs/cronograma.pdf" class="link">Ver Cronograma</a>
                 </div>
                 <div class="info-card">
                     <h4>Mapa Energético</h4>
                     <p>Diagnóstico completo da infraestrutura atual e planejamento do retrofit de térmicas.</p>
-                    <a href="https://cyszcbxi.manus.space/" class="link" target="_blank">Acessar Mapa</a>
+                    <a href="https://cyszcbxi.manus.space/" class="link">Acessar Mapa</a>
                 </div>
                 <div class="info-card">
                     <h4>Biopolo Mauá - Workshop I</h4>
                     <p>Conversão de UTEs para combustíveis renováveis, com logística de dutos integrada.</p>
-                    <a href="https://yemdxbhh.manus.space/" class="link" target="_blank">Acessar Dashboard</a>
+                    <a href="https://yemdxbhh.manus.space/" class="link">Acessar Dashboard</a>
                 </div>
                 <div class="info-card">
                     <h4>Estudo Biopolo</h4>
                     <p>Análise de viabilidade para um polo industrial verde, em convergência com o polo petroquímico Mauá.</p>
-                    <a href="https://claude.ai/public/artifacts/46550b7f-9d83-4166-88d8-ec26f1f28281" class="link" target="_blank">Estudo I</a>
-                <a href="https://xevivudr.manussite.space/" class="link" target="_blank">Estudo II</a>
-                <a href="https://github.com/scoobiii/mex-maua-2333/blob/main/docs/contrato-parceria.pdf" class="link" target="_blank">Estudo III (Minuta Contratual)</a>
+                    <a href="https://claude.ai/public/artifacts/46550b7f-9d83-4166-88d8-ec26f1f28281" class="link">Estudo I</a>
+                <a href="https://xevivudr.manussite.space/" class="link">Estudo II</a>
+                <a href="https://ai.studio/apps/drive/1n-QNRgdCKiL7SzHOAVGLLFkRC4F2fAUJ" class="link">Estudo III </a>
                 </div>
                 
                 <div class="info-card">
                     <h4>Mauá Tower</h4>
                     <p>O ícone da nova economia: um complexo multiuso com Data Cloud NVidia AI Server liquid cooling, imune a choques climáticos.</p>
                     <p>Shanguay Tower, inspirou Residencial Marielle, Carmem Silva, Preta Ferreira, que inspirou o Muá Tower, que rendeu nota 4.18 no Amcham Eco/Estadão 2017.</p>
-                    <a href="https://grabcad.com/library/vertical-solar-marielle-tower-cultural-center-residencial-carmen-silva-hotel-preta-ferreira-1" class="link" target="_blank">Ver Conceito</a>
+                    <a href="https://grabcad.com/library/vertical-solar-marielle-tower-cultural-center-residencial-carmen-silva-hotel-preta-ferreira-1" class="link">Ver Conceito</a>
                 </div>
                 <div class="info-card">
                     <h4>Mauá 100% Solar</h4>
                     <p>Autonomia energética total e um mercado de energia descentralizado e democrático, reduzindo custos e dependências externas.</p>
-                    <a href="https://ai.studio/apps/drive/1n-QNRgdCKiL7SzHOAVGLLFkRC4F2fAUJ" class="link" target="_blank">MEX DAO</a>
-                    <a href="https://ssuobooq.manus.space/" class="link" target="_blank">MAUAX DAO (obras)</a>
-
-                    
+                    <a href="https://scoobiii.github.io/ThermoFlex-Dashboard" class="link">MEX DAO</a>
+                                        
                 </div>
                 <div class="info-card">
                     <h4>Inteligência Legislativa</h4>
                     <p>Criação de Secretarias de Projetos Estratégicos e Energia Social, e a legislação para a DAO, construindo um ambiente de negócios seguro e ágil.</p>
-                    <a href="https://github.com/scoobiii/mex-maua-2333/blob/main/docs/Governança Solar _Projetos de Lei - Energia Solar e Mercado Livre  __Versão___ 1.0.1 .PDF" class="link" target="_blank">Ver Minuta da Lei</a>
+                    <a href="https://github.com/scoobiii/mex-maua-2333/blob/main/docs/Governança Solar _Projetos de Lei - Energia Solar e Mercado Livre  __Versão___ 1.0.1 .PDF" class="link">Ver Minuta da Lei</a>
                 </div>
             </div>
         </div>
@@ -567,7 +568,7 @@ const MexEcoBr: React.FC = () => {
                     <p>A Copa de 2030 em 3 continentes e a futura "Copa Climática" (Brasil + Escandinávia) indicam que o futuro é multipolar e baseado em resiliência, não em poderio militar.</p>
                 </div>
             </div>
-            <a href="https://claude.ai/public/artifacts/a0e64ecc-4ca1-479b-b6d2-bc5dbdfff258" class="link" target="_blank">Ler Análise Geopolítica Completa</a>
+            <a href="https://claude.ai/public/artifacts/a0e64ecc-4ca1-479b-b6d2-bc5dbdfff258" class="link">Ler Análise Geopolítica Completa</a>
         </div>
         
         
@@ -707,7 +708,7 @@ const MexEcoBr: React.FC = () => {
                   <div class="info-card">
                     <h4>PitchDeck & Wite PaperMapa</h4>
                     <p>Diagnóstico completo da infraestrutura atual e planejamento do retrofit de térmicas.</p>
-                    <a href="https://scoobiii.github.io/mauax-witepaper/" class="link" target="_blank">Acessar Mapa</a>
+                    <a href="https://scoobiii.github.io/mauax-witepaper/" class="link">Acessar Mapa</a>
                 </div>
                
 
@@ -717,45 +718,88 @@ const MexEcoBr: React.FC = () => {
     </div>
 
     <div class="navigation">
-        <button class="nav-btn" id="prev-btn" onclick="previousSlide()">&#8249;</button>
-        <button class="nav-btn" id="next-btn" onclick="nextSlide()">&#8250;</button>
+        <button class="nav-btn" id="prev-btn">&#8249;</button>
+        <button class="nav-btn" id="next-btn">&#8250;</button>
     </div>
 
     <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Link Interception Logic ---
+        const internalAppLinks = {
+            'https://cyszcbxi.manus.space/': 'Infrastructure',
+            'https://xevivudr.manussite.space/': 'Infrastructure',
+            'https://yemdxbhh.manus.space/': 'Power Plant'
+        };
+
+        const embeddableDomains = ['manus.space', 'scoobiii.github.io'];
+
+        document.querySelectorAll('a.link').forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                const href = link.getAttribute('href');
+                if (!href) return;
+
+                if (internalAppLinks[href]) {
+                    window.parent.postMessage({ type: 'navigate', page: internalAppLinks[href] }, '*');
+                } else {
+                    try {
+                        const url = new URL(href);
+                        if (embeddableDomains.some(domain => url.hostname.endsWith(domain))) {
+                            window.parent.postMessage({ type: 'viewExternal', url: href }, '*');
+                        } else {
+                            window.parent.postMessage({ type: 'openExternal', url: href }, '*');
+                        }
+                    } catch (e) {
+                        console.error("Invalid URL, opening externally as fallback:", href, e);
+                        window.parent.postMessage({ type: 'openExternal', url: href }, '*');
+                    }
+                }
+            });
+        });
+
+        // --- Presentation Logic ---
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
         const totalSlides = slides.length;
-        
         const slideCounterSpan = document.getElementById('current-slide');
         const slideTotalSpan = document.getElementById('total-slides');
-        
-        slideTotalSpan.textContent = totalSlides;
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
 
-        function showSlide(n) {
+        if (slideTotalSpan) {
+            slideTotalSpan.textContent = totalSlides;
+        }
+
+        const showSlide = (n) => {
             if (slides.length === 0) return;
             slides[currentSlide].classList.remove('active');
             currentSlide = (n + totalSlides) % totalSlides;
             slides[currentSlide].classList.add('active');
             
-            slideCounterSpan.textContent = currentSlide + 1;
+            if (slideCounterSpan) {
+                slideCounterSpan.textContent = currentSlide + 1;
+            }
             
-            document.getElementById('prev-btn').disabled = currentSlide === 0;
-            document.getElementById('next-btn').disabled = currentSlide === totalSlides - 1;
-        }
+            if(prevBtn) prevBtn.disabled = currentSlide === 0;
+            if(nextBtn) nextBtn.disabled = currentSlide === totalSlides - 1;
+        };
 
-        function nextSlide() {
+        const nextSlide = () => {
             if (currentSlide < totalSlides - 1) {
                 showSlide(currentSlide + 1);
             }
-        }
+        };
 
-        function previousSlide() {
+        const previousSlide = () => {
             if (currentSlide > 0) {
                 showSlide(currentSlide - 1);
             }
-        }
+        };
 
-        document.addEventListener('keydown', function(e) {
+        if (prevBtn) prevBtn.onclick = previousSlide;
+        if (nextBtn) nextBtn.onclick = nextSlide;
+        
+        document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 nextSlide();
@@ -766,6 +810,7 @@ const MexEcoBr: React.FC = () => {
         });
 
         showSlide(0);
+    });
     </script>
 </body>
 </html>

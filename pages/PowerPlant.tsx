@@ -79,16 +79,6 @@ const generateHistoricalResourceData = (range: '24h' | '7d'): ResourceDataPoint[
 };
 
 
-const generateHistoricalEmissions = (): HistoricalEmissionPoint[] => {
-    return Array.from({ length: 7 }, (_, i) => ({
-        time: `D-${6-i}`,
-        nox: 14 + Math.random() * 4,
-        sox: 4 + Math.random() * 2,
-        co: 22 + Math.random() * 8,
-        particulates: 7 + Math.random() * 3,
-    }));
-};
-
 const initialAlerts: Alert[] = [
     { id: 1, level: 'warning', message: 'Turbina #3: Vibração acima do limiar. Monitorar.', timestamp: '2024-08-05 10:15:00' },
     { id: 2, level: 'info', message: 'Manutenção preventiva da Turbina #5 agendada para 2024-08-10.', timestamp: '2024-08-05 09:30:00' },
@@ -163,6 +153,10 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
     useEffect(() => {
         if (plantStatus !== PlantStatus.Online) {
             setEmissions({ nox: 0, sox: 0, co: 0, particulates: 0 });
+            // Also set historical to 0 when offline for consistency
+            setHistoricalEmissions(Array.from({ length: 7 }, (_, i) => ({
+                time: `D-${6-i}`, nox: 0, sox: 0, co: 0, particulates: 0
+            })));
             return;
         }
 
@@ -199,12 +193,25 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                 baseEmissions = { nox: 15, sox: 5, co: 25, particulates: 8 };
         }
         
+        // This sets the real-time values
         setEmissions({
             nox: Math.max(0, baseEmissions.nox + (Math.random() - 0.5) * 2),
             sox: Math.max(0, baseEmissions.sox + (Math.random() - 0.5) * 0.5),
             co: Math.max(0, baseEmissions.co + (Math.random() - 0.5) * 5),
             particulates: Math.max(0, baseEmissions.particulates + (Math.random() - 0.5) * 1)
         });
+
+        // This dynamically generates historical emissions based on the same base values.
+        const newHistoricalEmissions = Array.from({ length: 7 }, (_, i) => ({
+            time: `D-${6-i}`,
+            // Fluctuate around the base values for the current fuel
+            nox: Math.max(0, baseEmissions.nox * (0.8 + Math.random() * 0.4)),
+            sox: Math.max(0, baseEmissions.sox * (0.8 + Math.random() * 0.4)),
+            co: Math.max(0, baseEmissions.co * (0.8 + Math.random() * 0.4)),
+            particulates: Math.max(0, baseEmissions.particulates * (0.8 + Math.random() * 0.4)),
+        }));
+        setHistoricalEmissions(newHistoricalEmissions);
+
     }, [fuelMode, flexMix, plantStatus]);
 
     // Simulate real-time data for resources
@@ -254,8 +261,6 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
     
     // Simulate real-time data updates for turbines and ambient conditions
     useEffect(() => {
-        setHistoricalEmissions(generateHistoricalEmissions());
-
         const interval = setInterval(() => {
             setTurbines(prev => prev.map(t => {
                 if (t.status !== 'active') return { ...t, rpm: 0, temp: 80, pressure: 1 };
@@ -264,11 +269,22 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                 const newTemp = 935 + Math.random() * 40;
                 const newPressure = 17.7 + Math.random() * 0.6;
                 
+                 // Update history
+                const newHistoryPoint = {
+                    time: '0s',
+                    rpm: newRpm,
+                    temp: newTemp,
+                    pressure: newPressure,
+                };
+                const updatedHistory = [newHistoryPoint, ...(t.history || []).slice(0, 19)]
+                    .map((p, i) => ({ ...p, time: `${i}s`}));
+
                 return {
                     ...t,
                     rpm: newRpm,
                     temp: newTemp,
                     pressure: newPressure,
+                    history: updatedHistory,
                 };
             }));
             
@@ -284,11 +300,22 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
 
     // Merge static turbine data with dynamic status from props
     useEffect(() => {
-        setTurbines(initialTurbines.map(t => ({
-            ...t,
-            status: turbineStatusConfig[t.id] || 'inactive',
-            maintenanceScore: turbineMaintenanceScores[t.id] || 0,
-        })));
+        setTurbines(initialTurbines.map(t => {
+            const status = turbineStatusConfig[t.id] || 'inactive';
+            const history = Array.from({ length: 20 }, (_, i) => ({
+                time: `${19 - i}s`,
+                rpm: status === 'active' ? 3590 + Math.random() * 25 : 0,
+                temp: status === 'active' ? 935 + Math.random() * 40 : 80,
+                pressure: status === 'active' ? 17.7 + Math.random() * 0.6 : 1,
+            }));
+
+            return {
+                ...t,
+                status,
+                maintenanceScore: turbineMaintenanceScores[t.id] || 0,
+                history,
+            };
+        }));
     }, [turbineStatusConfig, turbineMaintenanceScores]);
 
     // --- HANDLERS ---

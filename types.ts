@@ -10,6 +10,7 @@ export enum FuelMode {
   Biodiesel = 'Biodiesel',
   FlexNGH2 = 'Flex (GN/H2)',
   FlexEthanolBiodiesel = 'Flex (Etanol/Biodiesel)',
+  Nuclear = 'Nuclear',
 }
 
 export interface HistoricalDataPoint {
@@ -40,7 +41,7 @@ export interface Turbine {
   manufacturer: string;
   model: string;
   isoCapacity: number; // in MW
-  history?: { rpm: number; temp: number; pressure: number }[];
+  history?: { time: string; rpm: number; temp: number; pressure: number }[];
   maintenanceScore: number; // Replaces needsMaintenance
 }
 

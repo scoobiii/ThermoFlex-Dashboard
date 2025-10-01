@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Turbine } from '../types';
 import DashboardCard from './DashboardCard';
 import { CloseIcon, CogIcon } from './icons';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend, AreaChart, Area } from 'recharts';
 
 interface MainTurbineMonitorProps {
   turbine: Turbine;
@@ -25,17 +25,17 @@ const MetricDisplay: React.FC<{ label: string; value: string | number; unit: str
     </div>
 );
 
-const RPMCustomTooltip = ({ active, payload, label }: any) => {
+const RPMHistoryTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
-          <p className="label text-sm text-gray-300">{`${label}`}</p>
-          <p className="intro text-sm" style={{color: payload[0].fill}}>{`RPM: ${Math.round(payload[0].value)}`}</p>
+          <p className="label text-sm text-gray-300">{`Tempo: ${label}`}</p>
+          <p className="intro text-sm text-cyan-400">{`RPM: ${Math.round(payload[0].value)}`}</p>
         </div>
       );
     }
     return null;
-  };
+};
 
 const MainTurbineMonitor: React.FC<MainTurbineMonitorProps> = ({ turbine, onClose, allTurbines, totalPowerOutput }) => {
   const closeButton = (
@@ -59,11 +59,10 @@ const MainTurbineMonitor: React.FC<MainTurbineMonitorProps> = ({ turbine, onClos
       }, { name: 'Power' })
   ];
 
-  const rpmChartData = activeTurbines.map(t => ({
-    name: `Turbina #${t.id}`,
-    rpm: t.rpm,
-    id: t.id,
-  }));
+  const rpmHistoryData = useMemo(() => {
+    if (!turbine.history) return [];
+    return [...turbine.history].reverse();
+  }, [turbine.history]);
   
   return (
     <DashboardCard 
@@ -154,46 +153,50 @@ const MainTurbineMonitor: React.FC<MainTurbineMonitorProps> = ({ turbine, onClos
                 </ResponsiveContainer>
             </div>
           </div>
-          {/* RPM Comparison Chart */}
+          {/* RPM History Chart */}
           <div className="flex flex-col h-full min-h-[200px]">
             <h4 className="text-md font-semibold text-gray-300 text-center mb-2">
-              Comparativo de RPM (Ativas)
+              Histórico de RPM (Últimos 40s)
             </h4>
-             <div className="text-center text-xs text-gray-400 mb-2 invisible">
-                  <p>Dummy text for alignment</p>
-            </div>
             <div className="flex-grow">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={rpmChartData} margin={{ top: 5, right: 20, left: -10, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
-                        <XAxis 
-                          dataKey="name" 
-                          stroke="#9ca3af" 
-                          fontSize={10} 
-                          tickLine={false} 
-                          axisLine={false}
-                          tickFormatter={(value) => value.replace('Turbina ', '')}
-                        />
-                        <YAxis 
-                          stroke="#9ca3af" 
-                          fontSize={10} 
-                          tickLine={false} 
-                          axisLine={false} 
-                          domain={[3000, 4000]}
-                          unit=" RPM"
-                          width={45}
-                        />
-                        <Tooltip content={<RPMCustomTooltip />} cursor={{fill: 'rgba(42, 52, 73, 0.5)'}} />
-                        <Bar dataKey="rpm">
-                            {rpmChartData.map((entry) => (
-                                <Cell 
-                                    key={`cell-${entry.id}`} 
-                                    fill={entry.id === turbine.id ? '#06b6d4' : '#0891b2'} 
-                                />
-                            ))}
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={rpmHistoryData} margin={{ top: 5, right: 20, left: -10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorRpm" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
+                  <XAxis 
+                    dataKey="time" 
+                    stroke="#9ca3af" 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false}
+                    tickFormatter={(value) => value.replace('s', 's')}
+                  />
+                  <YAxis 
+                    stroke="#9ca3af" 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    domain={[3550, 3650]}
+                    unit=" RPM"
+                    width={55}
+                  />
+                  <Tooltip content={<RPMHistoryTooltip />} cursor={{fill: 'rgba(42, 52, 73, 0.5)'}}/>
+                  <Area 
+                    type="monotone" 
+                    dataKey="rpm" 
+                    stroke="#06b6d4" 
+                    strokeWidth={2} 
+                    fillOpacity={1} 
+                    fill="url(#colorRpm)" 
+                    isAnimationActive={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>

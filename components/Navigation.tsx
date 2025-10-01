@@ -20,7 +20,8 @@ export type Page =
     'Chiller Absorção -> Fog' |
     'Chiller Absorção -> Data Cloud' |
     'Fog System Details' |
-    'Power Plant Sankey'; // New page for detailed Sankey
+    'Power Plant Sankey' |
+    'External Page'; // New page for viewing external content
 
 interface NavItem {
     label: string;

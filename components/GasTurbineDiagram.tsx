@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { CloseIcon } from './icons';
 
-// FIX: Refactored to use a dedicated interface for props for better type safety and clarity, which can resolve subtle type inference issues.
-// The component was also defined inside another component, which is an anti-pattern. While not moved to prevent major refactoring, using a clear interface is a good first step.
+// Define a clear interface for the modal's props
+interface HotspotModalProps {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}
+
 const GasTurbineDiagram: React.FC = () => {
   const [activeHotspotId, setActiveHotspotId] = useState<string | null>(null);
 
@@ -18,7 +23,7 @@ const GasTurbineDiagram: React.FC = () => {
     };
   }, []);
 
-  const HotspotModal = ({ id, title, children }: { id: string, title: string, children: React.ReactNode }) => {
+  const HotspotModal: React.FC<HotspotModalProps> = ({ id, title, children }) => {
     if (activeHotspotId !== id) return null;
     return (
         <div 
@@ -118,7 +123,7 @@ const GasTurbineDiagram: React.FC = () => {
       </map>
 
       <HotspotModal id="pump-skid" title="Pump Skid">
-        <div>
+        <React.Fragment>
           <img
             className="alignleft"
             src="https://www.meefog.com/wp-content/uploads/2022/12/Pump-Skid.png"
@@ -128,11 +133,10 @@ const GasTurbineDiagram: React.FC = () => {
           />
           <h3><strong>Pump Skid</strong></h3>
           <p>Stainless-steel welded frame with oversized inlet water filter. Water lubricated direct drive pumps means no oil or drive belts to change. Variable frequency drives are used to reduce flow for staging.</p>
-        </div>
+        </React.Fragment>
       </HotspotModal>
-
       <HotspotModal id="evap-cooling" title="Evaporative Cooling Fog Nozzle Manifold">
-        <div>
+        <React.Fragment>
           <img
             className="alignleft"
             src="https://www.meefog.com/wp-content/uploads/Evaporative-Cooling-Fog-Nozzle-Manifold.jpg"
@@ -142,11 +146,10 @@ const GasTurbineDiagram: React.FC = () => {
           />
           <h3><strong>Evaporative Cooling Fog Nozzle Manifold</strong></h3>
           <p>Cools to wet bulb temperature with droplets evaporating prior to entering compressor. Fog nozzles mounted on stainless steel tubing are wired for FOD avoidance. These precision nozzles are manufactured and tested in our own facility.</p>
-        </div>
+        </React.Fragment>
       </HotspotModal>
-
       <HotspotModal id="wet-compression" title="Wet Compression Nozzle Manifold">
-        <div>
+        <React.Fragment>
           <img
             className="alignleft"
             src="https://www.meefog.com/wp-content/uploads/2022/12/Wet-Compression-Nozzle-Manifold.png"
@@ -156,7 +159,7 @@ const GasTurbineDiagram: React.FC = () => {
           />
           <h3><strong>Wet Compression Nozzle Manifold</strong></h3>
           <p>Fog droplets evaporate inside the compressor, giving an intercooling effect that reduces the work of compression. Water sprayed into the compressor will reduce NOx as well, but only about half as much as water sprayed into the combustors, because much of the air bypasses the combustion process.</p>
-        </div>
+        </React.Fragment>
       </HotspotModal>
     </div>
   );

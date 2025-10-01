@@ -11,7 +11,8 @@ import MexEcoBr from './pages/MexEcoBr';
 import ChillerDashboard from './pages/chiller';
 import PowerPlantSystem from './pages/PowerPlantSystem';
 import GasTurbineDiagram from './components/GasTurbineDiagram';
-import PowerPlantSankey from './components/PowerPlantSankey'; // Import new component
+import PowerPlantSankey from './components/PowerPlantSankey';
+import ExternalPageViewer from './pages/ExternalPageViewer';
 import { PlantStatus, FuelMode, TurbineStatus, Plant } from './types';
 import { POWER_PLANTS as initialPowerPlants } from './data/plants';
 
@@ -99,7 +100,16 @@ const loadAvailablePlants = (): Plant[] => {
 };
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<Page>('Power Plant');
+  const [currentPage, _setCurrentPage] = useState<Page>('Power Plant');
+  const [previousPage, setPreviousPage] = useState<Page>('Power Plant');
+  const [externalPageUrl, setExternalPageUrl] = useState<string | null>(null);
+
+  const setCurrentPage = (page: Page) => {
+    if (currentPage !== 'External Page') {
+      setPreviousPage(currentPage);
+    }
+    _setCurrentPage(page);
+  };
   
   // Shared state
   const [plantStatus, setPlantStatus] = useState<PlantStatus>(PlantStatus.Online);
@@ -173,6 +183,28 @@ const App: React.FC = () => {
     }
     setResourceConfigState(newConfig);
   };
+  
+  // Effect to handle messages from the iframe in MexEcoBr
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (typeof event.data === 'object' && event.data !== null && 'type' in event.data) {
+        const { type, page, url } = event.data;
+
+        if (type === 'navigate' && typeof page === 'string') {
+          setCurrentPage(page as Page);
+        } else if (type === 'viewExternal' && typeof url === 'string') {
+          setExternalPageUrl(url);
+          setCurrentPage('External Page');
+        } else if (type === 'openExternal' && typeof url === 'string') {
+          // Fallback to opening in a new tab for non-embeddable sites.
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [currentPage]); // Re-add listener to capture `currentPage` correctly for `setPreviousPage`
 
   const setFuelMode = (fuelMode: FuelMode) => updateCurrentConfig({ fuelMode });
   const setFlexMix = (updater: React.SetStateAction<{ h2: number; biodiesel: number }>) => {
@@ -239,6 +271,8 @@ const App: React.FC = () => {
           newFuelMode = FuelMode.Ethanol;
         } else if (plant.fuel.includes('Biodiesel')) {
           newFuelMode = FuelMode.Biodiesel;
+        } else if (plant.fuel.includes('Nuclear')) {
+          newFuelMode = FuelMode.Nuclear;
         }
         updateCurrentConfig({ fuelMode: newFuelMode });
       }
@@ -326,6 +360,15 @@ const App: React.FC = () => {
             efficiency={efficiency}
             setCurrentPage={setCurrentPage}
         />;
+      case 'External Page':
+        return externalPageUrl ? (
+          <ExternalPageViewer url={externalPageUrl} onClose={() => setCurrentPage(previousPage)} />
+        ) : (
+          <div className="text-center mt-8">
+            <p>URL externa não foi fornecida.</p>
+            <button onClick={() => setCurrentPage(previousPage)} className="mt-4 px-4 py-2 bg-cyan-500 text-white rounded-lg">Voltar</button>
+          </div>
+        );
       default:
         return <PowerPlant 
           plantStatus={plantStatus}
