@@ -8,7 +8,11 @@ interface HotspotModalProps {
   children: React.ReactNode;
 }
 
-const GasTurbineDiagram: React.FC = () => {
+interface GasTurbineDiagramProps {
+  t: (key: string) => string;
+}
+
+const GasTurbineDiagram: React.FC<GasTurbineDiagramProps> = ({ t }) => {
   const [activeHotspotId, setActiveHotspotId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,7 +41,7 @@ const GasTurbineDiagram: React.FC = () => {
                 className="bg-white p-6 rounded-lg max-w-3xl w-full text-gray-800 relative transform transition-all animate-slideUp"
                 onClick={e => e.stopPropagation()}
             >
-                <button onClick={() => setActiveHotspotId(null)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800" aria-label="Fechar modal">
+                <button onClick={() => setActiveHotspotId(null)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800" aria-label={t('diagram.closeModal')}>
                     <CloseIcon className="w-6 h-6" />
                 </button>
                 <h2 id={`hotspot-title-${id}`} className="text-2xl font-bold mb-4 text-cyan-600">{title}</h2>
@@ -80,8 +84,8 @@ const GasTurbineDiagram: React.FC = () => {
           }
           .animate-slideUp { animation: slideUp 0.3s ease-out; }
         `}</style>
-      <h1 className="text-3xl font-bold text-white mb-2">Diagrama Interativo do Sistema de Fogging</h1>
-      <p className="text-gray-400 mb-4">Clique nas áreas destacadas do diagrama para mais informações.</p>
+      <h1 className="text-3xl font-bold text-white mb-2">{t('diagram.title')}</h1>
+      <p className="text-gray-400 mb-4">{t('diagram.subtitle')}</p>
       <div className="bg-white inline-block p-2 rounded-lg shadow-xl">
         <img
           width="1280"

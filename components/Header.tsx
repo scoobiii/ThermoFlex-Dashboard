@@ -1,19 +1,23 @@
 import React from 'react';
 import { PlantStatus } from '../types';
 import { BoltIcon, ChartBarIcon } from './icons';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface HeaderProps {
   plantStatus: PlantStatus;
   powerOutput: number;
   selectedPlantName: string;
   maxCapacity: number;
+  language: string;
+  setLanguage: (language: string) => void;
+  t: (key: string) => string;
 }
 
-const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput, selectedPlantName, maxCapacity }) => {
+const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput, selectedPlantName, maxCapacity, language, setLanguage, t }) => {
   const statusInfo = {
-    [PlantStatus.Online]: { text: 'Online', color: 'bg-green-500' },
-    [PlantStatus.Offline]: { text: 'Offline', color: 'bg-red-500' },
-    [PlantStatus.Maintenance]: { text: 'Manutenção', color: 'bg-yellow-500' },
+    [PlantStatus.Online]: { text: t('plantStatus.ONLINE'), color: 'bg-green-500' },
+    [PlantStatus.Offline]: { text: t('plantStatus.OFFLINE'), color: 'bg-red-500' },
+    [PlantStatus.Maintenance]: { text: t('plantStatus.MAINTENANCE'), color: 'bg-yellow-500' },
   };
 
   return (
@@ -24,15 +28,17 @@ const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput, selectedPlant
         </div>
         <div>
             <h1 className="text-2xl font-bold text-white">{selectedPlantName.replace(' (standard)', '')}</h1>
-            <p className="text-gray-400">Plataforma de Monitoramento Integrado</p>
+            <p className="text-gray-400">{t('header.subtitle')}</p>
         </div>
       </div>
       <div className="flex items-center space-x-4 sm:space-x-6">
+        <LanguageSwitcher language={language} setLanguage={setLanguage} />
+        <div className="h-8 w-px bg-gray-700 hidden sm:block"></div>
         <div className="flex items-center space-x-2">
             <BoltIcon className="h-6 w-6 text-cyan-400" />
             <div>
                 <p className="text-sm font-semibold leading-tight text-cyan-400">{powerOutput.toFixed(1)} MW</p>
-                <p className="text-xs text-gray-400 leading-tight">Produção Atual</p>
+                <p className="text-xs text-gray-400 leading-tight">{t('header.currentProduction')}</p>
             </div>
         </div>
         <div className="h-8 w-px bg-gray-700 hidden sm:block"></div>
@@ -40,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput, selectedPlant
             <ChartBarIcon className="h-6 w-6 text-gray-400" />
             <div>
                 <p className="text-sm font-semibold leading-tight">{maxCapacity} MW</p>
-                <p className="text-xs text-gray-400 leading-tight">Capacidade Máxima</p>
+                <p className="text-xs text-gray-400 leading-tight">{t('header.maxCapacity')}</p>
             </div>
         </div>
         <div className="h-8 w-px bg-gray-700 hidden sm:block"></div>
@@ -48,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput, selectedPlant
             <span className={`h-3 w-3 rounded-full ${statusInfo[plantStatus].color} self-center`}></span>
              <div>
                 <p className="text-sm font-semibold leading-tight">{statusInfo[plantStatus].text}</p>
-                <p className="text-xs text-gray-400 leading-tight">Status</p>
+                <p className="text-xs text-gray-400 leading-tight">{t('header.status')}</p>
             </div>
         </div>
       </div>

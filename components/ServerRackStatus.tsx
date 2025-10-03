@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardCard from './DashboardCard';
 import ServerRackDetailsModal from './ServerRackDetailsModal';
-// FIX: Import ServerRackIcon to use as the icon for the DashboardCard.
 import { ServerRackIcon } from './icons';
 
 export interface Rack {
@@ -20,6 +19,7 @@ export interface Rack {
 
 interface ServerRackStatusProps {
   onRackDataUpdate: (count: number) => void;
+  t: (key: string) => string;
 }
 
 const generateInitialRackData = (): Rack[] => {
@@ -51,7 +51,7 @@ const generateInitialRackData = (): Rack[] => {
   });
 };
 
-const CompactRackCard: React.FC<{ rack: Rack; onClick: () => void }> = ({ rack, onClick }) => {
+const CompactRackCard: React.FC<{ rack: Rack; onClick: () => void, t: (key: string) => string; }> = ({ rack, onClick, t }) => {
   const statusBorderColor = {
     online: 'border-green-500/50',
     'high-load': 'border-yellow-500/70',
@@ -65,7 +65,7 @@ const CompactRackCard: React.FC<{ rack: Rack; onClick: () => void }> = ({ rack, 
     <button
       onClick={onClick}
       className={`bg-gray-800 p-2 rounded-lg text-left transition-all duration-200 border-2 ${statusBorderColor[rack.status]} hover:bg-gray-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${isOffline ? 'opacity-60' : ''}`}
-      aria-label={`Detalhes do Rack ${rack.id}`}
+      aria-label={t('dataCenter.rack.details').replace('{id}', String(rack.id))}
     >
       <h4 className="font-bold text-white text-sm truncate">Rack {rack.id}</h4>
       <div className="mt-1 text-xs text-gray-400 space-y-1 font-mono">
@@ -94,7 +94,7 @@ const CompactRackCard: React.FC<{ rack: Rack; onClick: () => void }> = ({ rack, 
   );
 };
 
-const ServerRackStatus: React.FC<ServerRackStatusProps> = ({ onRackDataUpdate }) => {
+const ServerRackStatus: React.FC<ServerRackStatusProps> = ({ onRackDataUpdate, t }) => {
   const [racks, setRacks] = useState<Rack[]>([]);
   const [selectedRack, setSelectedRack] = useState<Rack | null>(null);
 
@@ -161,19 +161,19 @@ const ServerRackStatus: React.FC<ServerRackStatusProps> = ({ onRackDataUpdate })
 
   return (
     <>
-      <DashboardCard title="Status dos Racks do Servidor" icon={<ServerRackIcon className="w-6 h-6" />}>
+      <DashboardCard title={t('dataCenter.rackStatusTitle')} icon={<ServerRackIcon className="w-6 h-6" />}>
         <div className="flex justify-center gap-6 mb-4 text-center">
           <div>
             <p className="text-2xl font-bold text-green-400">{summary.online}</p>
-            <p className="text-sm text-gray-400">Online</p>
+            <p className="text-sm text-gray-400">{t('dataCenter.rack.online')}</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-yellow-400">{summary['high-load']}</p>
-            <p className="text-sm text-gray-400">Carga Alta</p>
+            <p className="text-sm text-gray-400">{t('dataCenter.rack.highLoad')}</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-red-400">{summary.offline}</p>
-            <p className="text-sm text-gray-400">Offline</p>
+            <p className="text-sm text-gray-400">{t('dataCenter.rack.offline')}</p>
           </div>
         </div>
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
@@ -182,6 +182,7 @@ const ServerRackStatus: React.FC<ServerRackStatusProps> = ({ onRackDataUpdate })
               key={rack.id}
               rack={rack}
               onClick={() => setSelectedRack(rack)}
+              t={t}
             />
           ))}
         </div>
@@ -190,6 +191,7 @@ const ServerRackStatus: React.FC<ServerRackStatusProps> = ({ onRackDataUpdate })
         <ServerRackDetailsModal
           rack={selectedRack}
           onClose={() => setSelectedRack(null)}
+          t={t}
         />
       )}
     </>

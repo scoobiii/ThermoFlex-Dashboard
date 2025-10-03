@@ -37,13 +37,16 @@ interface ResourceManagementProps {
   isMaximizable?: boolean;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
+  // FIX: Add t prop for translations
+  t: (key: string) => string;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, t }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
-        <p className="label text-sm text-gray-300">{`Hora: ${label}`}</p>
+        {/* FIX: Use translation function */}
+        <p className="label text-sm text-gray-300">{`${t('tooltip.time')}: ${label}`}</p>
         {payload.map((p: any, i: number) => (
           <p key={i} style={{ color: p.color }} className="text-sm">
             {`${p.name}: ${p.value.toFixed(1)} ${p.unit}`}
@@ -99,6 +102,7 @@ const ResourceManagement: React.FC<ResourceManagementProps> = ({
   isMaximizable,
   isMaximized,
   onToggleMaximize,
+  t,
 }) => {
   const [visibleLines, setVisibleLines] = useState({
       water: true,
@@ -122,7 +126,8 @@ const ResourceManagement: React.FC<ResourceManagementProps> = ({
 
   return (
     <DashboardCard
-      title="Gestão de Recursos"
+      // FIX: Use translation function
+      title={t('resourceManagement.title')}
       icon={<WrenchScrewdriverIcon className="w-6 h-6" />}
       isMaximizable={isMaximizable}
       isMaximized={isMaximized}
@@ -137,11 +142,12 @@ const ResourceManagement: React.FC<ResourceManagementProps> = ({
                 <div className="flex items-center gap-2 mb-1">
                 <DropletIcon className="w-5 h-5 text-blue-400" />
                 <div>
-                    <h4 className="font-semibold text-blue-400 text-sm">Água</h4>
-                    <p className="text-xs text-gray-400">Consumo: <strong className="font-mono text-white">{waterConsumption.toFixed(1)} m³/h</strong></p>
+                    {/* FIX: Use translation function */}
+                    <h4 className="font-semibold text-blue-400 text-sm">{t('resourceManagement.water')}</h4>
+                    <p className="text-xs text-gray-400">{t('resourceManagement.consumption')}: <strong className="font-mono text-white">{waterConsumption.toFixed(1)} m³/h</strong></p>
                 </div>
                 </div>
-                <StorageIndicator label="Reservatório" storage={waterStorage} unit="m³" colorClass="bg-blue-500" />
+                <StorageIndicator label={t('resourceManagement.reservoir')} storage={waterStorage} unit="m³" colorClass="bg-blue-500" />
             </div>
           )}
 
@@ -151,11 +157,12 @@ const ResourceManagement: React.FC<ResourceManagementProps> = ({
                 <div className="flex items-center gap-2 mb-1">
                 <FlameIcon className="w-5 h-5 text-orange-400" />
                 <div>
-                    <h4 className="font-semibold text-orange-400 text-sm">Gás Natural</h4>
-                    <p className="text-xs text-gray-400">Consumo: <strong className="font-mono text-white">{gasConsumption.toLocaleString('pt-BR')} m³/h</strong></p>
+                    {/* FIX: Use translation function */}
+                    <h4 className="font-semibold text-orange-400 text-sm">{t('resourceManagement.gas')}</h4>
+                    <p className="text-xs text-gray-400">{t('resourceManagement.consumption')}: <strong className="font-mono text-white">{gasConsumption.toLocaleString('pt-BR')} m³/h</strong></p>
                 </div>
                 </div>
-                <StorageIndicator label="Armazenamento" storage={gasStorage} unit="m³" colorClass="bg-orange-500" />
+                <StorageIndicator label={t('resourceManagement.storage')} storage={gasStorage} unit="m³" colorClass="bg-orange-500" />
             </div>
           )}
 
@@ -165,11 +172,12 @@ const ResourceManagement: React.FC<ResourceManagementProps> = ({
                 <div className="flex items-center gap-2 mb-1">
                 <GasIcon className="w-5 h-5 text-teal-300" />
                 <div>
-                    <h4 className="font-semibold text-teal-300 text-sm">Etanol</h4>
-                    <p className="text-xs text-gray-400">Consumo: <strong className="font-mono text-white">{ethanolConsumption.toFixed(1)} m³/h</strong></p>
+                    {/* FIX: Use translation function */}
+                    <h4 className="font-semibold text-teal-300 text-sm">{t('resourceManagement.ethanol')}</h4>
+                    <p className="text-xs text-gray-400">{t('resourceManagement.consumption')}: <strong className="font-mono text-white">{ethanolConsumption.toFixed(1)} m³/h</strong></p>
                 </div>
                 </div>
-                <StorageIndicator label="Armazenamento" storage={ethanolStorage} unit="m³" colorClass="bg-teal-400" />
+                <StorageIndicator label={t('resourceManagement.storage')} storage={ethanolStorage} unit="m³" colorClass="bg-teal-400" />
             </div>
           )}
           
@@ -179,11 +187,12 @@ const ResourceManagement: React.FC<ResourceManagementProps> = ({
                 <div className="flex items-center gap-2 mb-1">
                 <GasIcon className="w-5 h-5 text-green-400" />
                 <div>
-                    <h4 className="font-semibold text-green-400 text-sm">Biodiesel</h4>
-                    <p className="text-xs text-gray-400">Consumo: <strong className="font-mono text-white">{biodieselConsumption.toFixed(1)} m³/h</strong></p>
+                    {/* FIX: Use translation function */}
+                    <h4 className="font-semibold text-green-400 text-sm">{t('resourceManagement.biodiesel')}</h4>
+                    <p className="text-xs text-gray-400">{t('resourceManagement.consumption')}: <strong className="font-mono text-white">{biodieselConsumption.toFixed(1)} m³/h</strong></p>
                 </div>
                 </div>
-                <StorageIndicator label="Armazenamento" storage={biodieselStorage} unit="m³" colorClass="bg-green-500" />
+                <StorageIndicator label={t('resourceManagement.storage')} storage={biodieselStorage} unit="m³" colorClass="bg-green-500" />
             </div>
           )}
           
@@ -193,11 +202,12 @@ const ResourceManagement: React.FC<ResourceManagementProps> = ({
                 <div className="flex items-center gap-2 mb-1">
                 <GasIcon className="w-5 h-5 text-emerald-400" />
                 <div>
-                    <h4 className="font-semibold text-emerald-400 text-sm">Hidrogênio (H₂)</h4>
-                    <p className="text-xs text-gray-400">Consumo: <strong className="font-mono text-white">{h2Consumption.toFixed(1)} kg/h</strong></p>
+                    {/* FIX: Use translation function */}
+                    <h4 className="font-semibold text-emerald-400 text-sm">{t('resourceManagement.h2')}</h4>
+                    <p className="text-xs text-gray-400">{t('resourceManagement.consumption')}: <strong className="font-mono text-white">{h2Consumption.toFixed(1)} kg/h</strong></p>
                 </div>
                 </div>
-                <StorageIndicator label="Armazenamento" storage={h2Storage} unit="kg" colorClass="bg-emerald-500" />
+                <StorageIndicator label={t('resourceManagement.storage')} storage={h2Storage} unit="kg" colorClass="bg-emerald-500" />
             </div>
           )}
         </div>
@@ -222,7 +232,8 @@ const ResourceManagement: React.FC<ResourceManagementProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
               <XAxis dataKey="time" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} />
               <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} />
-              <Tooltip content={<CustomTooltip />} />
+              {/* FIX: Pass translation function to custom tooltip */}
+              <Tooltip content={<CustomTooltip t={t} />} />
               <Legend wrapperStyle={{fontSize: "10px", position: 'absolute', bottom: 0 }} iconSize={8} />
               {Object.entries(visibleLines).map(([key, isVisible]) => (
                   (isVisible && resourceConfig[key as keyof ResourceConfig]) && (

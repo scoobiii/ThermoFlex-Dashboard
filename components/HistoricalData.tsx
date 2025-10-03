@@ -23,13 +23,16 @@ interface HistoricalDataProps {
   isMaximizable?: boolean;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
+  // FIX: Add t prop for translations
+  t: (key: string) => string;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, t }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
-        <p className="label text-sm text-gray-300">{`Período: ${label}`}</p>
+        {/* FIX: Use translation function */}
+        <p className="label text-sm text-gray-300">{`${t('tooltip.period')}: ${label}`}</p>
         {payload.map((p, i) => (
           <p key={i} style={{ color: p.color }} className="text-sm">
             {`${p.name}: ${p.value.toFixed(1)} ${p.unit}`}
@@ -44,7 +47,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const TimeRangeSelector: React.FC<{
   timeRange: '24h' | '7d';
   setTimeRange: (range: '24h' | '7d') => void;
-}> = ({ timeRange, setTimeRange }) => (
+  t: (key: string) => string;
+}> = ({ timeRange, setTimeRange, t }) => (
   <div className="flex items-center bg-gray-900/50 rounded-lg p-1">
     <button
       onClick={() => setTimeRange('24h')}
@@ -55,7 +59,8 @@ const TimeRangeSelector: React.FC<{
       }`}
       aria-pressed={timeRange === '24h'}
     >
-      24 Horas
+      {/* FIX: Use translation function */}
+      {t('fuelStatus.24h')}
     </button>
     <button
       onClick={() => setTimeRange('7d')}
@@ -66,7 +71,8 @@ const TimeRangeSelector: React.FC<{
       }`}
       aria-pressed={timeRange === '7d'}
     >
-      7 Dias
+      {/* FIX: Use translation function */}
+      {t('fuelStatus.7d')}
     </button>
   </div>
 );
@@ -78,12 +84,14 @@ const HistoricalData: React.FC<HistoricalDataProps> = ({
   isMaximizable,
   isMaximized,
   onToggleMaximize,
+  t,
 }) => {
-  const action = <TimeRangeSelector timeRange={timeRange} setTimeRange={setTimeRange} />;
+  const action = <TimeRangeSelector timeRange={timeRange} setTimeRange={setTimeRange} t={t} />;
 
   return (
     <DashboardCard
-      title="Dados Históricos"
+      // FIX: Use translation function
+      title={t('historicalData.title')}
       icon={<ChartBarIcon className="w-6 h-6" />}
       action={action}
       className="h-full"
@@ -114,10 +122,12 @@ const HistoricalData: React.FC<HistoricalDataProps> = ({
               axisLine={false}
               unit=" kg/s"
             />
-            <Tooltip content={<CustomTooltip />} />
+            {/* FIX: Pass translation function to custom tooltip */}
+            <Tooltip content={<CustomTooltip t={t} />} />
             <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}}/>
-            <Bar yAxisId="right" dataKey="consumption" name="Consumo" fill="#a3e635" barSize={20} unit="kg/s" />
-            <Line yAxisId="left" type="monotone" dataKey="power" name="Potência" stroke="#06b6d4" strokeWidth={2} dot={false} unit="MW" />
+            {/* FIX: Use translation function for legend names */}
+            <Bar yAxisId="right" dataKey="consumption" name={t('tooltip.consumption')} fill="#a3e635" barSize={20} unit="kg/s" />
+            <Line yAxisId="left" type="monotone" dataKey="power" name={t('tooltip.power')} stroke="#06b6d4" strokeWidth={2} dot={false} unit="MW" />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

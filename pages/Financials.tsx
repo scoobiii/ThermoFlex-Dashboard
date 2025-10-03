@@ -1,9 +1,5 @@
-
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import DashboardCard from '../components/DashboardCard';
-// FIX: Import ChartPieIcon to use as the icon for the DashboardCard.
 import { ChartBarIcon, BoltIcon, ArrowDownTrayIcon, ChartPieIcon, TrendingUpIcon, ComputerDesktopIcon } from '../components/icons';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend, BarChart, Bar, CartesianGrid } from 'recharts';
 import { PlantStatus, FuelMode } from '../types';
@@ -14,6 +10,7 @@ interface FinancialsProps {
   fuelMode: FuelMode;
   flexMix: { h2: number, biodiesel: number };
   activeRackCount: number;
+  t: (key: string) => string;
 }
 
 const initialMonthlyRevenueData = [
@@ -56,6 +53,7 @@ const Financials: React.FC<FinancialsProps> = ({
   fuelMode,
   flexMix,
   activeRackCount,
+  t,
 }) => {
     const [carbonPrice, setCarbonPrice] = useState(32.50); // USD per ton
     const [monthlyRevenueHistory, setMonthlyRevenueHistory] = useState(initialMonthlyRevenueData);
@@ -140,16 +138,16 @@ const Financials: React.FC<FinancialsProps> = ({
 
         // --- Data for Charts ---
         const revenueStreamData = [
-            { name: 'Venda de Energia', value: energyRevenue, color: '#f59e0b' },
-            { name: 'Serviços de Cloud', value: cloudRevenue, color: '#8b5cf6' },
-            { name: 'Créditos de Carbono', value: carbonRevenue, color: '#10b981' },
+            { name: t('financials.energySales'), value: energyRevenue, color: '#f59e0b' },
+            { name: t('financials.cloudServices'), value: cloudRevenue, color: '#8b5cf6' },
+            { name: t('financials.carbonCredits'), value: carbonRevenue, color: '#10b981' },
         ];
         
         const costData = [
-            { name: 'Combustível (CPV)', value: cogsFuel, color: '#34d399' },
-            { name: 'Manutenção', value: opexMaintenance, color: '#6ee7b7' },
-            { name: 'Pessoal', value: opexPersonnel, color: '#a7f3d0' },
-            { name: 'Data Center', value: opexDataCenter, color: '#fb923c' },
+            { name: t('financials.fuelCOGS'), value: cogsFuel, color: '#34d399' },
+            { name: t('financials.maintenance'), value: opexMaintenance, color: '#6ee7b7' },
+            { name: t('financials.personnel'), value: opexPersonnel, color: '#a7f3d0' },
+            { name: t('financials.dataCenter'), value: opexDataCenter, color: '#fb923c' },
         ];
         const totalOperatingCosts = cogsFuel + totalOpex;
 
@@ -158,7 +156,7 @@ const Financials: React.FC<FinancialsProps> = ({
             co2ReducedTons, carbonRevenue, revenueStreamData, costData,
             totalOperatingCosts, monthlyAmortization, ebit, taxes
         };
-    }, [plantStatus, powerOutput, fuelMode, flexMix, carbonPrice, activeRackCount]);
+    }, [plantStatus, powerOutput, fuelMode, flexMix, carbonPrice, activeRackCount, t]);
 
     const monthlySummaryData = useMemo(() => [
         { month: 'Set/23', revenue: 1180, costs: 760 },
@@ -270,36 +268,36 @@ const Financials: React.FC<FinancialsProps> = ({
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <DashboardCard
-                title="Demonstrativo de Resultados (Mensal)"
+                title={t('financials.incomeStatement')}
                 icon={<ChartBarIcon className="w-6 h-6" />}
                 className="lg:col-span-2"
                 action={
                 <button
                     onClick={handleExportCSV}
                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-gray-700 text-gray-300 rounded-md transition-all duration-200 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Exportar dados financeiros como CSV"
+                    aria-label={t('financials.exportCSV')}
                     disabled={plantStatus !== PlantStatus.Online}
                 >
                     <ArrowDownTrayIcon className="w-4 h-4" />
-                    Exportar DRE
+                    {t('financials.exportDRE')}
                 </button>
                 }
             >
                 <div className="space-y-3 mb-4">
                     <div className="flex justify-between items-baseline p-2 bg-gray-900/50 rounded-lg">
-                        <span className="text-gray-300">Receita Total</span>
+                        <span className="text-gray-300">{t('financials.totalRevenue')}</span>
                         <span className="text-xl font-bold text-green-400">{formatCurrency(financialMetrics.totalRevenue)}</span>
                     </div>
                     <div className="flex justify-between items-baseline p-2">
-                        <span className="text-gray-400 text-sm">Lucro Bruto</span>
+                        <span className="text-gray-400 text-sm">{t('financials.grossProfit')}</span>
                         <span className="font-semibold text-white">{formatCurrency(financialMetrics.grossProfit)}</span>
                     </div>
                     <div className="flex justify-between items-baseline p-2">
-                        <span className="text-gray-400 text-sm">EBITDA</span>
+                        <span className="text-gray-400 text-sm">{t('financials.profitEBITDA')}</span>
                         <span className="font-semibold text-white">{formatCurrency(financialMetrics.ebitda)}</span>
                     </div>
                     <div className="flex justify-between items-baseline p-2 bg-gray-900/50 rounded-lg">
-                        <span className="text-gray-300 font-bold">Resultado Líquido</span>
+                        <span className="text-gray-300 font-bold">{t('financials.netIncome')}</span>
                         <span className={`text-xl font-bold ${financialMetrics.netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                             {formatCurrency(financialMetrics.netProfit)}
                         </span>
@@ -320,63 +318,63 @@ const Financials: React.FC<FinancialsProps> = ({
                                 content={<CustomTooltip formatter={(value: number) => `R$ ${value.toFixed(1)}M`} />}
                                 wrapperStyle={{ backgroundColor: '#1A2233', border: '1px solid #2A3449', borderRadius: '0.5rem' }} 
                             />
-                            <Area type="monotone" dataKey="revenue" name="Receita" stroke="#06b6d4" fillOpacity={1} fill="url(#colorRevenue)" />
+                            <Area type="monotone" dataKey="revenue" name={t('financials.revenue')} stroke="#06b6d4" fillOpacity={1} fill="url(#colorRevenue)" />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
             </DashboardCard>
             
-            <DashboardCard title="Receita de Sustentabilidade" icon={<BoltIcon className="w-6 h-6 text-emerald-400" />}>
+            <DashboardCard title={t('financials.sustainabilityRevenue')} icon={<BoltIcon className="w-6 h-6 text-emerald-400" />}>
                  <div className="grid grid-cols-2 gap-4 text-center h-full items-center">
                     <div>
-                        <p className="text-gray-400 text-sm">CO₂ Reduzido</p>
+                        <p className="text-gray-400 text-sm">{t('financials.co2Reduced')}</p>
                         <p className="text-2xl font-bold text-white">{financialMetrics.co2ReducedTons.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</p>
-                        <p className="text-xs text-gray-500">tCO₂e / Mês</p>
+                        <p className="text-xs text-gray-500">{t('financials.co2Unit')}</p>
                     </div>
                     <div>
-                        <p className="text-gray-400 text-sm">Preço do Crédito</p>
+                        <p className="text-gray-400 text-sm">{t('financials.creditPrice')}</p>
                         <p className="text-2xl font-bold text-white">${carbonPrice.toFixed(2)}</p>
-                        <p className="text-xs text-gray-500">USD/tCO₂e</p>
+                        <p className="text-xs text-gray-500">{t('financials.creditUnit')}</p>
                     </div>
                     <div className="col-span-2 bg-gray-900/50 p-2 rounded-lg">
-                        <p className="text-gray-400 text-sm">Receita Adicional</p>
+                        <p className="text-gray-400 text-sm">{t('financials.additionalRevenue')}</p>
                         <p className="text-2xl font-bold text-emerald-400">{formatCurrency(financialMetrics.carbonRevenue)}</p>
-                         <p className="text-xs text-gray-500">Mensal</p>
+                         <p className="text-xs text-gray-500">{t('financials.monthly')}</p>
                     </div>
                  </div>
             </DashboardCard>
 
-            <DashboardCard title="Faturamento Data Cloud (Mensal)" icon={<ComputerDesktopIcon className="w-6 h-6 text-purple-400" />}>
+            <DashboardCard title={t('financials.cloudRevenueTitle')} icon={<ComputerDesktopIcon className="w-6 h-6 text-purple-400" />}>
                 <div className="space-y-3 h-full flex flex-col justify-around">
                     <div className="flex justify-between items-baseline">
-                        <span className="text-gray-400">Racks Ativos</span>
+                        <span className="text-gray-400">{t('financials.activeRacks')}</span>
                         <span className="font-semibold text-white font-mono">{activeRackCount}</span>
                     </div>
                     <div className="flex justify-between items-baseline">
-                        <span className="text-gray-400">Receita / Rack</span>
+                        <span className="text-gray-400">{t('financials.revenuePerRack')}</span>
                         <span className="font-semibold text-white font-mono">{formatCurrency(REVENUE_PER_RACK_PER_MONTH)}</span>
                     </div>
                     <div className="border-t border-gray-700 my-1"></div>
                     <div className="flex justify-between items-baseline">
-                        <span className="text-gray-300">Receita Bruta</span>
-                        <span className="font-semibold text-purple-400">{formatCurrency(financialMetrics.revenueStreamData.find(r => r.name === 'Serviços de Cloud')?.value || 0)}</span>
+                        <span className="text-gray-300">{t('financials.grossRevenue')}</span>
+                        <span className="font-semibold text-purple-400">{formatCurrency(financialMetrics.revenueStreamData.find(r => r.name === t('financials.cloudServices'))?.value || 0)}</span>
                     </div>
                     <div className="flex justify-between items-baseline">
-                        <span className="text-gray-400">Custos OPEX</span>
-                        <span className="font-semibold text-orange-400">-{formatCurrency(financialMetrics.costData.find(c => c.name === 'Data Center')?.value || 0)}</span>
+                        <span className="text-gray-400">{t('financials.opexCosts')}</span>
+                        <span className="font-semibold text-orange-400">-{formatCurrency(financialMetrics.costData.find(c => c.name === t('financials.dataCenter'))?.value || 0)}</span>
                     </div>
                     <div className="border-t border-gray-700 my-1"></div>
                     <div className="flex justify-between items-baseline bg-gray-900/50 p-2 rounded-lg">
-                        <span className="text-gray-300 font-bold">Lucro Líquido Cloud</span>
-                        <span className="font-bold text-green-500">{formatCurrency((financialMetrics.revenueStreamData.find(r => r.name === 'Serviços de Cloud')?.value || 0) - (financialMetrics.costData.find(c => c.name === 'Data Center')?.value || 0))}</span>
+                        <span className="text-gray-300 font-bold">{t('financials.cloudNetProfit')}</span>
+                        <span className="font-bold text-green-500">{formatCurrency((financialMetrics.revenueStreamData.find(r => r.name === t('financials.cloudServices'))?.value || 0) - (financialMetrics.costData.find(c => c.name === t('financials.dataCenter'))?.value || 0))}</span>
                     </div>
                 </div>
             </DashboardCard>
             
-            <DashboardCard title="Fontes de Receita (Mensal)" icon={<BoltIcon className="w-6 h-6" />}>
+            <DashboardCard title={t('financials.revenueStreamsTitle')} icon={<BoltIcon className="w-6 h-6" />}>
                  <div className="h-full flex flex-col">
                     <div className="text-center mb-4">
-                        <span className="text-gray-400 text-sm">Receita Total das Fontes</span>
+                        <span className="text-gray-400 text-sm">{t('financials.totalRevenueStreams')}</span>
                         <span className="text-3xl font-bold text-white block">{formatCurrency(financialMetrics.totalRevenue)}</span>
                     </div>
                     <div className="flex-grow h-64 -ml-4">
@@ -386,7 +384,7 @@ const Financials: React.FC<FinancialsProps> = ({
                                 <XAxis type="number" stroke="#9ca3af" fontSize={12} tickFormatter={(value) => `${formatCurrency(value / 1000000)}M`} />
                                 <YAxis type="category" dataKey="name" stroke="#9ca3af" fontSize={12} width={120} />
                                 <Tooltip content={<CustomTooltip formatter={formatCurrency} />} cursor={{fill: 'rgba(42, 52, 73, 0.5)'}} />
-                                <Bar dataKey="value" name="Receita" barSize={30} radius={[0, 8, 8, 0]}>
+                                <Bar dataKey="value" name={t('financials.revenue')} barSize={30} radius={[0, 8, 8, 0]}>
                                     {financialMetrics.revenueStreamData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
                                 </Bar>
                             </BarChart>
@@ -395,7 +393,7 @@ const Financials: React.FC<FinancialsProps> = ({
                  </div>
             </DashboardCard>
 
-            <DashboardCard title="Estrutura de Custos Operacionais (Mensal)" icon={<ChartPieIcon className="w-6 h-6" />}>
+            <DashboardCard title={t('financials.costStructureTitle')} icon={<ChartPieIcon className="w-6 h-6" />}>
                 <div className="h-full flex items-center justify-center">
                     <div className="w-full h-64 relative">
                         <ResponsiveContainer width="100%" height="100%">
@@ -408,14 +406,14 @@ const Financials: React.FC<FinancialsProps> = ({
                             </PieChart>
                         </ResponsiveContainer>
                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span className="text-gray-400 text-sm">Custos Totais</span>
+                            <span className="text-gray-400 text-sm">{t('financials.totalCosts')}</span>
                             <span className="text-2xl font-bold text-white">{formatCurrency(financialMetrics.totalOperatingCosts).replace('R$', 'R$ ')}</span>
                         </div>
                     </div>
                 </div>
             </DashboardCard>
 
-            <DashboardCard title="Resumo Financeiro Mensal (Últimos 12 Meses)" icon={<ChartBarIcon className="w-6 h-6" />} className="lg:col-span-3">
+            <DashboardCard title={t('financials.monthlySummaryTitle')} icon={<ChartBarIcon className="w-6 h-6" />} className="lg:col-span-3">
                 <div className="h-80 w-full pt-4">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={monthlySummaryData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -424,19 +422,19 @@ const Financials: React.FC<FinancialsProps> = ({
                             <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `R$ ${(value / 1000000).toFixed(0)}M`} />
                             <Tooltip content={<CustomTooltip formatter={formatCurrency} />} wrapperStyle={{ backgroundColor: '#1A2233', border: '1px solid #2A3449' }}/>
                             <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}}/>
-                            <Bar dataKey="revenue" name="Receita" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="costs" name="Custos" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="profit" name="Lucro (EBITDA)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="revenue" name={t('financials.revenue')} fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="costs" name={t('financials.costs')} fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="profit" name={t('financials.profitEBITDA')} fill="#10b981" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
             </DashboardCard>
 
-             <DashboardCard title="Metas de Produção (Mensal)" icon={<TrendingUpIcon className="w-6 h-6" />} className="lg:col-span-3">
+             <DashboardCard title={t('financials.productionTargetsTitle')} icon={<TrendingUpIcon className="w-6 h-6" />} className="lg:col-span-3">
                 <div className="space-y-4 h-full flex flex-col justify-around">
                     <div>
                         <div className="flex justify-between items-baseline mb-1">
-                            <span className="text-sm font-medium text-gray-300">Meta de Receita</span>
+                            <span className="text-sm font-medium text-gray-300">{t('financials.revenueTarget')}</span>
                             <span className="text-sm font-semibold text-white">{formatCurrency(REVENUE_TARGET)}</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-5">
@@ -453,7 +451,7 @@ const Financials: React.FC<FinancialsProps> = ({
                     </div>
                      <div>
                         <div className="flex justify-between items-baseline mb-1">
-                            <span className="text-sm font-medium text-gray-300">Meta de Lucro Líquido</span>
+                            <span className="text-sm font-medium text-gray-300">{t('financials.netProfitTarget')}</span>
                              <span className="text-sm font-semibold text-white">{formatCurrency(PROFIT_TARGET)}</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-5">
@@ -470,7 +468,7 @@ const Financials: React.FC<FinancialsProps> = ({
                     </div>
                      <div>
                         <div className="flex justify-between items-baseline mb-1">
-                            <span className="text-sm font-medium text-gray-300">ROI Anualizado (Projeção)</span>
+                            <span className="text-sm font-medium text-gray-300">{t('financials.roiProjection')}</span>
                              <span className="text-sm font-semibold text-white">30%</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-5">
@@ -486,28 +484,28 @@ const Financials: React.FC<FinancialsProps> = ({
                 </div>
              </DashboardCard>
 
-            <DashboardCard title="Receita de Serviços Cloud (Mensal)" icon={<ComputerDesktopIcon className="w-6 h-6 text-cyan-400" />} className="lg:col-span-3">
+            <DashboardCard title={t('financials.cloudServicesRevenueTitle')} icon={<ComputerDesktopIcon className="w-6 h-6 text-cyan-400" />} className="lg:col-span-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full">
                     <div className="text-center">
-                        <p className="text-gray-400 text-base">Receita Mensal Total</p>
+                        <p className="text-gray-400 text-base">{t('financials.monthly')}</p>
                         <p className="text-6xl font-bold text-cyan-400">
-                            {formatCurrency(financialMetrics.revenueStreamData.find(r => r.name === 'Serviços de Cloud')?.value || 0)}
+                            {formatCurrency(financialMetrics.revenueStreamData.find(r => r.name === t('financials.cloudServices'))?.value || 0)}
                         </p>
                     </div>
                     <div className="space-y-4 text-lg md:border-l border-gray-700 md:pl-8">
                         <div className="flex justify-between items-baseline">
-                            <span className="text-gray-400">Racks Ativos:</span>
+                            <span className="text-gray-400">{t('financials.activeRacks')}</span>
                             <span className="font-semibold text-white font-mono">{activeRackCount}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-gray-400">Receita / Rack:</span>
+                            <span className="text-gray-400">{t('financials.revenuePerRack')}</span>
                             <span className="font-semibold text-white font-mono">{formatCurrency(REVENUE_PER_RACK_PER_MONTH)}</span>
                         </div>
                     </div>
                 </div>
             </DashboardCard>
 
-            <DashboardCard title="Resumo de Lucro Líquido Mensal (Últimos 12 Meses)" icon={<ChartBarIcon className="w-6 h-6" />} className="lg:col-span-3">
+            <DashboardCard title={t('financials.netProfitSummaryTitle')} icon={<ChartBarIcon className="w-6 h-6" />} className="lg:col-span-3">
                 <div className="h-80 w-full pt-4">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={monthlyNetProfitSummaryData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -516,9 +514,9 @@ const Financials: React.FC<FinancialsProps> = ({
                             <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `R$ ${(value / 1000000).toFixed(0)}M`} />
                             <Tooltip content={<CustomTooltip formatter={formatCurrency} />} wrapperStyle={{ backgroundColor: '#1A2233', border: '1px solid #2A3449' }}/>
                             <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}}/>
-                            <Bar dataKey="revenue" name="Receita" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="totalCosts" name="Custos Totais (incl. Impostos)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="netProfit" name="Lucro Líquido" fill="#10b981" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="revenue" name={t('financials.revenue')} fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="totalCosts" name={t('financials.totalCostsWithTaxes')} fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="netProfit" name={t('financials.netProfit')} fill="#10b981" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

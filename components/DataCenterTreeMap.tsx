@@ -101,6 +101,7 @@ interface DataCenterTreeMapProps {
     isMaximizable?: boolean;
     isMaximized?: boolean;
     onToggleMaximize?: () => void;
+    t: (key: string) => string;
 }
 
 const generateInitialRackData = (): TreeMapNode[] => {
@@ -148,7 +149,7 @@ const generateInitialRackData = (): TreeMapNode[] => {
   });
 };
 
-const CustomTooltipContent = ({ active, payload }: any) => {
+const CustomTooltipContent = ({ active, payload, t }: any) => {
   if (active && payload && payload.length) {
     const data: TreeMapNode = payload[0].payload;
     return (
@@ -164,31 +165,31 @@ const CustomTooltipContent = ({ active, payload }: any) => {
         </div>
 
         <div className="border-t border-gray-700 pt-2 mt-2">
-            <h5 className="font-semibold text-cyan-400 text-xs uppercase mb-1">Consumo de Energia</h5>
+            <h5 className="font-semibold text-cyan-400 text-xs uppercase mb-1">{t('dataCenter.treemap.tooltip.energyConsumption')}</h5>
             <div className="grid grid-cols-2 gap-x-4">
                 <p className="text-gray-400">CPU:</p><p className="text-gray-200 font-mono text-right">{data.cpuConsumption} kWh</p>
                 <p className="text-gray-400">GPU:</p><p className="text-gray-200 font-mono text-right">{data.gpuConsumption} kWh</p>
-                <p className="text-gray-400">Memória:</p><p className="text-gray-200 font-mono text-right">{data.memoryConsumption} kWh</p>
+                <p className="text-gray-400">{t('dataCenter.treemap.tooltip.memory')}</p><p className="text-gray-200 font-mono text-right">{data.memoryConsumption} kWh</p>
                 <p className="text-gray-400">I/O:</p><p className="text-gray-200 font-mono text-right">{data.ioConsumption} kWh</p>
             </div>
              <div className="flex justify-between font-bold mt-1">
-                <p className="text-cyan-400">Total:</p><p className="text-cyan-400 font-mono">{data.totalEnergyConsumption} kWh</p>
+                <p className="text-cyan-400">{t('dataCenter.treemap.tooltip.total')}</p><p className="text-cyan-400 font-mono">{data.totalEnergyConsumption} kWh</p>
             </div>
         </div>
 
         <div className="border-t border-gray-700 pt-2 mt-2">
              <div className="flex justify-between">
-                <p className="text-gray-400">Consumo Frio:</p><p className="text-gray-200 font-mono">{data.coolingConsumption} kWₜ</p>
+                <p className="text-gray-400">{t('dataCenter.treemap.tooltip.cooling')}</p><p className="text-gray-200 font-mono">{data.coolingConsumption} kWₜ</p>
             </div>
         </div>
 
         <div className="border-t border-gray-700 pt-2 mt-2">
-            <h5 className="font-semibold text-gray-400 text-xs uppercase mb-1">Métricas</h5>
+            <h5 className="font-semibold text-gray-400 text-xs uppercase mb-1">{t('dataCenter.treemap.tooltip.metrics')}</h5>
              <div className="grid grid-cols-2 gap-x-4">
-                <p className="text-gray-400">Utilização:</p><p className="text-gray-200 font-mono text-right">{data.utilization}%</p>
-                <p className="text-gray-400">Temp:</p><p className="text-gray-200 font-mono text-right">{data.temp} °C</p>
-                <p className="text-gray-400">Rede:</p><p className="text-gray-200 font-mono text-right">{data.networkIO} Gbps</p>
-                <p className="text-gray-400">Memória:</p><p className="text-gray-200 font-mono text-right">{data.memory} GB</p>
+                <p className="text-gray-400">{t('dataCenter.treemap.tooltip.utilization')}</p><p className="text-gray-200 font-mono text-right">{data.utilization}%</p>
+                <p className="text-gray-400">{t('dataCenter.treemap.tooltip.temp')}</p><p className="text-gray-200 font-mono text-right">{data.temp} °C</p>
+                <p className="text-gray-400">{t('dataCenter.treemap.tooltip.network')}</p><p className="text-gray-200 font-mono text-right">{data.networkIO} Gbps</p>
+                <p className="text-gray-400">{t('dataCenter.treemap.tooltip.memory')}</p><p className="text-gray-200 font-mono text-right">{data.memory} GB</p>
              </div>
         </div>
       </div>
@@ -234,6 +235,7 @@ const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
     isMaximizable,
     isMaximized,
     onToggleMaximize,
+    t
 }) => {
     const [data, setData] = useState<TreeMapNode[]>([]);
     const [viewMode, setViewMode] = useState<TreeMapViewMode>('totalEnergy');
@@ -243,7 +245,7 @@ const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
     }, []);
 
     const dataKey = viewMode === 'totalEnergy' ? 'totalEnergyConsumption' : 'coolingConsumption';
-    const viewTitle = viewMode === 'totalEnergy' ? 'Consumo de Energia (kWh)' : 'Consumo de Frio (kWₜ)';
+    const viewTitle = viewMode === 'totalEnergy' ? t('dataCenter.treemap.energyConsumption') : t('dataCenter.treemap.coolingConsumption');
 
     const { min, max } = useMemo(() => {
         if (!data || data.length === 0) return { min: 0, max: 0 };
@@ -266,7 +268,7 @@ const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
     
     return (
         <DashboardCard 
-            title="Treemap de Consumo dos Racks"
+            title={t('dataCenter.treemap.title')}
             icon={<ServerRackIcon className="w-6 h-6" />}
             isMaximizable={isMaximizable}
             isMaximized={isMaximized}
@@ -277,19 +279,19 @@ const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
                         onClick={() => setViewMode('totalEnergy')}
                         className={`px-3 py-1 text-xs font-semibold rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${viewMode === 'totalEnergy' ? 'bg-cyan-500 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700'}`}
                     >
-                        Energia
+                        {t('dataCenter.treemap.energy')}
                     </button>
                     <button
                         onClick={() => setViewMode('cooling')}
                         className={`px-3 py-1 text-xs font-semibold rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${viewMode === 'cooling' ? 'bg-cyan-500 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700'}`}
                     >
-                        Frio
+                        {t('dataCenter.treemap.cooling')}
                     </button>
                 </div>
             }
         >
             <div className="w-full h-full flex flex-col">
-                <p className="text-center text-sm text-gray-400 mb-2">Visualizando por: <span className="font-semibold text-white">{viewTitle}</span></p>
+                <p className="text-center text-sm text-gray-400 mb-2">{t('dataCenter.treemap.viewingBy')} <span className="font-semibold text-white">{viewTitle}</span></p>
                 <div className="flex-grow">
                     <ResponsiveContainer width="100%" height="100%">
                         <Treemap
@@ -301,7 +303,7 @@ const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
                             isAnimationActive={false}
                             aspectRatio={16/9}
                         >
-                            <Tooltip content={<CustomTooltipContent />} />
+                            <Tooltip content={<CustomTooltipContent t={t} />} />
                         </Treemap>
                     </ResponsiveContainer>
                 </div>

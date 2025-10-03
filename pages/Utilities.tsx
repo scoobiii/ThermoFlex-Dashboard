@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useState } from 'react';
 import { Plant, PlantStatus } from '../types';
 import { SnowflakeIcon, WrenchScrewdriverIcon, BoltIcon, CloudIcon, ComputerDesktopIcon, ActivityIcon, MapPinIcon, GasIcon, ChartBarIcon, WarningIcon } from '../components/icons';
@@ -13,6 +11,7 @@ interface UtilitiesProps {
     setCurrentPage: (page: Page) => void;
     activeRackCount: number;
     selectedPlant: Plant;
+    t: (key: string) => string;
 }
 
 const SankeyConnector: React.FC = () => (
@@ -23,7 +22,7 @@ const SankeyConnector: React.FC = () => (
     </div>
 );
 
-const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ powerOutput, efficiency, plantStatus, setCurrentPage, activeRackCount }) => {
+const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ powerOutput, efficiency, plantStatus, setCurrentPage, activeRackCount, t }) => {
     
     const isOnline = plantStatus === PlantStatus.Online;
     const [ambientTemp] = React.useState(32.4);
@@ -83,7 +82,7 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
             <div className="grid grid-cols-1 lg:grid-cols-11 gap-6 items-stretch">
                 <div className="lg:col-span-3">
                     <DashboardCard 
-                        title="Fluxo de Energia da Usina" 
+                        title={t('utilities.plantEnergyFlow')}
                         icon={<ActivityIcon className="w-6 h-6 text-yellow-400" />} 
                         className="h-full"
                         action={
@@ -91,33 +90,35 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
                                 onClick={() => setCurrentPage('Power Plant Sankey')}
                                 className="px-3 py-1 text-xs font-semibold bg-gray-700 text-gray-300 rounded-md transition-all duration-200 hover:bg-cyan-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500"
                             >
-                                Detalhes do Fluxo
+                                {t('utilities.flowDetails')}
                             </button>
                         }
                     >
                         <div className="flex flex-col justify-center h-full space-y-4 text-sm">
                             <div className="flex justify-between items-baseline">
-                                <span className="text-gray-400">Potência Térmica Total</span>
+                                <span className="text-gray-400">{t('utilities.totalThermalPower')}</span>
                                 <span className="font-mono text-lg font-semibold text-white">{powerInput.toFixed(0)} MW</span>
                             </div>
                             <div className="flex justify-between items-baseline pl-4">
-                                <span className="text-gray-400">- Potência Elétrica</span>
+                                <span className="text-gray-400">{t('utilities.electricalPower')}</span>
                                 <span className="font-mono font-semibold text-cyan-400">{powerOutput.toFixed(0)} MW</span>
                             </div>
                             <div className="border-t border-gray-700 my-2"></div>
                             <div className="flex justify-between items-baseline bg-gray-900/50 p-2 rounded-lg">
-                                <span className="font-semibold text-orange-400">Calor Residual (Perdas)</span>
+                                <span className="font-semibold text-orange-400">{t('utilities.residualHeat')}</span>
                                 <span className="font-mono text-xl font-bold text-orange-400">{wasteHeat.toFixed(0)} MW</span>
                             </div>
                         </div>
                     </DashboardCard>
                 </div>
-                
-                <div className="lg:col-span-1 hidden lg:flex"> <SankeyConnector /> </div>
+
+                <div className="lg:col-span-1 hidden lg:block">
+                    <SankeyConnector />
+                </div>
 
                 <div className="lg:col-span-3">
-                     <DashboardCard 
-                        title="Chiller de Absorção" 
+                    <DashboardCard 
+                        title={t('utilities.absorptionChiller')}
                         icon={<SnowflakeIcon className="w-6 h-6 text-cyan-400" />} 
                         className="h-full"
                         action={
@@ -125,155 +126,121 @@ const TrigenerationView: React.FC<Omit<UtilitiesProps, 'selectedPlant'>> = ({ po
                                 onClick={() => setCurrentPage('Chiller')}
                                 className="px-3 py-1 text-xs font-semibold bg-gray-700 text-gray-300 rounded-md transition-all duration-200 hover:bg-cyan-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500"
                             >
-                                Ver Detalhes
+                                {t('utilities.viewDetails')}
                             </button>
                         }
                     >
-                        <div className="flex flex-col items-center justify-between h-full text-center">
-                             <div>
-                                <p className={`text-5xl font-bold tracking-tight ${isOnline ? 'text-cyan-400' : 'text-gray-500'}`}>{coolingProduction.toFixed(0)}</p>
-                                <p className="text-lg text-gray-400">MW de Frio</p>
-                                <p className={`mt-4 text-sm font-semibold ${isOnline ? 'text-green-400' : 'text-red-500'}`}>{isOnline ? 'Sistema Ativo' : 'Sistema Inativo'}</p>
-                             </div>
-                            <div className="text-xs text-gray-500 border-t border-gray-700 w-full pt-2 mt-2">
-                                <p><strong>Quantidade:</strong> 2 | <strong>Fabricante:</strong> Broad</p>
-                                <p><strong>Modelo:</strong> BCT-1500</p>
-                            </div>
+                        <div className="flex flex-col justify-center items-center h-full text-center">
+                            <p className="text-5xl font-bold tracking-tight text-cyan-400">{coolingProduction.toFixed(0)}</p>
+                            <p className="text-lg text-gray-400">{t('utilities.mwCooling')}</p>
+                            <p className={`mt-4 font-semibold ${isOnline ? 'text-green-400' : 'text-red-500'}`}>
+                                {isOnline ? t('utilities.systemActive') : t('utilities.systemInactive')}
+                            </p>
                         </div>
                     </DashboardCard>
                 </div>
-                
-                <div className="lg:col-span-1 hidden lg:flex"> <SankeyConnector /> </div>
-                
+
+                <div className="lg:col-span-1 hidden lg:block">
+                    <SankeyConnector />
+                </div>
+
                 <div className="lg:col-span-3">
-                    <DashboardCard title="Alinhamento Frio-Eletricidade" icon={<WrenchScrewdriverIcon className="w-6 h-6" />} className="h-full">
-                        <div className="flex flex-col justify-between h-full space-y-3">
-                             <div className="space-y-3">
-                                <Slider label="TIAC System" value={coolingDistribution.tiac} onChange={e => handleDistributionChange('tiac', parseInt(e.target.value))} />
-                                <Slider label="Fog System" value={coolingDistribution.fog} onChange={e => handleDistributionChange('fog', parseInt(e.target.value))} />
-                                <button
-                                    onClick={() => setCurrentPage('Fog System Details')}
-                                    className="w-full mt-2 text-center px-3 py-2 text-xs font-semibold bg-gray-700 text-cyan-400 rounded-md transition-all duration-200 hover:bg-cyan-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500"
-                                >
-                                    Ver Detalhes do Sistema Fogging
-                                </button>
-                            </div>
-                            
-                            <div className="space-y-3 border-t border-gray-700 pt-3">
-                                <div className="bg-gray-700/50 p-2 rounded-lg text-center">
-                                    <p className="text-xs text-gray-400">Alocado para Data Cloud</p>
-                                    <p className="font-mono text-lg font-semibold text-white">{coolingDistribution.dataCenter.toFixed(0)}% ({dataCenterCooling.toFixed(1)} MW)</p>
-                                    <p className="text-xs text-gray-500">Potencial para <strong className="text-white">{Math.floor(potentialActiveRacks)}/{TOTAL_RACKS}</strong> Racks</p>
-                                </div>
-                            </div>
-                            
-                            <div className="border-t border-gray-700 pt-3 mt-auto">
-                                <div className="flex items-center gap-3"><BoltIcon className="w-8 h-8 text-green-400"/>
-                                    <div>
-                                        <span className="font-semibold text-green-400 text-base">Economia de Energia (Trigeração)</span>
-                                        <p className="text-xs text-gray-500">(Equivalente Elétrico)</p>
+                    <DashboardCard 
+                        title={t('utilities.coolingAlignment')}
+                        icon={<WrenchScrewdriverIcon className="w-6 h-6 text-gray-300" />} 
+                        className="h-full"
+                    >
+                        <div className="flex flex-col h-full justify-between">
+                            <div className="space-y-3">
+                                <div className="bg-gray-700/50 p-3 rounded-lg cursor-pointer hover:bg-gray-700" onClick={() => setCurrentPage('Chiller Absorção -> Tiac')}>
+                                    <div className="flex justify-between items-baseline">
+                                        <span className="font-semibold text-gray-300">TIAC</span>
+                                        <span className="font-mono text-white">{tiacCooling.toFixed(1)} MW</span>
                                     </div>
-                                    <span className={`font-mono text-3xl font-bold ml-auto ${isOnline ? 'text-green-400' : 'text-gray-500'}`}>{electricalEquivalentSaved.toFixed(0)} MW</span>
+                                    <p className="text-xs text-gray-400 mt-1">Ambiente: {ambientTemp.toFixed(1)}°C ➔ Admissão: <strong className="text-cyan-400">{isOnline ? '15.0' : ambientTemp.toFixed(1)}°C</strong></p>
+                                </div>
+                                <div className="bg-gray-700/50 p-3 rounded-lg cursor-pointer hover:bg-gray-700" onClick={() => setCurrentPage('Fog System Details')}>
+                                    <div className="flex justify-between items-baseline">
+                                        <span className="font-semibold text-gray-300">Fogging</span>
+                                        <span className="font-mono text-white">{fogCooling.toFixed(1)} MW</span>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1">Boost de Potência <strong className="text-cyan-400">~{isOnline ? '220' : '0'} MW</strong></p>
+                                </div>
+                                <div className="bg-gray-700/50 p-3 rounded-lg cursor-pointer hover:bg-gray-700" onClick={() => setCurrentPage('Data Center')}>
+                                    <div className="flex justify-between items-baseline">
+                                        <span className="font-semibold text-gray-300">Data Cloud</span>
+                                        <span className="font-mono text-white">{dataCenterCooling.toFixed(1)} MW</span>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1">{t('utilities.rackPotential').replace('{count}', activeRackCount.toFixed(0)).replace('{total}', String(TOTAL_RACKS))}</p>
                                 </div>
                             </div>
                         </div>
                     </DashboardCard>
                 </div>
             </div>
+
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 <DashboardCard 
+                    title={t('utilities.trigenerationSavings')} 
+                    icon={<BoltIcon className="w-6 h-6 text-green-400" />}
+                >
+                    <div className="flex flex-col justify-center items-center h-full text-center">
+                        <p className="text-5xl font-bold tracking-tight text-green-400">{electricalEquivalentSaved.toFixed(0)}</p>
+                        <p className="text-lg text-gray-400">MW {t('utilities.electricalEquivalent')}</p>
+                    </div>
+                </DashboardCard>
+                 <DashboardCard 
+                    title={t('utilities.allocatedToCloud')}
+                    icon={<ComputerDesktopIcon className="w-6 h-6 text-purple-400" />}
+                >
+                    <div className="flex flex-col justify-center items-center h-full text-center">
+                         <p className="text-5xl font-bold tracking-tight text-purple-400">{dataCenterCooling.toFixed(1)}</p>
+                        <p className="text-lg text-gray-400">{t('utilities.mwCooling')}</p>
+                         <p className="mt-4 text-gray-300">{t('utilities.rackPotential').replace('{count}', activeRackCount.toFixed(0)).replace('{total}', String(TOTAL_RACKS))}</p>
+                    </div>
+                </DashboardCard>
+            </div>
         </div>
     );
 };
 
-const UteDetailsView: React.FC<{ plant: Plant; setCurrentPage: (page: Page) => void }> = ({ plant, setCurrentPage }) => {
-    const Metric: React.FC<{label: string, value: string | number | null | undefined, unit?: string, color?: string}> = ({label, value, unit, color = 'text-white'}) => (
-        <div className="flex justify-between items-baseline text-sm">
-            <span className="text-gray-400">{label}</span>
-            <span className={`font-mono font-semibold ${color}`}>
-                {value !== null && value !== undefined ? `${typeof value === 'number' ? value.toLocaleString('pt-BR') : value} ${unit || ''}`.trim() : 'N/A'}
-            </span>
-        </div>
-    );
-
-    const efficiencyDecimal = plant.efficiency ? plant.efficiency / 100 : 0;
-    const thermalPower = efficiencyDecimal > 0 ? plant.power / efficiencyDecimal : 0;
-    const residualHeat = thermalPower > 0 ? thermalPower - plant.power : 0;
-
-
+const ConventionalView: React.FC<Pick<UtilitiesProps, 'selectedPlant' | 't'>> = ({ selectedPlant, t }) => {
     return (
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <DashboardCard 
-                title="Fluxo de Energia da Usina" 
-                icon={<ActivityIcon className="w-6 h-6 text-yellow-400" />} 
-                className="h-full"
-                action={
-                    <button
-                        onClick={() => setCurrentPage('PowerPlantSystem')}
-                        className="px-3 py-1 text-xs font-semibold bg-gray-700 text-gray-300 rounded-md transition-all duration-200 hover:bg-cyan-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500"
-                    >
-                        Ver Inventário
-                    </button>
-                }
-            >
-                <div className="flex flex-col justify-center h-full space-y-4 text-sm">
-                    <div className="flex justify-between items-baseline">
-                        <span className="text-gray-400">Potência Térmica Total</span>
-                        <span className="font-mono text-lg font-semibold text-white">
-                           {thermalPower > 0 ? `${thermalPower.toFixed(0)} MW` : 'N/A'}
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-baseline pl-4">
-                        <span className="text-gray-400">- Potência Elétrica</span>
-                        <span className="font-mono font-semibold text-cyan-400">
-                            {plant.power.toFixed(0)} MW
-                        </span>
-                    </div>
-                    <div className="border-t border-gray-700 my-2"></div>
-                    <div className="flex justify-between items-baseline bg-gray-900/50 p-2 rounded-lg">
-                        <span className="font-semibold text-orange-400">Calor Residual (Perdas)</span>
-                        <span className="font-mono text-xl font-bold text-orange-400">
-                             {residualHeat > 0 ? `${residualHeat.toFixed(0)} MW` : 'N/A'}
-                        </span>
-                    </div>
+            <DashboardCard title={t('utilities.generalInfo')} icon={<MapPinIcon className="w-6 h-6"/>}>
+                <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-400">{t('config.location')}:</span> <span className="font-semibold">{t(selectedPlant.locationKey || '') || 'N/A'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t('config.fuelMode')}:</span> <span className="font-semibold">{t(selectedPlant.fuelKey)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t('system.technology')}:</span> <span className="font-semibold">{t(selectedPlant.cycleKey || '') || 'N/A'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t('config.powerMW')}:</span> <span className="font-semibold">{selectedPlant.power} MW</span></div>
+                    {selectedPlant.descriptionKey && <p className="pt-2 border-t border-gray-700 text-gray-400 italic">{t(selectedPlant.descriptionKey)}</p>}
                 </div>
             </DashboardCard>
-
-            <DashboardCard title="Informações Gerais" icon={<MapPinIcon className="w-6 h-6" />}>
-                <div className="space-y-3 h-full flex flex-col justify-center">
-                    <Metric label="Localização" value={plant.location} />
-                    <Metric label="Combustível" value={plant.fuel} />
-                    <Metric label="Tecnologia" value={plant.cycle} />
+             <DashboardCard title={t('utilities.performance2023')} icon={<ChartBarIcon className="w-6 h-6"/>}>
+                <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-400">{t('system.generation')} 2023:</span> <span className="font-semibold text-cyan-400">{selectedPlant.generation2023?.toLocaleString('pt-BR') || 'N/A'} GWh</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t('powerOutput.totalEfficiency')} Média:</span> <span className="font-semibold text-green-400">{selectedPlant.efficiency?.toFixed(1) || 'N/A'}%</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">{t('system.efficiencyAnalysis')}:</span> <span className="font-semibold text-orange-400">{selectedPlant.rate || 'N/A'} tCO₂e/GWh</span></div>
                 </div>
             </DashboardCard>
-            <DashboardCard title="Performance (2023)" icon={<ChartBarIcon className="w-6 h-6 text-cyan-400"/>}>
-                <div className="space-y-3 h-full flex flex-col justify-center">
-                    <Metric label="Capacidade" value={plant.power} unit="MW" color="text-cyan-400" />
-                    <Metric label="Geração em 2023" value={plant.generation2023} unit="GWh" />
-                    <Metric label="Eficiência" value={plant.efficiency} unit="%" />
-                </div>
-            </DashboardCard>
-             <DashboardCard title="Emissões (2023)" icon={<WarningIcon className="w-6 h-6 text-orange-400"/>}>
-                <div className="space-y-3 h-full flex flex-col justify-center">
-                    <Metric label="Emissões Totais" value={plant.emissions2023} unit="mil tCO₂e" color="text-orange-400" />
-                    <Metric label="Taxa de Emissão" value={plant.rate} unit="tCO₂e/GWh" />
+             <DashboardCard title={t('utilities.emissions2023')} icon={<WarningIcon className="w-6 h-6"/>}>
+                <div className="flex flex-col justify-center items-center h-full text-center">
+                    <p className="text-5xl font-bold tracking-tight text-red-400">{selectedPlant.emissions2023?.toLocaleString('pt-BR') || 'N/A'}</p>
+                    <p className="text-lg text-gray-400">mil tCO₂e</p>
                 </div>
             </DashboardCard>
         </div>
     );
 };
 
-const Utilities: React.FC<UtilitiesProps> = (props) => {
-    const { selectedPlant } = props;
 
-    // The special projects that use the trigeneration utility view
+const Utilities: React.FC<UtilitiesProps> = ({ selectedPlant, ...props }) => {
     const isTrigenerationProject = 
         selectedPlant.type === 'standard' || 
-        selectedPlant.name === 'Parque Térmico Pedreira';
-
-    if (isTrigenerationProject) {
-        return <TrigenerationView {...props} />;
-    } else {
-        return <UteDetailsView plant={selectedPlant} setCurrentPage={props.setCurrentPage}/>;
-    }
+        selectedPlant.name === 'Parque Térmico Pedreira' ||
+        selectedPlant.fuelKey === 'fuel.NUCLEAR';
+        
+    return isTrigenerationProject ? <TrigenerationView {...props} /> : <ConventionalView selectedPlant={selectedPlant} t={props.t} />;
 };
 
 export default Utilities;

@@ -5,7 +5,11 @@ import { ActivityIcon } from './icons';
 // Using window.mermaid as it's loaded from a script tag in index.html
 declare const mermaid: any;
 
-const EnergyFlowSankey: React.FC = () => {
+interface EnergyFlowSankeyProps {
+    t: (key: string) => string;
+}
+
+const EnergyFlowSankey: React.FC<EnergyFlowSankeyProps> = ({ t }) => {
     const mermaidChart = `
 sankey-beta
     "Power Grid", "Chiller", 23
@@ -67,7 +71,7 @@ sankey-beta
     }, []);
 
     return (
-        <DashboardCard title="Fluxo de Energia do Data Center (PUE)" icon={<ActivityIcon className="w-6 h-6" />}>
+        <DashboardCard title={t('dataCenter.sankey.title')} icon={<ActivityIcon className="w-6 h-6" />}>
             <div className="p-4 bg-gray-900 rounded-lg overflow-x-auto flex justify-center h-[70vh]">
                 <div className="mermaid" style={{ minWidth: '800px' }}>
                     {mermaidChart}

@@ -1,4 +1,5 @@
 
+
 import React, { useMemo, useState } from 'react';
 import { Alert, EmissionData, HistoricalEmissionPoint } from '../types';
 import DashboardCard from './DashboardCard';
@@ -14,6 +15,8 @@ interface EmissionsMonitorProps {
   isMaximizable?: boolean;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
+  // FIX: Add t prop for translations
+  t: (key: string) => string;
 }
 
 interface EmissionBarProps {
@@ -42,14 +45,15 @@ const EmissionBar: React.FC<EmissionBarProps> = ({ label, value, max, unit}) => 
     );
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, t }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
-        <p className="label text-sm text-gray-300">{`Dia: ${label}`}</p>
+        {/* FIX: Use translation function */}
+        <p className="label text-sm text-gray-300">{`${t('tooltip.day')}: ${label}`}</p>
         {payload.map((p, i) => (
           <p key={i} style={{ color: p.stroke }} className="text-sm">
-            {`${p.dataKey.includes('forecast') ? 'Previsto' : 'Histórico'}: ${p.value.toFixed(1)} kg/h`}
+            {`${p.dataKey.includes('forecast') ? t('tooltip.forecast') : t('tooltip.historical')}: ${p.value.toFixed(1)} kg/h`}
           </p>
         ))}
       </div>
@@ -92,7 +96,8 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
   onClearAll,
   isMaximizable,
   isMaximized,
-  onToggleMaximize
+  onToggleMaximize,
+  t
 }) => {
   const [view, setView] = useState<'emissions' | 'alerts'>('emissions');
   
@@ -170,7 +175,8 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
                         <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
                         <XAxis dataKey="time" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} interval={chartData.length - 2} tickFormatter={(value, index) => index === 0 ? 'D-1' : 'D+7'} />
                         <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} unit=" kg/h" domain={[0, 40]} ticks={[0, 10, 20, 30]} />
-                        <Tooltip content={<CustomTooltip />} />
+                        {/* FIX: Pass translation function to custom tooltip */}
+                        <Tooltip content={<CustomTooltip t={t} />} />
                         <Line type="monotone" dataKey="co" stroke="#facc15" strokeWidth={2} dot={false} />
                         <Line type="monotone" dataKey="forecastCo" stroke="#facc15" strokeWidth={2} dot={false} strokeDasharray="5 5" />
                         <Line type="monotone" dataKey="nox" stroke="#f87171" strokeWidth={2} dot={false} />
@@ -199,9 +205,10 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
           <button
             onClick={onClearAll}
             className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline focus:outline-none"
-            aria-label="Limpar todos os alertas"
+            aria-label={t('emissions.clearAll')}
           >
-            Limpar Tudo
+            {/* FIX: Use translation function */}
+            {t('emissions.clearAll')}
           </button>
         </div>
       )}
@@ -221,14 +228,15 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
               <CloseIcon className="w-4 h-4" />
             </button>
           </div>
-        )) : <p className="text-center text-gray-500 pt-8">Nenhum alerta recente.</p>}
+        )) : <p className="text-center text-gray-500 pt-8">{t('emissions.noAlerts')}</p>}
       </div>
     </div>
   );
 
   return (
     <DashboardCard 
-      title="Emissões e Alertas"
+      // FIX: Use translation function
+      title={t('emissions.title')}
       icon={<WarningIcon className="w-6 h-6" />} 
       className="h-full"
       isMaximizable={isMaximizable}
@@ -247,7 +255,8 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
                         }`}
                         aria-pressed={view === 'emissions'}
                     >
-                        Emissões
+                        {/* FIX: Use translation function */}
+                        {t('emissions.tabEmissions')}
                     </button>
                     <button
                         onClick={() => setView('alerts')}
@@ -258,7 +267,8 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
                         }`}
                         aria-pressed={view === 'alerts'}
                     >
-                        Alertas ({alerts.length})
+                        {/* FIX: Use translation function */}
+                        {t('emissions.tabAlerts')} ({alerts.length})
                     </button>
                 </div>
             </div>

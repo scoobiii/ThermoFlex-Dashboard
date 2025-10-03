@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ThermometerIcon, DropletIcon, CogIcon, TrendingUpIcon, ActivityIcon } from '../components/icons';
 
-const ChillerDashboard = () => {
+// FIX: Add props interface for translation function
+interface ChillerDashboardProps {
+  t: (key: string) => string;
+}
+
+const ChillerDashboard: React.FC<ChillerDashboardProps> = ({ t }) => {
   const [data, setData] = useState<any[]>([]); // Use any[] for recharts flexibility
   const [currentTime, setCurrentTime] = useState(new Date());
   const [pidParams, setPidParams] = useState({
@@ -88,11 +93,11 @@ const ChillerDashboard = () => {
       <div className="bg-gray-800 rounded-lg shadow-md border border-gray-700 p-4 mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-white">Sistema Chiller Absorção LiBr/H₂O</h1>
-            <p className="text-gray-400">Monitoramento CPS | Controle PID | Lógica Fuzzy Avançada</p>
+            <h1 className="text-2xl font-bold text-white">{t('chiller.title')}</h1>
+            <p className="text-gray-400">{t('chiller.subtitle')}</p>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500">Última atualização</div>
+            <div className="text-sm text-gray-500">{t('chiller.lastUpdate')}</div>
             <div className="text-lg font-mono text-white">{currentTime.toLocaleTimeString()}</div>
           </div>
         </div>
@@ -103,7 +108,7 @@ const ChillerDashboard = () => {
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Temperatura Água Gelada</p>
+              <p className="text-sm text-gray-400">{t('chiller.chilledWaterTemp')}</p>
               <p className={`text-2xl font-bold ${getStatusColor(currentData.chilledWaterTemp, 4, 7)}`}>
                 {currentData.chilledWaterTemp?.toFixed(1)}°C
               </p>
@@ -115,7 +120,7 @@ const ChillerDashboard = () => {
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">COP Térmico</p>
+              <p className="text-sm text-gray-400">{t('chiller.thermalCOP')}</p>
               <p className={`text-2xl font-bold ${getStatusColor(currentData.cop, 1.2, 1.5)}`}>
                 {currentData.cop?.toFixed(2)}
               </p>
@@ -127,7 +132,7 @@ const ChillerDashboard = () => {
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Capacidade Frigorífica</p>
+              <p className="text-sm text-gray-400">{t('chiller.refrigerationCapacity')}</p>
               <p className={`text-2xl font-bold ${getStatusColor(currentData.capacity, 14000, 16000)}`}>
                 {(currentData.capacity/1000)?.toFixed(1)}k TR
               </p>
@@ -139,7 +144,7 @@ const ChillerDashboard = () => {
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Concentração LiBr</p>
+              <p className="text-sm text-gray-400">{t('chiller.librConcentration')}</p>
               <p className={`text-2xl font-bold ${getStatusColor(currentData.libr_concentration, 55, 62)}`}>
                 {currentData.libr_concentration?.toFixed(1)}%
               </p>
@@ -152,7 +157,7 @@ const ChillerDashboard = () => {
       {/* Gráficos de Tendência */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-          <h3 className="text-lg font-semibold mb-4 text-gray-200">Temperaturas do Sistema</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-200">{t('chiller.systemTemperatures')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
@@ -161,15 +166,15 @@ const ChillerDashboard = () => {
               <Tooltip
                 contentStyle={{ backgroundColor: '#1A2233', border: '1px solid #2A3449' }}
                 formatter={(value: number, name) => [typeof value === 'number' ? `${value.toFixed(1)}°C` : value, name]} />
-              <Line type="monotone" dataKey="chilledWaterTemp" stroke="#3b82f6" name="Água Gelada" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="hotWaterTemp" stroke="#ef4444" name="Água Quente" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="coolingWaterTemp" stroke="#f59e0b" name="Água Resfriamento" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="chilledWaterTemp" stroke="#3b82f6" name={t('chiller.chilledWater')} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="hotWaterTemp" stroke="#ef4444" name={t('chiller.hotWater')} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="coolingWaterTemp" stroke="#f59e0b" name={t('chiller.coolingWater')} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-          <h3 className="text-lg font-semibold mb-4 text-gray-200">Eficiência e Capacidade</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-200">{t('chiller.efficiencyAndCapacity')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
@@ -178,7 +183,7 @@ const ChillerDashboard = () => {
               <YAxis yAxisId="right" orientation="right" stroke="#8b5cf6" fontSize={12} />
               <Tooltip contentStyle={{ backgroundColor: '#1A2233', border: '1px solid #2A3449' }} />
               <Line yAxisId="left" type="monotone" dataKey="cop" stroke="#10b981" name="COP" strokeWidth={2} dot={false} />
-              <Line yAxisId="right" type="monotone" dataKey="capacity" stroke="#8b5cf6" name="Capacidade (TR)" strokeWidth={2} dot={false} />
+              <Line yAxisId="right" type="monotone" dataKey="capacity" stroke="#8b5cf6" name={t('chiller.capacityTR')} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -187,7 +192,7 @@ const ChillerDashboard = () => {
       {/* Controladores PID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <PIDController
-          title="PID Temperatura"
+          title={t('chiller.pidTemperature')}
           params={pidParams.temperature}
           onUpdate={(param, value) => 
             setPidParams(prev => ({
@@ -197,7 +202,7 @@ const ChillerDashboard = () => {
           }
         />
         <PIDController
-          title="PID Vazão"
+          title={t('chiller.pidFlow')}
           params={pidParams.flow}
           onUpdate={(param, value) => 
             setPidParams(prev => ({
@@ -207,7 +212,7 @@ const ChillerDashboard = () => {
           }
         />
         <PIDController
-          title="PID Concentração"
+          title={t('chiller.pidConcentration')}
           params={pidParams.concentration}
           onUpdate={(param, value) => 
             setPidParams(prev => ({
@@ -220,7 +225,7 @@ const ChillerDashboard = () => {
 
       {/* Historical Temperature Chart */}
       <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 mb-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-200">Histórico de Temperaturas do Sistema</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-200">{t('chiller.tempHistory')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
@@ -229,9 +234,9 @@ const ChillerDashboard = () => {
               <Tooltip
                 contentStyle={{ backgroundColor: '#1A2233', border: '1px solid #2A3449' }}
                 formatter={(value: number, name) => [typeof value === 'number' ? `${value.toFixed(1)}°C` : value, name]} />
-              <Line type="monotone" dataKey="chilledWaterTemp" stroke="#3b82f6" name="Água Gelada" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="hotWaterTemp" stroke="#ef4444" name="Água Quente" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="coolingWaterTemp" stroke="#f59e0b" name="Água Resfriamento" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="chilledWaterTemp" stroke="#3b82f6" name={t('chiller.chilledWater')} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="hotWaterTemp" stroke="#ef4444" name={t('chiller.hotWater')} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="coolingWaterTemp" stroke="#f59e0b" name={t('chiller.coolingWater')} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -241,7 +246,7 @@ const ChillerDashboard = () => {
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-200">
             <ActivityIcon className="w-5 h-5" />
-            Lógica Fuzzy - Regras Ativas
+            {t('chiller.fuzzyLogic')}
           </h3>
           <div className="space-y-3">
             {fuzzyLogicRules.map((rule, index) => (
@@ -251,7 +256,7 @@ const ChillerDashboard = () => {
                 'border-blue-500 bg-blue-900/20'
               }`}>
                 <div className="text-sm font-medium text-gray-300">{rule.condition}</div>
-                <div className="text-sm text-gray-400 mt-1">Ação: {rule.action}</div>
+                <div className="text-sm text-gray-400 mt-1">{t('chiller.action')} {rule.action}</div>
                 <span className={`inline-block px-2 py-1 rounded text-xs font-medium mt-2 ${
                   rule.priority === 'Crítica' ? 'bg-red-500/30 text-red-300' :
                   rule.priority === 'Alta' ? 'bg-yellow-500/30 text-yellow-300' :
@@ -265,26 +270,26 @@ const ChillerDashboard = () => {
         </div>
 
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-          <h3 className="text-lg font-semibold mb-4 text-gray-200">Parâmetros de Processo</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-200">{t('chiller.processParameters')}</h3>
           <div className="space-y-2">
             <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded">
-              <span className="text-sm font-medium text-gray-400">Vazão Água Gelada</span>
+              <span className="text-sm font-medium text-gray-400">{t('chiller.chilledWaterFlow')}</span>
               <span className="font-mono text-white">{currentData.flow_chilled?.toFixed(0)} m³/h</span>
             </div>
             <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded">
-              <span className="text-sm font-medium text-gray-400">Vazão Água Quente</span>
+              <span className="text-sm font-medium text-gray-400">{t('chiller.hotWaterFlow')}</span>
               <span className="font-mono text-white">{currentData.flow_hot?.toFixed(0)} m³/h</span>
             </div>
             <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded">
-              <span className="text-sm font-medium text-gray-400">Consumo Elétrico</span>
+              <span className="text-sm font-medium text-gray-400">{t('chiller.powerConsumption')}</span>
               <span className="font-mono text-white">{currentData.power_consumption?.toFixed(1)} kW</span>
             </div>
             <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded">
-              <span className="text-sm font-medium text-gray-400">Pressão Evaporador</span>
+              <span className="text-sm font-medium text-gray-400">{t('chiller.evaporatorPressure')}</span>
               <span className="font-mono text-white">0.87 kPa</span>
             </div>
             <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded">
-              <span className="text-sm font-medium text-gray-400">Pressão Absorvedor</span>
+              <span className="text-sm font-medium text-gray-400">{t('chiller.absorberPressure')}</span>
               <span className="font-mono text-white">7.2 kPa</span>
             </div>
           </div>

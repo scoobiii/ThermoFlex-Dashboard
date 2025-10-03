@@ -44,11 +44,11 @@ type DataCenterTab = 'overview' | 'treemap' | 'energyflow';
 type MaximizedWidget = 'treemap' | null;
 
 interface DataCenterProps {
-  /** Callback to notify parent of active rack count changes */
   onActiveRackUpdate: (count: number) => void;
+  t: (key: string) => string;
 }
 
-const DataCenter: React.FC<DataCenterProps> = ({ onActiveRackUpdate }) => {
+const DataCenter: React.FC<DataCenterProps> = ({ onActiveRackUpdate, t }) => {
   const [activeTab, setActiveTab] = useState<DataCenterTab>('overview');
   const [maximizedWidget, setMaximizedWidget] = useState<MaximizedWidget>(null);
 
@@ -71,6 +71,7 @@ const DataCenter: React.FC<DataCenterProps> = ({ onActiveRackUpdate }) => {
           isMaximizable 
           isMaximized={true}
           onToggleMaximize={() => toggleMaximize('treemap')}
+          t={t}
         />
       </div>
     );
@@ -85,21 +86,21 @@ const DataCenter: React.FC<DataCenterProps> = ({ onActiveRackUpdate }) => {
             className={tabButtonClasses('overview')}
             aria-current={activeTab === 'overview' ? 'page' : undefined}
           >
-            Visão Geral
+            {t('dataCenter.overview')}
           </button>
           <button
             onClick={() => setActiveTab('treemap')}
             className={tabButtonClasses('treemap')}
             aria-current={activeTab === 'treemap' ? 'page' : undefined}
           >
-            Treemap de Consumo
+            {t('dataCenter.treemap')}
           </button>
           <button
             onClick={() => setActiveTab('energyflow')}
             className={tabButtonClasses('energyflow')}
             aria-current={activeTab === 'energyflow' ? 'page' : undefined}
           >
-            Fluxo de Energia
+            {t('dataCenter.energyFlow')}
           </button>
         </nav>
       </div>
@@ -108,13 +109,13 @@ const DataCenter: React.FC<DataCenterProps> = ({ onActiveRackUpdate }) => {
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
             <div className="lg:col-span-1">
-              <PowerConsumption />
+              <PowerConsumption t={t} />
             </div>
             <div className="lg:col-span-1">
-              <CoolingLoad />
+              <CoolingLoad t={t} />
             </div>
             <div className="lg:col-span-3">
-              <ServerRackStatus onRackDataUpdate={onActiveRackUpdate} />
+              <ServerRackStatus onRackDataUpdate={onActiveRackUpdate} t={t} />
             </div>
           </div>
         )}
@@ -124,18 +125,18 @@ const DataCenter: React.FC<DataCenterProps> = ({ onActiveRackUpdate }) => {
               isMaximizable
               isMaximized={false}
               onToggleMaximize={() => toggleMaximize('treemap')}
+              t={t}
             />
           </div>
         )}
         {activeTab === 'energyflow' && (
             <div className="animate-fadeIn">
-                <EnergyFlowSankey />
+                <EnergyFlowSankey t={t} />
             </div>
         )}
       </div>
 
       {/* Inline animation definition for encapsulation */}
-      {/* FIX: Removed non-standard 'jsx' prop from style tag to resolve TS error. */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }

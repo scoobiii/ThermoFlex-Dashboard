@@ -5,9 +5,10 @@ import { Plant } from '../types';
 
 interface PlantsMapProps {
   coordinates: Plant['coordinates'] | undefined;
+  t: (key: string) => string;
 }
 
-const PlantsMap: React.FC<PlantsMapProps> = ({ coordinates }) => {
+const PlantsMap: React.FC<PlantsMapProps> = ({ coordinates, t }) => {
   const mapEmbedUrl = useMemo(() => {
     const baseUrl = "https://maps.google.com/maps?&output=embed&t=k";
 
@@ -23,12 +24,12 @@ const PlantsMap: React.FC<PlantsMapProps> = ({ coordinates }) => {
   }, [coordinates]);
 
   return (
-    <DashboardCard title="Mapa das Usinas" icon={<MapPinIcon className="w-6 h-6" />}>
+    <DashboardCard title={t('config.plantsMapTitle')} icon={<MapPinIcon className="w-6 h-6" />}>
       <div className="w-full h-full min-h-[420px] bg-gray-700 rounded-lg overflow-hidden">
         <iframe
           key={mapEmbedUrl} // Use a key to force iframe re-render on src change
           src={mapEmbedUrl}
-          title="Mapa das Usinas de Energia"
+          title={t('config.plantsMapTitleIframe')}
           width="100%"
           height="100%"
           style={{ border: 0 }}

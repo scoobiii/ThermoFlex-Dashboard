@@ -1,16 +1,17 @@
+
 export enum PlantStatus {
-  Online = 'Online',
-  Offline = 'Offline',
-  Maintenance = 'Manutenção',
+  Online = 'ONLINE',
+  Offline = 'OFFLINE',
+  Maintenance = 'MAINTENANCE',
 }
 
 export enum FuelMode {
-  NaturalGas = 'Gás Natural',
-  Ethanol = 'Etanol',
-  Biodiesel = 'Biodiesel',
-  FlexNGH2 = 'Flex (GN/H2)',
-  FlexEthanolBiodiesel = 'Flex (Etanol/Biodiesel)',
-  Nuclear = 'Nuclear',
+  NaturalGas = 'NATURAL_GAS',
+  Ethanol = 'ETHANOL',
+  Biodiesel = 'BIODIESEL',
+  FlexNGH2 = 'FLEX_NG_H2',
+  FlexEthanolBiodiesel = 'FLEX_ETHANOL_BIODIESEL',
+  Nuclear = 'NUCLEAR',
 }
 
 export interface HistoricalDataPoint {
@@ -59,27 +60,28 @@ export interface LongHistoricalDataPoint {
 }
 
 export interface Plant {
-  name: string;
-  power: number; // capacity in MW
-  fuel: string;
-
-  // Fields for custom projects from original data/plants.ts
+  name: string; // The original name acts as a unique ID
+  nameKey: string;
+  power: number;
+  fuelKey: string;
+  
   type?: 'standard' | 'upgrade' | 'new';
-  status?: 'standard' | 'Existente' | 'Proposta';
-  description?: string;
-  conversion?: number; // percentage
-  ethanolDemand?: number; // m³/h
+  statusKey?: string;
+  descriptionKey?: string;
+  conversion?: number;
+  ethanolDemand?: number;
   coordinates?: { lat: number; lng: number };
   identifier?: {
     type: 'location' | 'license';
-    value: string;
+    valueKey: string;
   };
 
-  // Fields for real UTEs from national inventory
-  location?: string;
-  cycle?: string; // 'Ciclo Combinado', etc.
-  generation2023?: number | null; // GWh
-  emissions2023?: number | null; // mil tCO₂e
-  efficiency?: number | null; // %
-  rate?: number | null; // tCO₂e/GWh
+  locationKey?: string;
+  cycleKey?: string;
+  generation2023?: number | null;
+  emissions2023?: number | null;
+  efficiency?: number | null;
+  rate?: number | null;
+  // FIX: Add optional status property for compatibility
+  status?: string;
 }

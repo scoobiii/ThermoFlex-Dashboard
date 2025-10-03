@@ -3,6 +3,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { BoltIcon as Power, FactoryIcon as Factory, CogIcon as Settings, InfoIcon as Info, ChevronDownIcon as ChevronDown, ChevronUpIcon as ChevronUp, ChartBarIcon as BarChart3, TrendingUpIcon as TrendingUp, MagnifyingGlassIcon as Search, CloseIcon } from '../components/icons';
 import { POWER_PLANTS } from '../data/plants';
 
+interface PowerPlantSystemProps {
+  t: (key: string) => string;
+}
+
 const Metric = ({ label, value, unit, icon: Icon, colorClass = "text-blue-600" }) => (
   <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
     <div className="flex items-center space-x-2">
@@ -15,7 +19,7 @@ const Metric = ({ label, value, unit, icon: Icon, colorClass = "text-blue-600" }
   </div>
 );
 
-const PowerPlantSystem = () => {
+const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlant, setSelectedPlant] = useState('all');
@@ -26,7 +30,6 @@ const PowerPlantSystem = () => {
     efficiency: true
   });
 
-  // Use the shared data source, filtering for real plants from the inventory (those with a 'cycle' property)
   const plantsData = POWER_PLANTS.filter(p => p.cycle);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -49,8 +52,6 @@ const PowerPlantSystem = () => {
 
   const highlightedPlant = selectedPlant === 'all' ? null : plantsData.find(p => p.name === selectedPlant);
 
-
-  // Dados para gráficos de análise
   const fuelTypeData = [
     { name: 'Gás Natural', count: plantsData.filter(p => p.fuel === 'Gás Natural').length, generation: plantsData.filter(p => p.fuel === 'Gás Natural').reduce((sum, p) => sum + (p.generation2023 || 0), 0) },
     { name: 'Carvão Mineral', count: plantsData.filter(p => p.fuel === 'Carvão Mineral').length, generation: plantsData.filter(p => p.fuel === 'Carvão Mineral').reduce((sum, p) => sum + (p.generation2023 || 0), 0) },
@@ -123,27 +124,24 @@ const PowerPlantSystem = () => {
         }
       `}</style>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <Factory className="w-10 h-10 text-blue-600" />
-            <h1 className="text-4xl font-bold text-gray-800">Sistema Nacional de Termelétricas</h1>
+            <h1 className="text-4xl font-bold text-gray-800">{t('system.title')}</h1>
           </div>
-          <p className="text-gray-600 text-lg">Inventário de Emissões Atmosféricas - 67 Usinas do SIN (2023)</p>
+          <p className="text-gray-600 text-lg">{t('system.subtitle')}</p>
         </div>
 
-        {/* Filtros e Busca */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Search Input */}
             <div>
-              <label htmlFor="search-plant" className="block text-sm font-medium text-gray-700 mb-1">Buscar por nome/local</label>
+              <label htmlFor="search-plant" className="block text-sm font-medium text-gray-700 mb-1">{t('system.search')}</label>
               <div className="relative">
                 <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   id="search-plant"
                   type="text"
-                  placeholder="Ex: Parnaíba, Macaé..."
+                  placeholder={t('system.searchPlaceholder')}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -151,32 +149,30 @@ const PowerPlantSystem = () => {
               </div>
             </div>
 
-            {/* Fuel Type Dropdown */}
             <div>
-              <label htmlFor="fuel-filter" className="block text-sm font-medium text-gray-700 mb-1">Filtrar por Combustível</label>
+              <label htmlFor="fuel-filter" className="block text-sm font-medium text-gray-700 mb-1">{t('system.filterFuel')}</label>
               <select
                 id="fuel-filter"
                 value={selectedFilter}
                 onChange={(e) => setSelectedFilter(e.target.value)}
                 className="w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">Todos os Combustíveis</option>
+                <option value="all">{t('system.allFuels')}</option>
                 <option value="Gás Natural">Gás Natural</option>
                 <option value="Carvão Mineral">Carvão Mineral</option>
                 <option value="Óleo Combustível">Óleo Combustível</option>
               </select>
             </div>
 
-            {/* Locate Plant Dropdown */}
             <div>
-              <label htmlFor="locate-plant" className="block text-sm font-medium text-gray-700 mb-1">Destacar Usina Específica</label>
+              <label htmlFor="locate-plant" className="block text-sm font-medium text-gray-700 mb-1">{t('system.highlightPlant')}</label>
               <select
                 id="locate-plant"
                 value={selectedPlant}
                 onChange={(e) => setSelectedPlant(e.target.value)}
                 className="w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">Nenhuma destacada</option>
+                <option value="all">{t('system.noHighlight')}</option>
                 {plantsData.sort((a, b) => a.name.localeCompare(b.name)).map(plant => (
                   <option key={plant.name} value={plant.name}>
                     {plant.name}
@@ -194,36 +190,36 @@ const PowerPlantSystem = () => {
                 <div className="flex items-center space-x-3">
                   <Info className="w-8 h-8 text-blue-600" />
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Destaque: {highlightedPlant.name}</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">{t('system.highlight')} {highlightedPlant.name}</h2>
                     <p className="text-gray-500">{highlightedPlant.location}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedPlant('all')}
                   className="p-2 rounded-full text-gray-500 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Fechar destaque"
+                  aria-label={t('system.closeHighlight')}
                 >
                   <CloseIcon className="w-6 h-6" />
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-semibold text-lg text-gray-800 mb-3">Visão Geral e Descrição ("Visão")</h4>
+                  <h4 className="font-semibold text-lg text-gray-800 mb-3">{t('system.overviewDescription')}</h4>
                   <div className="space-y-2 text-sm text-gray-700">
-                    <p><strong>Combustível:</strong> {highlightedPlant.fuel}</p>
-                    <p><strong>Tecnologia:</strong> {highlightedPlant.cycle}</p>
+                    <p><strong>{t('config.fuelMode')}</strong> {highlightedPlant.fuel}</p>
+                    <p><strong>{t('system.technology')}</strong> {highlightedPlant.cycle}</p>
                     {highlightedPlant.description && (
                       <p className="pt-2 italic border-t border-gray-200 mt-2">{highlightedPlant.description}</p>
                     )}
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-lg text-gray-800 mb-3">Indicadores Chave ("Números") - 2023</h4>
-                  <Metric label="Capacidade" value={highlightedPlant.power} unit="MW" icon={Power} colorClass="text-blue-600" />
-                  <Metric label="Geração" value={highlightedPlant.generation2023} unit="GWh" icon={TrendingUp} colorClass="text-green-600" />
-                  <Metric label="Emissões" value={highlightedPlant.emissions2023} unit="mil tCO₂e" icon={Factory} colorClass="text-red-600" />
-                  <Metric label="Eficiência" value={highlightedPlant.efficiency} unit="%" icon={Settings} colorClass="text-purple-600" />
-                  <Metric label="Taxa de Emissão" value={highlightedPlant.rate} unit="tCO₂e/GWh" icon={BarChart3} colorClass="text-orange-600" />
+                  <h4 className="font-semibold text-lg text-gray-800 mb-3">{t('system.keyIndicators')}</h4>
+                  <Metric label={t('system.capacity')} value={highlightedPlant.power} unit="MW" icon={Power} colorClass="text-blue-600" />
+                  <Metric label={t('system.generation')} value={highlightedPlant.generation2023} unit="GWh" icon={TrendingUp} colorClass="text-green-600" />
+                  <Metric label={t('system.emissions')} value={highlightedPlant.emissions2023} unit="mil tCO₂e" icon={Factory} colorClass="text-red-600" />
+                  <Metric label={t('powerOutput.totalEfficiency')} value={highlightedPlant.efficiency} unit="%" icon={Settings} colorClass="text-purple-600" />
+                  <Metric label={t('system.efficiencyAnalysis')} value={highlightedPlant.rate} unit="tCO₂e/GWh" icon={BarChart3} colorClass="text-orange-600" />
                 </div>
               </div>
             </div>
@@ -232,31 +228,29 @@ const PowerPlantSystem = () => {
 
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Coluna Esquerda - Análise Geral */}
           <div>
-            {/* Distribuição por Combustível */}
             <SectionCard
-              title="Distribuição por Combustível"
+              title={t('system.fuelDistribution')}
               icon={BarChart3}
               isExpanded={expandedSections.analytics}
               onToggle={() => toggleSection('analytics')}
             >
               <div className="space-y-6 mt-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-3">Número de Usinas por Combustível</h4>
+                  <h4 className="font-semibold text-gray-800 mb-3">{t('system.plantCountByFuel')}</h4>
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={fuelTypeData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="count" fill="#3B82F6" name="Quantidade" />
+                      <Bar dataKey="count" fill="#3B82F6" name={t('system.quantity')} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-3">Geração por Tipo de Combustível (GWh)</h4>
+                  <h4 className="font-semibold text-gray-800 mb-3">{t('system.generationByFuel')}</h4>
                   <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                       <Pie
@@ -280,9 +274,8 @@ const PowerPlantSystem = () => {
               </div>
             </SectionCard>
 
-            {/* Maiores Emissores */}
             <SectionCard
-              title="Top 10 Maiores Emissores (2023)"
+              title={t('system.topEmitters')}
               icon={TrendingUp}
               isExpanded={expandedSections.emissions}
               onToggle={() => toggleSection('emissions')}
@@ -296,7 +289,7 @@ const PowerPlantSystem = () => {
                       <YAxis dataKey="name" type="category" width={100} fontSize={10} interval={0}/>
                       <Tooltip formatter={(value: number) => `${value.toLocaleString()} mil tCO₂e`} />
                       <Legend />
-                      <Bar dataKey="emissions2023" name="Emissões (mil tCO₂e)" fill="#EF4444" />
+                      <Bar dataKey="emissions2023" name={t('system.emissionsUnit')} fill="#EF4444" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -304,18 +297,16 @@ const PowerPlantSystem = () => {
             </SectionCard>
           </div>
 
-          {/* Coluna Direita - Eficiência e Lista */}
           <div>
-            {/* Análise de Eficiência */}
             <SectionCard
-              title="Eficiência vs Taxa de Emissão"
+              title={t('system.efficiencyAnalysis')}
               icon={Settings}
               isExpanded={expandedSections.efficiency}
               onToggle={() => toggleSection('efficiency')}
             >
               <div className="space-y-6 mt-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-3">Relação Eficiência x Taxa de Emissão</h4>
+                  <h4 className="font-semibold text-gray-800 mb-3">{t('system.efficiencyRelation')}</h4>
                   <ResponsiveContainer width="100%" height={300}>
                     <ScatterChart>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -345,9 +336,8 @@ const PowerPlantSystem = () => {
               </div>
             </SectionCard>
 
-            {/* Lista de Usinas */}
             <SectionCard
-              title={`Usinas Termelétricas (${filteredPlants.length})`}
+              title={t('system.plantListTitle').replace('{count}', String(filteredPlants.length))}
               icon={Factory}
               isExpanded={expandedSections.plants}
               onToggle={() => toggleSection('plants')}
@@ -362,9 +352,9 @@ const PowerPlantSystem = () => {
                       </span>
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <p><span className="font-medium">Local:</span> {plant.location}</p>
-                      <p><span className="font-medium">Tecnologia:</span> {plant.cycle}</p>
-                      <p><span className="font-medium">Capacidade:</span> {plant.power} MW</p>
+                      <p><span className="font-medium">{t('system.location')}</span> {plant.location}</p>
+                      <p><span className="font-medium">{t('system.technology')}</span> {plant.cycle}</p>
+                      <p><span className="font-medium">{t('system.capacity')}</span> {plant.power} MW</p>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mt-3 text-xs">
                       <div className="bg-white p-2 rounded">
@@ -378,42 +368,40 @@ const PowerPlantSystem = () => {
                     </div>
                   </div>
                 )) : (
-                  <p className="text-center text-gray-500 py-8">Nenhuma usina encontrada com os filtros atuais.</p>
+                  <p className="text-center text-gray-500 py-8">{t('system.noPlantsFound')}</p>
                 )}
               </div>
             </SectionCard>
           </div>
         </div>
 
-        {/* Estatísticas Resumo */}
         <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Resumo do Sistema Termelétrico Nacional (2023)</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-4">{t('system.summaryTitle')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600">{plantsData.length}</div>
-              <div className="text-gray-600">Usinas Inventariadas</div>
+              <div className="text-gray-600">{t('system.inventoriedPlants')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">26,9</div>
-              <div className="text-gray-600">TWh Gerados</div>
+              <div className="text-gray-600">{t('system.generatedTWh')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-red-600">17,9</div>
-              <div className="text-gray-600">Mi tCO₂e Emitidas</div>
+              <div className="text-gray-600">{t('system.emittedMtCO2e')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-orange-600">671</div>
-              <div className="text-gray-600">tCO₂e/GWh Média</div>
+              <div className="text-gray-600">{t('system.avgEmissionRate')}</div>
             </div>
           </div>
         </div>
 
-        {/* Footer Informativo */}
         <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
           <div className="flex items-start space-x-3">
             <Info className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-semibold text-gray-800 mb-2">Sobre o Inventário</h3>
+              <h3 className="font-semibold text-gray-800 mb-2">{t('system.aboutInventory')}</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
                 Este sistema apresenta dados do 4º Inventário de Emissões Atmosféricas em Usinas Termelétricas (ano-base 2023) 
                 realizado pelo Instituto de Energia e Meio Ambiente (IEMA). O inventário abrange 67 usinas termelétricas a 

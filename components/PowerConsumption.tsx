@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import DashboardCard from './DashboardCard';
 import { BoltIcon } from './icons';
 
-const PowerConsumption: React.FC = () => {
+interface PowerConsumptionProps {
+  t: (key: string) => string;
+}
+
+const PowerConsumption: React.FC<PowerConsumptionProps> = ({ t }) => {
   const [pue, setPue] = useState(1.05);
   const [itLoad, setItLoad] = useState(485); // kW
   const [totalLoad, setTotalLoad] = useState(510); // kW
@@ -24,20 +28,20 @@ const PowerConsumption: React.FC = () => {
   }, [itLoad]);
 
   return (
-    <DashboardCard title="Consumo de Energia" icon={<BoltIcon className="w-6 h-6 text-yellow-400" />}>
+    <DashboardCard title={t('dataCenter.powerConsumptionTitle')} icon={<BoltIcon className="w-6 h-6 text-yellow-400" />}>
       <div className="flex flex-col justify-around h-full text-center">
         <div>
-          <p className="text-gray-400 text-sm">PUE (Power Usage Effectiveness)</p>
+          <p className="text-gray-400 text-sm">{t('dataCenter.pue')}</p>
           <p className="text-4xl font-bold text-green-400 tracking-tight">{pue.toFixed(3)}</p>
         </div>
         <div className="flex justify-around text-sm">
           <div>
-            <p className="text-gray-400">Carga TI</p>
+            <p className="text-gray-400">{t('dataCenter.itLoad')}</p>
             <p className="font-mono text-lg font-semibold">{itLoad.toFixed(1)} kW</p>
           </div>
           <div className="w-px bg-gray-700"></div>
           <div>
-            <p className="text-gray-400">Carga Total</p>
+            <p className="text-gray-400">{t('dataCenter.totalLoad')}</p>
             <p className="font-mono text-lg font-semibold">{totalLoad.toFixed(1)} kW</p>
           </div>
         </div>

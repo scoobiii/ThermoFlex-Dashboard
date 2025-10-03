@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ChevronDownIcon } from './icons';
 
@@ -24,39 +25,40 @@ export type Page =
     'External Page'; // New page for viewing external content
 
 interface NavItem {
-    label: string;
+    labelKey: string;
     page: Page;
     children?: NavItem[];
 }
 
 // Restructure nav items to support submenus
 const navItems: NavItem[] = [
-    { label: 'Power Plant', page: 'Power Plant' },
+    { labelKey: 'nav.powerPlant', page: 'Power Plant' },
     { 
-        label: 'Utilities', 
+        labelKey: 'nav.utilities', 
         page: 'Utilities',
         children: [
-            { label: 'Fluxo de Energia da Usina', page: 'Fluxo de Energia da Usina' },
-            { label: 'Chiller Absorção', page: 'Chiller Absorção' },
-            { label: 'Chiller Absorção -> Tiac', page: 'Chiller Absorção -> Tiac' },
-            { label: 'Chiller Absorção -> Fog', page: 'Chiller Absorção -> Fog' },
-            { label: 'Chiller Absorção -> Data Cloud', page: 'Chiller Absorção -> Data Cloud' },
+            { labelKey: 'nav.utilities.flow', page: 'Fluxo de Energia da Usina' },
+            { labelKey: 'nav.utilities.chiller', page: 'Chiller Absorção' },
+            { labelKey: 'nav.utilities.chiller.tiac', page: 'Chiller Absorção -> Tiac' },
+            { labelKey: 'nav.utilities.chiller.fog', page: 'Chiller Absorção -> Fog' },
+            { labelKey: 'nav.utilities.chiller.dataCloud', page: 'Chiller Absorção -> Data Cloud' },
         ]
     },
-    { label: 'Data Center', page: 'Data Center' },
-    { label: 'Financials', page: 'Financials' },
-    { label: 'Configuration', page: 'Configuration' },
-    { label: 'Infrastructure', page: 'Infrastructure' },
-    { label: 'MAUAX consortium', page: 'MAUAX consortium' },
-    { label: 'inventario UTE', page: 'inventario UTE' }
+    { labelKey: 'nav.dataCenter', page: 'Data Center' },
+    { labelKey: 'nav.financials', page: 'Financials' },
+    { labelKey: 'nav.configuration', page: 'Configuration' },
+    { labelKey: 'nav.infrastructure', page: 'Infrastructure' },
+    { labelKey: 'nav.consortium', page: 'MAUAX consortium' },
+    { labelKey: 'nav.inventory', page: 'inventario UTE' }
 ];
 
 interface NavigationProps {
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
+  t: (key: string) => string;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentPage, setCurrentPage }) => {
+const Navigation: React.FC<NavigationProps> = ({ currentPage, setCurrentPage, t }) => {
     const [openMenu, setOpenMenu] = useState<string | null>(null);
 
     // Check if the current page is a child of a nav item to keep the parent highlighted
@@ -73,31 +75,31 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, setCurrentPage }) 
                         <div className="flex items-baseline space-x-4">
                             {navItems.map((item) => (
                                 <div 
-                                    key={item.label}
+                                    key={item.labelKey}
                                     className="relative"
-                                    onMouseEnter={() => item.children && setOpenMenu(item.label)}
+                                    onMouseEnter={() => item.children && setOpenMenu(item.labelKey)}
                                     onMouseLeave={() => item.children && setOpenMenu(null)}
                                 >
                                     <button
                                         onClick={() => setCurrentPage(item.page)}
                                         className={`flex items-center gap-1 transition-colors duration-200 ${
-                                            currentPage === item.page || isChildPageActive(item) || (item.children && openMenu === item.label)
+                                            currentPage === item.page || isChildPageActive(item) || (item.children && openMenu === item.labelKey)
                                             ? 'bg-gray-800 text-white'
                                             : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                                         } px-3 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white`}
                                         aria-haspopup={!!item.children}
-                                        aria-expanded={openMenu === item.label}
+                                        aria-expanded={openMenu === item.labelKey}
                                         aria-current={currentPage === item.page || isChildPageActive(item) ? 'page' : undefined}
                                     >
-                                        {item.label}
+                                        {t(item.labelKey)}
                                         {item.children && <ChevronDownIcon className="w-4 h-4" />}
                                     </button>
-                                    {item.children && openMenu === item.label && (
+                                    {item.children && openMenu === item.labelKey && (
                                         <div className="absolute z-10 mt-2 w-64 origin-top-left rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-fadeIn">
                                             <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                                                 {item.children.map(child => (
                                                     <a
-                                                        key={child.label}
+                                                        key={child.labelKey}
                                                         href="#"
                                                         onClick={(e) => {
                                                             e.preventDefault();
@@ -107,7 +109,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, setCurrentPage }) 
                                                         className="text-gray-300 hover:bg-gray-700 hover:text-white block px-4 py-2 text-sm"
                                                         role="menuitem"
                                                     >
-                                                        {child.label}
+                                                        {t(child.labelKey)}
                                                     </a>
                                                 ))}
                                             </div>

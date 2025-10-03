@@ -1,5 +1,6 @@
 
 
+
 import React from 'react';
 import { Alert } from '../types';
 import DashboardCard from './DashboardCard';
@@ -9,7 +10,7 @@ interface AlertsProps {
   alerts: Alert[];
   onDismiss: (id: number) => void;
   onClearAll: () => void;
-  // FIX: Add props for maximizing functionality
+  t: (key: string) => string;
   isMaximizable?: boolean;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
@@ -34,14 +35,14 @@ const Alerts: React.FC<AlertsProps> = ({
   alerts, 
   onDismiss, 
   onClearAll,
+  t,
   isMaximizable,
   isMaximized,
   onToggleMaximize
 }) => {
   return (
     <DashboardCard 
-      title="Alertas Recentes"
-      // FIX: Added the missing required `icon` prop to satisfy DashboardCardProps.
+      title={t('alerts.title')}
       icon={<WarningIcon className="w-6 h-6" />}
       isMaximizable={isMaximizable}
       isMaximized={isMaximized}
@@ -52,9 +53,9 @@ const Alerts: React.FC<AlertsProps> = ({
           <button
             onClick={onClearAll}
             className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline focus:outline-none"
-            aria-label="Limpar todos os alertas"
+            aria-label={t('alerts.clearAllLabel')}
           >
-            Limpar Tudo
+            {t('alerts.clearAllButton')}
           </button>
         </div>
       )}
@@ -69,12 +70,12 @@ const Alerts: React.FC<AlertsProps> = ({
              <button 
                 onClick={() => onDismiss(alert.id)} 
                 className="text-gray-500 hover:text-white transition-colors duration-200 p-1 -m-1 rounded-full" 
-                aria-label={`Dispensar alerta: ${alert.message}`}
+                aria-label={t('alerts.dismissLabel').replace('{message}', alert.message)}
             >
               <CloseIcon className="w-4 h-4" />
             </button>
           </div>
-        )) : <p className="text-center text-gray-500 pt-8">Nenhum alerta recente.</p>}
+        )) : <p className="text-center text-gray-500 pt-8">{t('alerts.noAlerts')}</p>}
       </div>
     </DashboardCard>
   );

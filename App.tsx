@@ -15,6 +15,8 @@ import PowerPlantSankey from './components/PowerPlantSankey';
 import ExternalPageViewer from './pages/ExternalPageViewer';
 import { PlantStatus, FuelMode, TurbineStatus, Plant } from './types';
 import { POWER_PLANTS as initialPowerPlants } from './data/plants';
+import { useTranslations } from './hooks/useTranslations';
+import { useSettings } from './hooks/useSettings';
 
 export type TurbineStatusConfig = { [key: number]: TurbineStatus };
 
@@ -115,6 +117,8 @@ const App: React.FC = () => {
   const [currentPage, _setCurrentPage] = useState<Page>('Power Plant');
   const [previousPage, setPreviousPage] = useState<Page>('Power Plant');
   const [externalPageUrl, setExternalPageUrl] = useState<string | null>(null);
+  const { language, setLanguage } = useSettings();
+  const { t } = useTranslations(language);
 
   const setCurrentPage = (page: Page) => {
     if (currentPage !== 'External Page') {
@@ -255,14 +259,15 @@ const App: React.FC = () => {
 
   const addPlant = () => {
     setAvailablePlants(prev => {
-      const newProjectName = `Novo Projeto ${prev.filter(p => p.name.startsWith("Novo Projeto")).length + 1}`;
+      const newProjectName = `${t('config.newProjectName')} ${prev.filter(p => p.name.startsWith(t('config.newProjectName'))).length + 1}`;
       const newPlant: Plant = {
         name: newProjectName,
+        nameKey: '', // User-created plants don't have a translation key
         power: 100,
-        fuel: 'Gás Natural',
-        identifier: { type: 'location', value: 'Não definido' },
-        description: 'Edite os detalhes deste novo projeto.',
-        status: 'Proposta',
+        fuelKey: 'fuel.NATURAL_GAS',
+        identifier: { type: 'location', valueKey: 'plants.identifier.notDefined' },
+        descriptionKey: 'plants.mauaxBioPowerPlant.description', // Placeholder
+        statusKey: 'plant.status.proposal',
         type: 'new',
         coordinates: { lat: 0, lng: 0 },
       };
@@ -294,11 +299,11 @@ const App: React.FC = () => {
         let newFuelMode = FuelMode.NaturalGas;
         if (plant.name === 'MAUAX Bio PowerPlant (standard)') {
           newFuelMode = FuelMode.FlexNGH2;
-        } else if (plant.fuel.includes('Etanol')) {
+        } else if (plant.fuelKey.includes('ETHANOL')) {
           newFuelMode = FuelMode.Ethanol;
-        } else if (plant.fuel.includes('Biodiesel')) {
+        } else if (plant.fuelKey.includes('BIODIESEL')) {
           newFuelMode = FuelMode.Biodiesel;
-        } else if (plant.fuel.includes('Nuclear')) {
+        } else if (plant.fuelKey.includes('NUCLEAR')) {
           newFuelMode = FuelMode.Nuclear;
         }
         updateCurrentConfig({ fuelMode: newFuelMode });
@@ -328,7 +333,7 @@ const App: React.FC = () => {
     const powerInput = powerOutput / (currentEfficiency / 100);
     const wasteHeat = powerInput - powerOutput;
     
-    if ((isTrigenerationProject || selectedPlant.fuel === 'Nuclear') && wasteHeat > 0) {
+    if ((isTrigenerationProject || selectedPlant.fuelKey === 'fuel.NUCLEAR') && wasteHeat > 0) {
         const chillerCOP = 0.694;
         const coolingProduction = wasteHeat * chillerCOP;
 
@@ -367,6 +372,7 @@ const App: React.FC = () => {
           turbineMaintenanceScores={currentConfig.turbineMaintenanceScores || {}}
           setTurbineMaintenanceScores={setTurbineMaintenanceScores}
           resourceConfig={resourceConfig}
+          t={t}
         />;
       case 'Utilities':
       case 'Fluxo de Energia da Usina':
@@ -380,9 +386,10 @@ const App: React.FC = () => {
           setCurrentPage={setCurrentPage}
           activeRackCount={activeRackCount}
           selectedPlant={selectedPlant}
+          t={t}
         />;
       case 'Data Center':
-        return <DataCenter onActiveRackUpdate={setActiveRackCount} />;
+        return <DataCenter onActiveRackUpdate={setActiveRackCount} t={t} />;
       case 'Infrastructure':
         return <Infrastructure />;
       case 'MAUAX consortium':
@@ -394,6 +401,7 @@ const App: React.FC = () => {
           fuelMode={currentConfig.fuelMode}
           flexMix={currentConfig.flexMix}
           activeRackCount={activeRackCount}
+          t={t}
         />;
       case 'Configuration':
         return <Configuration
@@ -414,28 +422,30 @@ const App: React.FC = () => {
           updatePlant={updatePlant}
           resourceConfig={resourceConfig}
           setResourceConfig={setResourceConfig}
+          t={t}
         />;
       case 'Chiller':
       case 'Chiller Absorção':
-        return <ChillerDashboard />;
+        return <ChillerDashboard t={t} />;
       case 'inventario UTE':
       case 'PowerPlantSystem':
-        return <PowerPlantSystem />;
+        return <PowerPlantSystem t={t} />;
       case 'Fog System Details':
-        return <GasTurbineDiagram />;
+        return <GasTurbineDiagram t={t} />;
       case 'Power Plant Sankey':
         return <PowerPlantSankey 
             powerOutput={powerOutput}
             efficiency={efficiency}
             setCurrentPage={setCurrentPage}
+            t={t}
         />;
       case 'External Page':
         return externalPageUrl ? (
-          <ExternalPageViewer url={externalPageUrl} onClose={() => setCurrentPage(previousPage)} />
+          <ExternalPageViewer url={externalPageUrl} onClose={() => setCurrentPage(previousPage)} t={t} />
         ) : (
           <div className="text-center mt-8">
-            <p>URL externa não foi fornecida.</p>
-            <button onClick={() => setCurrentPage(previousPage)} className="mt-4 px-4 py-2 bg-cyan-500 text-white rounded-lg">Voltar</button>
+            <p>{t('external.noUrl')}</p>
+            <button onClick={() => setCurrentPage(previousPage)} className="mt-4 px-4 py-2 bg-cyan-500 text-white rounded-lg">{t('external.back')}</button>
           </div>
         );
       default:
@@ -451,15 +461,24 @@ const App: React.FC = () => {
           turbineMaintenanceScores={currentConfig.turbineMaintenanceScores || {}}
           setTurbineMaintenanceScores={setTurbineMaintenanceScores}
           resourceConfig={resourceConfig}
+          t={t}
         />;
     }
   };
 
   return (
     <div className="bg-gray-900 min-h-screen text-gray-200">
-      <Navigation currentPage={currentPage} setCurrentPage={setCurrentPage} />
+      <Navigation currentPage={currentPage} setCurrentPage={setCurrentPage} t={t} />
       <div className="p-4 sm:p-6 lg:p-8 max-w-full mx-auto">
-        <Header plantStatus={plantStatus} powerOutput={powerOutput} selectedPlantName={selectedPlantName} maxCapacity={maxCapacity} />
+        <Header 
+          plantStatus={plantStatus} 
+          powerOutput={powerOutput} 
+          selectedPlantName={t(selectedPlant.nameKey) || selectedPlant.name}
+          maxCapacity={maxCapacity}
+          language={language}
+          setLanguage={setLanguage}
+          t={t}
+        />
         {renderPage()}
       </div>
     </div>

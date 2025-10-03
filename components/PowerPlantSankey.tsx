@@ -10,9 +10,10 @@ interface PowerPlantSankeyProps {
     powerOutput: number;
     efficiency: number;
     setCurrentPage: (page: Page) => void;
+    t: (key: string) => string;
 }
 
-const PowerPlantSankey: React.FC<PowerPlantSankeyProps> = ({ powerOutput, efficiency, setCurrentPage }) => {
+const PowerPlantSankey: React.FC<PowerPlantSankeyProps> = ({ powerOutput, efficiency, setCurrentPage, t }) => {
     // Calculations based on Utilities.tsx logic
     const powerInput = efficiency > 0 ? powerOutput / (efficiency / 100) : 0;
     const wasteHeat = powerInput - powerOutput;
@@ -68,11 +69,11 @@ sankey-beta
     return (
         <div className="mt-6 animate-fadeIn">
             <DashboardCard 
-                title="Fluxo de Energia Detalhado da Usina" 
+                title={t('sankey.title')} 
                 icon={<ActivityIcon className="w-6 h-6" />}
                 action={
                     <button onClick={() => setCurrentPage('Utilities')} className="px-3 py-1.5 text-xs font-semibold bg-gray-700 text-gray-300 rounded-md hover:bg-cyan-500 hover:text-white">
-                        Voltar
+                        {t('sankey.back')}
                     </button>
                 }
             >
