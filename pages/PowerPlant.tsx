@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
     PlantStatus, 
@@ -96,7 +94,7 @@ const initialTurbines: Omit<Turbine, 'status' | 'maintenanceScore'>[] = [
     { id: 5, rpm: 0, temp: 80, pressure: 1, type: 'Ciclo Rankine', manufacturer: 'GE', model: '7HA.02', isoCapacity: 500 },
 ];
 
-type MaximizedWidget = 'power' | 'fuel' | 'emissions' | 'turbines' | 'history' | 'resources' | null;
+type WidgetKey = 'power' | 'fuel' | 'emissions' | 'resources' | 'turbines' | 'history';
 type TurbineTypeFilter = 'all' | 'Ciclo Combinado' | 'Ciclo Rankine';
 
 
@@ -116,7 +114,14 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
     t,
 }) => {
     // --- STATE MANAGEMENT ---
-    const [maximizedWidget, setMaximizedWidget] = useState<MaximizedWidget>(null);
+    const [maximizedStates, setMaximizedStates] = useState<Record<WidgetKey, boolean>>({
+        power: false,
+        fuel: false,
+        emissions: false,
+        resources: false,
+        turbines: false,
+        history: false,
+    });
     const [selectedTurbineId, setSelectedTurbineId] = useState<number | null>(null);
     const [alerts, setAlerts] = useState<Alert[]>(initialAlerts);
     
@@ -331,6 +336,10 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
         }));
     };
 
+    const toggleMaximize = (widget: WidgetKey) => {
+        setMaximizedStates(prev => ({ ...prev, [widget]: !prev[widget] }));
+    };
+
 
     // --- COMPUTED VALUES ---
     const powerLoss = useMemo(() => {
@@ -359,34 +368,10 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
 
     // --- RENDER LOGIC ---
 
-    const renderMaximizedWidget = () => {
-        const commonProps = { isMaximizable: true, isMaximized: true, onToggleMaximize: () => setMaximizedWidget(null), t };
-        switch(maximizedWidget) {
-            case 'power': return <PowerOutput powerOutput={powerOutput} efficiency={efficiency} historicalData={shortHistoricalData} efficiencyGain={efficiencyGain} plantStatus={plantStatus} dryBulbTemp={ambient.dry} wetBulbTemp={ambient.wet} humidity={ambient.humidity} powerLoss={powerLoss} {...commonProps} />;
-            case 'fuel': return <FuelStatus fuelMode={fuelMode} consumption={historicalData.slice(-1)[0]?.consumption || 0} flexMix={flexMix} setFlexMix={setFlexMix} historicalData={historicalData} timeRange={timeRange} setTimeRange={setTimeRange} {...commonProps} />;
-            case 'emissions': 
-                return fuelMode === FuelMode.Nuclear 
-                  ? <NuclearPlantInfo {...commonProps} />
-                  : <EmissionsMonitor emissions={emissions} historicalEmissions={historicalEmissions} alerts={alerts} onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))} onClearAll={() => setAlerts([])} {...commonProps} />;
-            case 'resources': return <ResourceManagement {...resourceData} historicalData={historicalResourceData} resourceConfig={resourceConfig} {...commonProps} />;
-            case 'turbines': return <TurbineStatus turbines={filteredTurbines} onSelectTurbine={setSelectedTurbineId} selectedTurbineId={selectedTurbineId} turbineTypeFilter={turbineTypeFilter} setTurbineTypeFilter={setTurbineTypeFilter} onPerformMaintenance={handlePerformMaintenance} {...commonProps} />;
-            case 'history': return <HistoricalData data={historicalData} timeRange={timeRange} setTimeRange={setTimeRange} {...commonProps} />;
-            default: return null;
-        }
-    };
-    
-    if (maximizedWidget) {
-        return (
-            <div className="mt-6 fixed inset-0 bg-gray-900 z-50 p-8 overflow-y-auto">
-                {renderMaximizedWidget()}
-            </div>
-        )
-    }
-
     return (
         <div className="mt-6">
             <div className="mt-6 grid grid-cols-12 gap-6">
-                <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
+                <div className={maximizedStates.power ? "col-span-12" : "col-span-12 md:col-span-6 lg:col-span-3 h-full"}>
                     <PowerOutput 
                         powerOutput={powerOutput} 
                         efficiency={efficiency} 
@@ -398,30 +383,32 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                         humidity={ambient.humidity}
                         powerLoss={powerLoss}
                         isMaximizable
-                        onToggleMaximize={() => setMaximizedWidget('power')}
+                        isMaximized={maximizedStates.power}
+                        onToggleMaximize={() => toggleMaximize('power')}
                         t={t}
                     />
                 </div>
-                <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
+                <div className={maximizedStates.fuel ? "col-span-12" : "col-span-12 md:col-span-6 lg:col-span-3 h-full"}>
                     <FuelStatus 
                         fuelMode={fuelMode}
                         consumption={historicalData.slice(-1)[0]?.consumption || 380}
                         flexMix={flexMix}
                         setFlexMix={setFlexMix}
                         isMaximizable
-                        onToggleMaximize={() => setMaximizedWidget('fuel')}
+                        isMaximized={maximizedStates.fuel}
+                        onToggleMaximize={() => toggleMaximize('fuel')}
                         historicalData={historicalData}
                         timeRange={timeRange}
                         setTimeRange={setTimeRange}
                         t={t}
                     />
                 </div>
-                <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
+                <div className={maximizedStates.emissions ? "col-span-12" : "col-span-12 md:col-span-6 lg:col-span-3 h-full"}>
                    {fuelMode === FuelMode.Nuclear ? (
                         <NuclearPlantInfo
                             isMaximizable
-                            onToggleMaximize={() => setMaximizedWidget('emissions')}
-                            // FIX: Pass the `t` prop to NuclearPlantInfo
+                            isMaximized={maximizedStates.emissions}
+                            onToggleMaximize={() => toggleMaximize('emissions')}
                             t={t}
                         />
                     ) : (
@@ -432,23 +419,25 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                             onDismiss={(id) => setAlerts(prev => prev.filter(a => a.id !== id))}
                             onClearAll={() => setAlerts([])}
                             isMaximizable
-                            onToggleMaximize={() => setMaximizedWidget('emissions')}
+                            isMaximized={maximizedStates.emissions}
+                            onToggleMaximize={() => toggleMaximize('emissions')}
                             t={t}
                         />
                     )}
                 </div>
-                <div className="col-span-12 md:col-span-6 lg:col-span-3 h-full">
+                <div className={maximizedStates.resources ? "col-span-12" : "col-span-12 md:col-span-6 lg:col-span-3 h-full"}>
                     <ResourceManagement
                         {...resourceData}
                         historicalData={historicalResourceData}
                         resourceConfig={resourceConfig}
                         isMaximizable
-                        onToggleMaximize={() => setMaximizedWidget('resources')}
+                        isMaximized={maximizedStates.resources}
+                        onToggleMaximize={() => toggleMaximize('resources')}
                         t={t}
                     />
                 </div>
                 
-                <div className="col-span-12">
+                <div className={`col-span-12 ${!selectedTurbine && maximizedStates.turbines ? 'h-[80vh]' : ''}`}>
                     {selectedTurbine ? (
                         <MainTurbineMonitor 
                             turbine={selectedTurbine} 
@@ -463,7 +452,8 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                             onSelectTurbine={setSelectedTurbineId} 
                             selectedTurbineId={selectedTurbineId}
                             isMaximizable
-                            onToggleMaximize={() => setMaximizedWidget('turbines')}
+                            isMaximized={maximizedStates.turbines}
+                            onToggleMaximize={() => toggleMaximize('turbines')}
                             turbineTypeFilter={turbineTypeFilter}
                             setTurbineTypeFilter={setTurbineTypeFilter}
                             onPerformMaintenance={handlePerformMaintenance}
@@ -472,13 +462,14 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                     )}
                 </div>
 
-                <div className="col-span-12">
+                <div className={`col-span-12 ${maximizedStates.history ? 'h-[80vh]' : ''}`}>
                     <HistoricalData
                         data={historicalData}
                         timeRange={timeRange}
                         setTimeRange={setTimeRange}
                         isMaximizable
-                        onToggleMaximize={() => setMaximizedWidget('history')}
+                        isMaximized={maximizedStates.history}
+                        onToggleMaximize={() => toggleMaximize('history')}
                         t={t}
                     />
                 </div>

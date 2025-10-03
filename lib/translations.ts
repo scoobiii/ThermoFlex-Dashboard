@@ -1,3 +1,4 @@
+
 export const translations = {
   PT: {
     // Header
@@ -76,6 +77,12 @@ export const translations = {
     'tooltip.day': 'Dia',
     'tooltip.forecast': 'Previsto',
     'tooltip.historical': 'Histórico',
+    'emissions.historical': 'Histórico',
+    'emissions.forecast': 'Previsto',
+    'emissions.historicalShort': 'Hist.',
+    'emissions.forecastShort': 'Prev.',
+    'emissions.period': 'Período',
+    'emissions.to': 'a',
 
     // Turbine Status Card
     'turbineStatus.title': 'Status das Turbinas',
@@ -349,6 +356,9 @@ export const translations = {
     'system.emittedMtCO2e': 'Mi tCO₂e Emitidas',
     'system.avgEmissionRate': 'tCO₂e/GWh Média',
     'system.aboutInventory': 'Sobre o Inventário',
+    'system.section.production_capacity': 'Produção e Capacidade',
+    'system.section.emissions_data': 'Emissões',
+    'system.section.efficiency_performance': 'Eficiência e Desempenho',
 
     // External Viewer
     'external.title': 'Visualizador Externo',
@@ -576,6 +586,12 @@ export const translations = {
     'tooltip.day': 'Day',
     'tooltip.forecast': 'Forecast',
     'tooltip.historical': 'Historical',
+    'emissions.historical': 'Historical',
+    'emissions.forecast': 'Forecast',
+    'emissions.historicalShort': 'Hist.',
+    'emissions.forecastShort': 'Fcast.',
+    'emissions.period': 'Period',
+    'emissions.to': 'to',
 
     // Turbine Status Card
     'turbineStatus.title': 'Turbine Status',
@@ -849,6 +865,9 @@ export const translations = {
     'system.emittedMtCO2e': 'Mt CO₂e Emitted',
     'system.avgEmissionRate': 'tCO₂e/GWh Average',
     'system.aboutInventory': 'About the Inventory',
+    'system.section.production_capacity': 'Production & Capacity',
+    'system.section.emissions_data': 'Emissions',
+    'system.section.efficiency_performance': 'Efficiency & Performance',
 
     // External Viewer
     'external.title': 'External Viewer',

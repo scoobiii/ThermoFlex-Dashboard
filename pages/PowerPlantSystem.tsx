@@ -222,13 +222,31 @@ const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
                     )}
                   </div>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <h4 className="font-semibold text-lg text-gray-800 mb-3">{t('system.keyIndicators')}</h4>
-                  <Metric label={t('system.capacity')} value={highlightedPlant.power} unit="MW" icon={Power} colorClass="text-blue-600" />
-                  <Metric label={t('system.generation')} value={highlightedPlant.generation2023} unit="GWh" icon={TrendingUp} colorClass="text-green-600" />
-                  <Metric label={t('system.emissions')} value={highlightedPlant.emissions2023} unit="mil tCO₂e" icon={Factory} colorClass="text-red-600" />
-                  <Metric label={t('powerOutput.totalEfficiency')} value={highlightedPlant.efficiency} unit="%" icon={Settings} colorClass="text-purple-600" />
-                  <Metric label={t('system.efficiencyAnalysis')} value={highlightedPlant.rate} unit="tCO₂e/GWh" icon={BarChart3} colorClass="text-orange-600" />
+                  
+                  <div>
+                    <h5 className="font-medium text-gray-500 text-sm uppercase tracking-wider mb-2">{t('system.section.production_capacity')}</h5>
+                    <div className="space-y-2">
+                        <Metric label={t('system.capacity')} value={highlightedPlant.power} unit="MW" icon={Power} colorClass="text-blue-600" />
+                        <Metric label={t('system.generation')} value={highlightedPlant.generation2023} unit="GWh" icon={TrendingUp} colorClass="text-green-600" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium text-gray-500 text-sm uppercase tracking-wider mb-2">{t('system.section.emissions_data')}</h5>
+                     <div className="space-y-2">
+                        <Metric label={t('system.emissions')} value={highlightedPlant.emissions2023} unit="mil tCO₂e" icon={Factory} colorClass="text-red-600" />
+                    </div>
+                  </div>
+
+                   <div>
+                    <h5 className="font-medium text-gray-500 text-sm uppercase tracking-wider mb-2">{t('system.section.efficiency_performance')}</h5>
+                     <div className="space-y-2">
+                        <Metric label={t('powerOutput.totalEfficiency')} value={highlightedPlant.efficiency} unit="%" icon={Settings} colorClass="text-purple-600" />
+                        <Metric label={t('system.efficiencyAnalysis')} value={highlightedPlant.rate} unit="tCO₂e/GWh" icon={BarChart3} colorClass="text-orange-600" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

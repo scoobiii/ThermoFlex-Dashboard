@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, AreaChart, Area, XAxis, YAxis } from 'recharts';
+import { ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis } from 'recharts';
 import { FuelMode, LongHistoricalDataPoint } from '../types';
 import DashboardCard from './DashboardCard';
 import { GasIcon } from './icons';
@@ -17,14 +17,6 @@ interface FuelStatusProps {
   setTimeRange: (range: '24h' | '7d') => void;
   t: (key: string) => string;
 }
-
-const COLORS: { [key: string]: string } = {
-  'Gás Natural': '#0891b2',
-  'H2': '#34d399',
-  'Etanol': '#6ee7b7',
-  'Biodiesel': '#22c55e',
-  'Nuclear': '#a855f7',
-};
 
 // --- Reusable Components ---
 
@@ -90,34 +82,13 @@ const FuelStatus: React.FC<FuelStatusProps> = ({
 }) => {
   const [view, setView] = useState<'current' | 'history'>('current');
   
-  let chartData = [];
   let fuelTitle: string = t(`fuelMode.${fuelMode}`);
 
   switch (fuelMode) {
-    case FuelMode.NaturalGas:
-      chartData = [{ name: t('fuelMode.NATURAL_GAS'), value: 100 }];
-      break;
-    case FuelMode.Ethanol:
-      chartData = [{ name: t('fuelMode.ETHANOL'), value: 100 }];
-      break;
-    case FuelMode.Biodiesel:
-      chartData = [{ name: t('fuelMode.BIODIESEL'), value: 100 }];
-      break;
-    case FuelMode.Nuclear:
-      chartData = [{ name: t('fuelMode.NUCLEAR'), value: 100 }];
-      break;
     case FuelMode.FlexNGH2:
-      chartData = [
-        { name: t('fuelMode.NATURAL_GAS'), value: 100 - flexMix.h2 },
-        { name: `H2 (${flexMix.h2}%)`, value: flexMix.h2 },
-      ];
       fuelTitle = `NG (${100 - flexMix.h2}%) / H2 (${flexMix.h2}%)`
       break;
     case FuelMode.FlexEthanolBiodiesel:
-      chartData = [
-        { name: t('fuelMode.ETHANOL'), value: 100 - flexMix.biodiesel },
-        { name: t('fuelMode.BIODIESEL'), value: flexMix.biodiesel },
-      ];
       fuelTitle = `${t('fuelMode.ETHANOL')} (${100-flexMix.biodiesel}%) / ${t('fuelMode.BIODIESEL')} (${flexMix.biodiesel}%)`
       break;
   }
@@ -125,39 +96,52 @@ const FuelStatus: React.FC<FuelStatusProps> = ({
   const showH2Slider = fuelMode === FuelMode.FlexNGH2;
   const showBiodieselSlider = fuelMode === FuelMode.FlexEthanolBiodiesel;
 
-  const renderCurrentView = () => (
+  const renderCurrentView = () => {
+    const MAX_CONSUMPTION = 500; // kg/s, based on typical consumption values
+    const radius = 80;
+    const circumference = Math.PI * radius;
+    const percentageValue = Math.min(consumption / MAX_CONSUMPTION, 1);
+    const offset = circumference * (1 - percentageValue);
+
+    let gaugeColor = '#22c55e'; // green-500
+    if (percentageValue > 0.85) {
+      gaugeColor = '#ef4444'; // red-500
+    } else if (percentageValue > 0.60) {
+      gaugeColor = '#f59e0b'; // amber-500
+    }
+
+    return (
     <>
       <div>
           <div className="text-center">
               <p className="text-gray-400 text-sm">{t('fuelStatus.operatingMode')}</p>
               <p className="font-semibold text-cyan-400 h-10">{fuelTitle}</p>
           </div>
-          <div className="h-32 w-full -ml-4">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={50}
-                  innerRadius={35}
-                  fill="#8884d8"
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[entry.name.split(' ')[0]]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value, name) => [`${value}%`, name]} />
-                <Legend iconType="circle" iconSize={8} wrapperStyle={{fontSize: "12px"}}/>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="text-center mt-2">
+          
+          <div className="relative h-32 w-full flex items-center justify-center -mt-4">
+            <svg viewBox="0 0 200 100" className="w-5/6 h-full">
+              <path
+                d="M 20 100 A 80 80 0 0 1 180 100"
+                fill="none"
+                stroke="#4b5563"
+                strokeWidth="16"
+                strokeLinecap="round"
+              />
+              <path
+                d="M 20 100 A 80 80 0 0 1 180 100"
+                fill="none"
+                stroke={gaugeColor}
+                strokeWidth="16"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                style={{ transition: 'stroke-dashoffset 0.3s ease-out, stroke 0.3s ease-out' }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-end pb-4 pointer-events-none">
               <p className="text-3xl font-bold text-white">{consumption.toFixed(1)}</p>
-              <p className="text-gray-400">{t('fuelStatus.consumption')}</p>
+              <p className="text-gray-400 text-xs -mt-1">{t('fuelStatus.consumption')}</p>
+            </div>
           </div>
       </div>
       
@@ -235,7 +219,7 @@ const FuelStatus: React.FC<FuelStatusProps> = ({
         )}
       </div>
     </>
-  );
+  )};
 
   const renderHistoryView = () => (
     <div className="flex flex-col h-full">

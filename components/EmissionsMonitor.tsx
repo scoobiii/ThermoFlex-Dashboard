@@ -1,5 +1,4 @@
 
-
 import React, { useMemo, useState } from 'react';
 import { Alert, EmissionData, HistoricalEmissionPoint } from '../types';
 import DashboardCard from './DashboardCard';
@@ -15,7 +14,6 @@ interface EmissionsMonitorProps {
   isMaximizable?: boolean;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
-  // FIX: Add t prop for translations
   t: (key: string) => string;
 }
 
@@ -25,6 +23,12 @@ interface EmissionBarProps {
     max: number;
     unit: string;
 }
+
+const pollutantConfig = {
+  co: { name: 'CO', color: '#facc15' },
+  nox: { name: 'NOx', color: '#f87171' },
+  sox: { name: 'SOx', color: '#fbbf24' },
+};
 
 const EmissionBar: React.FC<EmissionBarProps> = ({ label, value, max, unit}) => {
     const percentage = (value / max) * 100;
@@ -47,15 +51,36 @@ const EmissionBar: React.FC<EmissionBarProps> = ({ label, value, max, unit}) => 
 
 const CustomTooltip = ({ active, payload, label, t }: any) => {
   if (active && payload && payload.length) {
+    const pointData = payload.reduce((acc, p) => {
+      acc[p.dataKey] = p.value;
+      return acc;
+    }, {});
+
     return (
-      <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg">
-        {/* FIX: Use translation function */}
-        <p className="label text-sm text-gray-300">{`${t('tooltip.day')}: ${label}`}</p>
-        {payload.map((p, i) => (
-          <p key={i} style={{ color: p.stroke }} className="text-sm">
-            {`${p.dataKey.includes('forecast') ? t('tooltip.forecast') : t('tooltip.historical')}: ${p.value.toFixed(1)} kg/h`}
-          </p>
-        ))}
+      <div className="bg-gray-700 p-2 border border-gray-600 rounded-md shadow-lg text-sm w-48">
+        <p className="font-bold text-gray-300 mb-2">{`${t('tooltip.day')}: ${label}`}</p>
+        {Object.entries(pollutantConfig).map(([key, config]) => {
+          const histKey = key;
+          const forecastKey = `forecast${key.charAt(0).toUpperCase() + key.slice(1)}`;
+          const histValue = pointData[histKey];
+          const forecastValue = pointData[forecastKey];
+          const value = histValue ?? forecastValue;
+
+          if (value === undefined) return null;
+
+          return (
+            <div key={config.name} className="flex justify-between items-center">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{backgroundColor: config.color}}></div>
+                <span className="font-semibold" style={{color: config.color}}>{config.name}:</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="font-mono text-white">{value.toFixed(1)}</span>
+                <span className="text-xs text-gray-400">{histValue !== undefined ? `(${t('emissions.historicalShort')})` : `(${t('emissions.forecastShort')})`}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -76,17 +101,6 @@ const alertConfig = {
         color: 'border-l-4 border-blue-400'
     }
 }
-
-const LegendItem: React.FC<{ color: string; text: string }> = ({ color, text }) => (
-  <div className="flex items-center space-x-2">
-    <div className="flex items-center">
-      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }}></div>
-      <div className="w-3 h-px" style={{ backgroundColor: color }}></div>
-    </div>
-    <span style={{ color }}>{text}</span>
-  </div>
-);
-
 
 const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({ 
   emissions, 
@@ -169,30 +183,43 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
             <EmissionBar label="CO" value={emissions.co} max={50} unit="kg/h" />
         </div>
         <div className="w-full h-full flex flex-col">
+            <div className="text-center text-xs text-gray-400 mb-2">
+                {t('emissions.period')}: D-6 {t('emissions.to')} D+7
+            </div>
             <div className="flex-grow min-h-[180px] -ml-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#2A3449" />
-                        <XAxis dataKey="time" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} interval={chartData.length - 2} tickFormatter={(value, index) => index === 0 ? 'D-1' : 'D+7'} />
+                        <XAxis dataKey="time" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} interval={chartData.length - 2} tickFormatter={(value, index) => index === 0 ? 'D-6' : 'D+7'} />
                         <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} unit=" kg/h" domain={[0, 40]} ticks={[0, 10, 20, 30]} />
-                        {/* FIX: Pass translation function to custom tooltip */}
                         <Tooltip content={<CustomTooltip t={t} />} />
-                        <Line type="monotone" dataKey="co" stroke="#facc15" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="forecastCo" stroke="#facc15" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-                        <Line type="monotone" dataKey="nox" stroke="#f87171" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="forecastNox" stroke="#f87171" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-                        <Line type="monotone" dataKey="sox" stroke="#fbbf24" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="forecastSox" stroke="#fbbf24" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                        <Line type="monotone" dataKey="co" stroke={pollutantConfig.co.color} strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="forecastCo" stroke={pollutantConfig.co.color} strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                        <Line type="monotone" dataKey="nox" stroke={pollutantConfig.nox.color} strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="forecastNox" stroke={pollutantConfig.nox.color} strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                        <Line type="monotone" dataKey="sox" stroke={pollutantConfig.sox.color} strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="forecastSox" stroke={pollutantConfig.sox.color} strokeWidth={2} dot={false} strokeDasharray="5 5" />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
-             <div className="space-y-1 text-xs font-semibold pl-4 mt-2">
-                <LegendItem color="#facc15" text="CO Histórico" />
-                <LegendItem color="#facc15" text="CO Previsto" />
-                <LegendItem color="#f87171" text="NOx Histórico" />
-                <LegendItem color="#f87171" text="NOx Previsto" />
-                <LegendItem color="#fbbf24" text="SOx Histórico" />
-                <LegendItem color="#fbbf24" text="SOx Previsto" />
+             <div className="flex justify-center flex-wrap items-center gap-x-4 gap-y-1 text-xs mt-2 px-4">
+                {Object.values(pollutantConfig).map(p => (
+                    <div key={p.name} className="flex items-center gap-1">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }}></div>
+                        <span style={{ color: p.color }}>{p.name}</span>
+                    </div>
+                ))}
+                
+                <div className="border-l border-gray-600 h-4 mx-2"></div>
+
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-0.5 bg-gray-400"></div>
+                    <span className="text-gray-400">{t('emissions.historical')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <svg width="16" height="2" className="text-gray-400"><line x1="0" y1="1" x2="16" y2="1" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3"/></svg>
+                    <span className="text-gray-400">{t('emissions.forecast')}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -207,7 +234,6 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
             className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline focus:outline-none"
             aria-label={t('emissions.clearAll')}
           >
-            {/* FIX: Use translation function */}
             {t('emissions.clearAll')}
           </button>
         </div>
@@ -235,7 +261,6 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
 
   return (
     <DashboardCard 
-      // FIX: Use translation function
       title={t('emissions.title')}
       icon={<WarningIcon className="w-6 h-6" />} 
       className="h-full"
@@ -255,7 +280,6 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
                         }`}
                         aria-pressed={view === 'emissions'}
                     >
-                        {/* FIX: Use translation function */}
                         {t('emissions.tabEmissions')}
                     </button>
                     <button
@@ -267,7 +291,6 @@ const EmissionsMonitor: React.FC<EmissionsMonitorProps> = ({
                         }`}
                         aria-pressed={view === 'alerts'}
                     >
-                        {/* FIX: Use translation function */}
                         {t('emissions.tabAlerts')} ({alerts.length})
                     </button>
                 </div>
