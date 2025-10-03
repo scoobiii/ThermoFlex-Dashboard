@@ -67,7 +67,8 @@ const Configuration: React.FC<ConfigurationProps> = ({
         ...selectedPlantRaw,
         identifier: {
           type: 'location' as 'location' | 'license',
-          value: selectedPlantRaw.location || 'Não definido',
+          // FIX: Use `locationKey` and set `valueKey` as required by the `Plant` type.
+          valueKey: selectedPlantRaw.locationKey || 'plants.identifier.notDefined',
         }
       };
     }
@@ -121,7 +122,8 @@ const Configuration: React.FC<ConfigurationProps> = ({
   const handlePlantUpdate = (field: keyof Plant | `identifier.${keyof NonNullable<Plant['identifier']>}`, value: string) => {
     if (!selectedPlant || !selectedPlantRaw) return;
 
-    let updatedPlant = { ...selectedPlant };
+    // FIX: Ensure updatedPlant is a valid Plant object.
+    let updatedPlant: Plant = { ...selectedPlant };
     
     if (field.startsWith('identifier.')) {
         const subField = field.split('.')[1] as keyof NonNullable<Plant['identifier']>;
@@ -133,20 +135,24 @@ const Configuration: React.FC<ConfigurationProps> = ({
         } else {
             updatedPlant.identifier = {
                 ...updatedPlant.identifier!,
-                value: value,
+                // FIX: Update `valueKey` instead of the non-existent `value` property.
+                valueKey: value,
             };
         }
     } else if (field === 'power') {
         const numValue = parseFloat(value);
         updatedPlant.power = isNaN(numValue) ? 0 : numValue;
     } else {
-        (updatedPlant[field as 'name' | 'fuel' | 'description'] as string) = value;
+        // FIX: Ensure that only valid keys of Plant are updated.
+        (updatedPlant[field as keyof Plant] as any) = value;
     }
     
     if (field === 'name') {
+        // FIX: Pass a valid Plant object to `updatePlant`.
         updatePlant(selectedPlantRaw.name, updatedPlant);
         setSelectedPlantName(value);
     } else {
+        // FIX: Pass a valid Plant object to `updatePlant`.
         updatePlant(selectedPlantRaw.name, updatedPlant);
     }
   };
@@ -310,17 +316,22 @@ const Configuration: React.FC<ConfigurationProps> = ({
                           <input
                               type="text"
                               placeholder={selectedPlant.identifier.type === 'location' ? 'Ex: São Paulo, SP' : 'Ex: ANEEL 12345-6'}
-                              value={selectedPlant.identifier.value}
-                              onChange={(e) => handlePlantUpdate('identifier.value', e.target.value)}
+                              // FIX: Use `valueKey` from identifier, not `value`.
+                              value={selectedPlant.identifier.valueKey}
+                              // FIX: Update `identifier.valueKey` on change.
+                              onChange={(e) => handlePlantUpdate('identifier.valueKey', e.target.value)}
                               className="w-full bg-gray-900/50 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2"
                           />
                       </div>
-                    <FormInput label={t('config.mainFuelType')} value={selectedPlant.fuel} name="fuel" />
+                    {/* FIX: Use `fuelKey` instead of `fuel`. */}
+                    <FormInput label={t('config.mainFuelType')} value={selectedPlant.fuelKey} name="fuelKey" />
                      <div>
                         <label className="block text-sm font-medium text-gray-400 mb-1">{t('config.description')}</label>
                         <textarea
-                            value={selectedPlant.description || ''}
-                            onChange={(e) => handlePlantUpdate('description', e.target.value)}
+                            // FIX: Use `descriptionKey` instead of `description`.
+                            value={selectedPlant.descriptionKey || ''}
+                            // FIX: Update `descriptionKey` on change.
+                            onChange={(e) => handlePlantUpdate('descriptionKey', e.target.value)}
                             className="w-full h-24 bg-gray-900/50 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2"
                         />
                     </div>

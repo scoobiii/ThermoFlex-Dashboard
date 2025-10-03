@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter } from 'recharts';
 import { BoltIcon as Power, FactoryIcon as Factory, CogIcon as Settings, InfoIcon as Info, ChevronDownIcon as ChevronDown, ChevronUpIcon as ChevronUp, ChartBarIcon as BarChart3, TrendingUpIcon as TrendingUp, MagnifyingGlassIcon as Search, CloseIcon } from '../components/icons';
 import { POWER_PLANTS } from '../data/plants';
+import { Plant } from '../types';
 
 interface PowerPlantSystemProps {
   t: (key: string) => string;
@@ -30,7 +31,8 @@ const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
     efficiency: true
   });
 
-  const plantsData = POWER_PLANTS.filter(p => p.cycle);
+  // FIX: Use `cycleKey` instead of `cycle`.
+  const plantsData = POWER_PLANTS.filter(p => p.cycleKey);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
@@ -40,12 +42,14 @@ const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
   };
 
   const filteredPlants = plantsData.filter(plant => {
+    // FIX: Use `fuelKey` with translation `t()` for filtering instead of `fuel`.
     const matchesFilter = selectedFilter === 'all' || 
-                         (plant.fuel && plant.fuel.toLowerCase().includes(selectedFilter.toLowerCase()));
+                         (plant.fuelKey && t(plant.fuelKey).toLowerCase().includes(selectedFilter.toLowerCase()));
     
+    // FIX: Use `locationKey` with translation `t()` for searching instead of `location`.
     const matchesSearch = searchTerm === '' ||
                          plant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (plant.location && plant.location.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (plant.locationKey && t(plant.locationKey).toLowerCase().includes(searchTerm.toLowerCase()));
 
     return matchesFilter && matchesSearch;
   });
@@ -53,9 +57,10 @@ const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
   const highlightedPlant = selectedPlant === 'all' ? null : plantsData.find(p => p.name === selectedPlant);
 
   const fuelTypeData = [
-    { name: 'Gás Natural', count: plantsData.filter(p => p.fuel === 'Gás Natural').length, generation: plantsData.filter(p => p.fuel === 'Gás Natural').reduce((sum, p) => sum + (p.generation2023 || 0), 0) },
-    { name: 'Carvão Mineral', count: plantsData.filter(p => p.fuel === 'Carvão Mineral').length, generation: plantsData.filter(p => p.fuel === 'Carvão Mineral').reduce((sum, p) => sum + (p.generation2023 || 0), 0) },
-    { name: 'Óleo Combustível', count: plantsData.filter(p => p.fuel === 'Óleo Combustível').length, generation: plantsData.filter(p => p.fuel === 'Óleo Combustível').reduce((sum, p) => sum + (p.generation2023 || 0), 0) }
+    // FIX: Use `t(p.fuelKey)` for comparison instead of `p.fuel`.
+    { name: 'Gás Natural', count: plantsData.filter(p => t(p.fuelKey) === 'Gás Natural').length, generation: plantsData.filter(p => t(p.fuelKey) === 'Gás Natural').reduce((sum, p) => sum + (p.generation2023 || 0), 0) },
+    { name: 'Carvão Mineral', count: plantsData.filter(p => t(p.fuelKey) === 'Carvão Mineral').length, generation: plantsData.filter(p => t(p.fuelKey) === 'Carvão Mineral').reduce((sum, p) => sum + (p.generation2023 || 0), 0) },
+    { name: 'Óleo Combustível', count: plantsData.filter(p => t(p.fuelKey) === 'Óleo Combustível').length, generation: plantsData.filter(p => t(p.fuelKey) === 'Óleo Combustível').reduce((sum, p) => sum + (p.generation2023 || 0), 0) }
   ];
 
   const topEmitters = plantsData
@@ -69,7 +74,8 @@ const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
       name: p.name,
       efficiency: p.efficiency,
       rate: p.rate,
-      fuel: p.fuel
+      // FIX: Use `fuelKey` with translation `t()` instead of `fuel`.
+      fuel: t(p.fuelKey)
     }));
 
   const COLORS = ['#3B82F6', '#EF4444', '#F59E0B', '#10B981', '#8B5CF6'];
@@ -191,7 +197,8 @@ const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
                   <Info className="w-8 h-8 text-blue-600" />
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800">{t('system.highlight')} {highlightedPlant.name}</h2>
-                    <p className="text-gray-500">{highlightedPlant.location}</p>
+                    {/* FIX: Use `locationKey` with `t()` */}
+                    <p className="text-gray-500">{t(highlightedPlant.locationKey)}</p>
                   </div>
                 </div>
                 <button
@@ -206,10 +213,12 @@ const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
                 <div>
                   <h4 className="font-semibold text-lg text-gray-800 mb-3">{t('system.overviewDescription')}</h4>
                   <div className="space-y-2 text-sm text-gray-700">
-                    <p><strong>{t('config.fuelMode')}</strong> {highlightedPlant.fuel}</p>
-                    <p><strong>{t('system.technology')}</strong> {highlightedPlant.cycle}</p>
-                    {highlightedPlant.description && (
-                      <p className="pt-2 italic border-t border-gray-200 mt-2">{highlightedPlant.description}</p>
+                    {/* FIX: Use `fuelKey` and `cycleKey` with `t()` */}
+                    <p><strong>{t('config.fuelMode')}</strong> {t(highlightedPlant.fuelKey)}</p>
+                    <p><strong>{t('system.technology')}</strong> {t(highlightedPlant.cycleKey)}</p>
+                    {/* FIX: Use `descriptionKey` with `t()` */}
+                    {highlightedPlant.descriptionKey && (
+                      <p className="pt-2 italic border-t border-gray-200 mt-2">{t(highlightedPlant.descriptionKey)}</p>
                     )}
                   </div>
                 </div>
@@ -322,6 +331,7 @@ const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
                                         <p className="font-bold">{data.name}</p>
                                         <p>Eficiência: {data.efficiency}%</p>
                                         <p>Taxa Emissão: {data.rate} tCO₂e/GWh</p>
+                                        {/* FIX: Use `fuel` property which now holds translated value. */}
                                         <p>Combustível: {data.fuel}</p>
                                     </div>
                                 );
@@ -344,16 +354,18 @@ const PowerPlantSystem: React.FC<PowerPlantSystemProps> = ({ t }) => {
             >
               <div className="space-y-3 mt-4 max-h-[500px] overflow-y-auto pr-2">
                 {filteredPlants.length > 0 ? filteredPlants.map((plant, index) => (
-                  <div key={index} className={`p-4 rounded-lg border ${getFuelBgColor(plant.fuel)}`}>
+                  <div key={index} className={`p-4 rounded-lg border ${getFuelBgColor(t(plant.fuelKey))}`}>
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-semibold text-gray-800">{plant.name}</h4>
-                      <span className={`text-sm font-medium ${getFuelColor(plant.fuel)}`}>
-                        {plant.fuel}
+                      <span className={`text-sm font-medium ${getFuelColor(t(plant.fuelKey))}`}>
+                        {/* FIX: Use `fuelKey` with `t()` */}
+                        {t(plant.fuelKey)}
                       </span>
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <p><span className="font-medium">{t('system.location')}</span> {plant.location}</p>
-                      <p><span className="font-medium">{t('system.technology')}</span> {plant.cycle}</p>
+                      {/* FIX: Use `locationKey` and `cycleKey` with `t()` */}
+                      <p><span className="font-medium">{t('system.location')}</span> {t(plant.locationKey)}</p>
+                      <p><span className="font-medium">{t('system.technology')}</span> {t(plant.cycleKey)}</p>
                       <p><span className="font-medium">{t('system.capacity')}</span> {plant.power} MW</p>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mt-3 text-xs">
