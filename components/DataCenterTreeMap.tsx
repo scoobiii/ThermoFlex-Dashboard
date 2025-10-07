@@ -1,54 +1,18 @@
+
 /**
  * @file DataCenterTreeMap.tsx
  * @description Renders a treemap visualization of the data center server racks, showing their status and key metrics.
- * @version 1.7.1
- * @date 2024-08-05
+ * @version 1.1.0
+ * @date 2024-07-28
  * @author Senior DevOps Team
  * @productowner Edivaldo Beringela (Prefeitura de Mauá)
  * 
  * @responsibility
  * Visualizes hierarchical rack data using area-proportional treemap.
- * Supports dynamic metric switching (energy vs cooling) with Finviz-style color scaling.
+ * Supports dynamic metric switching (energy vs cooling).
  * Integrates with DashboardCard for consistent UI and maximize behavior.
- * Ensures both action controls and maximize button remain accessible at all times.
  * 
  * @changelog
- * v1.7.1 - 2024-08-05
- *   - Verified and documented compatibility with DashboardCard v1.1.0.
- *   - Confirmed that the action controls (Energy/Cooling switcher) and maximize button now coexist correctly in the card header without mutual exclusion.
- *   - No functional changes to this file; fix was implemented upstream in DashboardCard.
- *
- * v1.7.0 - 2024-08-04
- *   - De-correlated cooling and energy consumption data to ensure treemap sizes visibly change when switching KPIs.
- *   - Introduced a randomized `coolingEfficiencyFactor` for each rack during data generation.
- *   - This makes the treemap layout dynamically re-organize based on the selected metric, fulfilling the user request for KPI-driven sizing.
- *
- * v1.6.0 - 2024-08-03
- *   - Added data labels (rack name and value) directly inside the treemap cells for better readability, visible on larger nodes.
- *   - Labels are conditionally rendered based on block size (`width > 60 && height > 35`) to prevent clutter.
- *   - Text includes a subtle shadow for improved contrast against dynamic background colors.
- *
- * v1.5.0 - 2024-08-02
- *   - Fixed a critical rendering bug in `CustomizedContent` where it was attempting to access a non-existent `payload` prop, causing the entire treemap to render as blank.
- *   - Modified the component to correctly access data values (e.g., `totalEnergyConsumption`) directly from its props, restoring the visualization.
- *   - Added explicit handling for 'Offline' racks to render them with a distinct neutral gray color, improving clarity.
- *
- * v1.4.0 - 2024-08-01
- *   - Refactored and re-implemented the interactive view switcher for clarity and performance.
- *   - Enhanced the Finviz-style dynamic coloring logic to provide a clearer visual representation of consumption hotspots.
- *   - The treemap now dynamically adjusts both the size and color of each rack based on the selected metric ('Consumo de Energia' or 'Consumo de Frio').
- * 
- * v1.3.0 - 2024-07-31
- *   - Implemented dynamic, Finviz-style coloring. Racks are now colored on a green-to-red scale based on the selected metric's value.
- *   - The color scale is calculated dynamically based on the min/max consumption values of the visible dataset.
- *   - Replaced the static, status-based coloring in `CustomizedContent` with the new dynamic, value-based coloring logic.
- * 
- * v1.2.1 - 2024-07-30
- *   - Corrected the logic in `CustomizedContent` to robustly access the `status` property directly from props. This resolves a critical rendering failure where most racks were not being displayed.
- * 
- * v1.2.0 - 2024-07-29
- *   - Fixed a critical rendering bug in `CustomizedContent` where `payload.status` was being accessed instead of `status` from props.
- * 
  * v1.1.0 - 2024-07-28
  *   - Added detailed, granular consumption metrics per rack: CPU, GPU, Memory, I/O, Cooling.
  *   - Renamed 'energyConsumption' to 'totalEnergyConsumption' for clarity.
@@ -67,7 +31,7 @@
  * GOS7 (Gang of Seven Senior Full Stack DevOps Agile Scrum Team)
  * - Claude, Grok, Gemini, Qwen, DeepSeek, GPT, Manus
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, Treemap, Tooltip } from 'recharts';
 import DashboardCard from './DashboardCard';
 import { ServerRackIcon } from './icons';
@@ -94,7 +58,6 @@ interface TreeMapNode {
   coolingConsumption: number; // kW_th
 
   children?: TreeMapNode[];
-  [key: string]: any; // Index signature for recharts compatibility
 }
 
 interface DataCenterTreeMapProps {
@@ -105,7 +68,7 @@ interface DataCenterTreeMapProps {
 }
 
 const generateInitialRackData = (): TreeMapNode[] => {
-  return Array.from({ length: 725 }, (_, i) => {
+  return Array.from({ length: 120 }, (_, i) => {
     const statusRoll = Math.random();
     let status: RackStatus = 'Online';
     if (statusRoll > 0.95) {
@@ -123,11 +86,7 @@ const generateInitialRackData = (): TreeMapNode[] => {
         memoryConsumption = 20 + Math.random() * 10;
         ioConsumption = 30 + Math.random() * 15;
         totalEnergyConsumption = cpuConsumption + gpuConsumption + memoryConsumption + ioConsumption;
-        
-        // De-correlate cooling from energy by giving each rack a variable efficiency factor.
-        // This makes the treemap sizes visually change when switching KPIs.
-        const coolingEfficiencyFactor = 0.15 + Math.random() * 0.15; // Varying efficiency from 15% to 30%
-        coolingConsumption = totalEnergyConsumption * coolingEfficiencyFactor;
+        coolingConsumption = totalEnergyConsumption * 0.25; // Simple correlation for now
     }
     
     return {
@@ -198,38 +157,40 @@ const CustomTooltipContent = ({ active, payload, t }: any) => {
   return null;
 };
 
-const CustomizedContent: React.FC<any> = (props) => {
-    const { x, y, width, height, name, dataKey, getColor, status } = props;
+const CustomizedContent = (props: any) => {
+    const { x, y, width, height, name, status } = props;
     
-    const value = props[dataKey];
-    
-    if (status === 'Offline') {
-        return (
-            <g>
-                <rect x={x} y={y} width={width} height={height} style={{ fill: '#4b5563', stroke: '#374151', strokeWidth: 1 }} />
-            </g>
-        );
+    // Defensive check
+    if (!status) {
+        return null;
     }
 
-    const color = getColor(value);
-    const valueUnit = dataKey === 'totalEnergyConsumption' ? 'kWh' : 'kWₜ';
+    let color = '#3b82f6'; // blue-500 for Online
+    if (status === 'High Load') color = '#f59e0b'; // amber-500
+    if (status === 'Offline') color = '#ef4444'; // red-500
 
     return (
         <g>
-            <rect x={x} y={y} width={width} height={height} style={{ fill: color, stroke: '#1f2937', strokeWidth: 1 }} />
-            {width > 60 && height > 35 && (
-                <text x={x + width / 2} y={y + height / 2} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={12} style={{ textShadow: '0 0 4px rgba(0,0,0,0.7)' }}>
+            <rect
+                x={x}
+                y={y}
+                width={width}
+                height={height}
+                style={{
+                    fill: color,
+                    stroke: '#1f2937',
+                    strokeWidth: 2,
+                }}
+            />
+            {width > 80 && height > 30 && (
+                <text x={x + width / 2} y={y + height / 2} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={14} style={{ textShadow: '0 0 2px rgba(0,0,0,0.7)' }}>
                     {name}
                 </text>
             )}
-             {width > 60 && height > 55 && (
-                 <text x={x + width / 2} y={y + height / 2 + 16} textAnchor="middle" dominantBaseline="middle" fill="#fff" fontSize={10} style={{ textShadow: '0 0 4px rgba(0,0,0,0.7)' }}>
-                    {typeof value === 'number' ? `${value.toFixed(1)} ${valueUnit}` : ''}
-                </text>
-             )}
         </g>
     );
 };
+
 
 const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
     isMaximizable,
@@ -247,25 +208,6 @@ const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
     const dataKey = viewMode === 'totalEnergy' ? 'totalEnergyConsumption' : 'coolingConsumption';
     const viewTitle = viewMode === 'totalEnergy' ? t('dataCenter.treemap.energyConsumption') : t('dataCenter.treemap.coolingConsumption');
 
-    const { min, max } = useMemo(() => {
-        if (!data || data.length === 0) return { min: 0, max: 0 };
-        const values = data.filter(d => d.status !== 'Offline').map(d => d[dataKey]);
-        if (values.length === 0) return { min: 0, max: 0 };
-        return { min: Math.min(...values), max: Math.max(...values) };
-    }, [data, dataKey]);
-
-    const getColor = (value: number) => {
-        if (typeof value !== 'number') return '#4b5563'; // Return gray for non-numeric values
-        const range = max - min;
-        if (range === 0) return '#22c55e'; // Green for no variation
-
-        const normalized = (value - min) / range;
-        
-        // Finviz-style Green -> Yellow -> Red
-        const hue = (1 - normalized) * 120; // 120 (green) to 0 (red)
-        return `hsl(${hue}, 80%, 50%)`;
-    };
-    
     return (
         <DashboardCard 
             title={t('dataCenter.treemap.title')}
@@ -290,7 +232,7 @@ const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
                 </div>
             }
         >
-            <div className="w-full h-full flex flex-col">
+            <div className="w-full h-full min-h-[500px] flex flex-col">
                 <p className="text-center text-sm text-gray-400 mb-2">{t('dataCenter.treemap.viewingBy')} <span className="font-semibold text-white">{viewTitle}</span></p>
                 <div className="flex-grow">
                     <ResponsiveContainer width="100%" height="100%">
@@ -299,7 +241,7 @@ const DataCenterTreeMap: React.FC<DataCenterTreeMapProps> = ({
                             dataKey={dataKey}
                             stroke="#fff"
                             fill="#8884d8"
-                            content={<CustomizedContent dataKey={dataKey} getColor={getColor} />}
+                            content={<CustomizedContent />}
                             isAnimationActive={false}
                             aspectRatio={16/9}
                         >

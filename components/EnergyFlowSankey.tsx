@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import DashboardCard from './DashboardCard';
 import { ActivityIcon } from './icons';
 
@@ -10,6 +10,7 @@ interface EnergyFlowSankeyProps {
 }
 
 const EnergyFlowSankey: React.FC<EnergyFlowSankeyProps> = ({ t }) => {
+    const mermaidRef = useRef<HTMLDivElement>(null);
     const mermaidChart = `
 sankey-beta
     "Power Grid", "Chiller", 23
@@ -43,7 +44,7 @@ sankey-beta
     `;
 
     useEffect(() => {
-        if (typeof mermaid !== 'undefined') {
+        if (typeof mermaid !== 'undefined' && mermaidRef.current) {
             try {
                 mermaid.initialize({
                     startOnLoad: false,
@@ -63,18 +64,25 @@ sankey-beta
                         nodeBorder: '#06b6d4',
                     }
                 });
-                mermaid.contentLoaded();
+                
+                const graphId = `sankey-datacenter-${Date.now()}`;
+                mermaid.render(graphId, mermaidChart, (svgCode: string) => {
+                    if (mermaidRef.current) {
+                        mermaidRef.current.innerHTML = svgCode;
+                    }
+                });
+
             } catch (e) {
-                console.error("Error initializing mermaid", e);
+                console.error("Error rendering mermaid diagram in EnergyFlowSankey:", e);
             }
         }
-    }, []);
+    }, [mermaidChart]);
 
     return (
         <DashboardCard title={t('dataCenter.sankey.title')} icon={<ActivityIcon className="w-6 h-6" />}>
             <div className="p-4 bg-gray-900 rounded-lg overflow-x-auto flex justify-center h-[70vh]">
-                <div className="mermaid" style={{ minWidth: '800px' }}>
-                    {mermaidChart}
+                <div ref={mermaidRef} style={{ minWidth: '800px' }}>
+                    {/* Mermaid diagram is injected here by useEffect */}
                 </div>
             </div>
         </DashboardCard>

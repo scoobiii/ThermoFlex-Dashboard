@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import DashboardCard from './DashboardCard';
 import { ActivityIcon } from './icons';
 import { Page } from './Navigation';
@@ -14,6 +14,8 @@ interface PowerPlantSankeyProps {
 }
 
 const PowerPlantSankey: React.FC<PowerPlantSankeyProps> = ({ powerOutput, efficiency, setCurrentPage, t }) => {
+    const mermaidRef = useRef<HTMLDivElement>(null);
+
     // Calculations based on Utilities.tsx logic
     const powerInput = efficiency > 0 ? powerOutput / (efficiency / 100) : 0;
     const wasteHeat = powerInput - powerOutput;
@@ -44,10 +46,10 @@ sankey-beta
     `;
 
     useEffect(() => {
-        if (typeof mermaid !== 'undefined') {
+        if (typeof mermaid !== 'undefined' && mermaidRef.current) {
             try {
                 mermaid.initialize({
-                    startOnLoad: true, 
+                    startOnLoad: false, 
                     theme: 'dark',
                     sankey: {
                         alignment: 'center'
@@ -60,11 +62,19 @@ sankey-beta
                         textColor: '#d1d5db',
                     }
                 });
+
+                const graphId = `sankey-powerplant-${Date.now()}`;
+                mermaid.render(graphId, mermaidChart, (svgCode: string) => {
+                    if (mermaidRef.current) {
+                        mermaidRef.current.innerHTML = svgCode;
+                    }
+                });
+
             } catch (e) {
-                console.error("Mermaid initialization error:", e);
+                console.error("Mermaid initialization error in PowerPlantSankey:", e);
             }
         }
-    }, []);
+    }, [mermaidChart]);
 
     return (
         <div className="mt-6 animate-fadeIn">
@@ -78,8 +88,8 @@ sankey-beta
                 }
             >
                 <div className="p-4 bg-gray-900 rounded-lg overflow-x-auto flex justify-center h-[75vh]">
-                    <div className="mermaid" style={{ minWidth: '900px' }}>
-                        {mermaidChart}
+                    <div ref={mermaidRef} style={{ minWidth: '900px' }}>
+                        {/* Mermaid diagram is injected here by useEffect */}
                     </div>
                 </div>
             </DashboardCard>

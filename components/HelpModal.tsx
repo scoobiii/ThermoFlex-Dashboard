@@ -7,7 +7,7 @@ interface HelpModalProps {
   t: (key: string) => string;
 }
 
-type HelpTab = 'glossary' | 'userGuide' | 'devGuide' | 'newProject';
+type HelpTab = 'glossary' | 'userGuide' | 'devGuide' | 'newProject' | 'partners' | 'tutorial';
 
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, t }) => {
   if (!isOpen) return null;
@@ -15,7 +15,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, t }) => {
   const [activeTab, setActiveTab] = useState<HelpTab>('glossary');
 
   const tabButtonClasses = (tabName: HelpTab) =>
-    `px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 ${
+    `px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 w-full text-left ${
       activeTab === tabName
         ? 'bg-cyan-600 text-white'
         : 'text-gray-300 hover:bg-gray-700/50'
@@ -101,6 +101,42 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, t }) => {
     </div>
   );
 
+  const PartnersGuideContent = () => (
+      <div className="space-y-6 text-gray-300">
+        <div>
+          <h3 className="text-xl font-bold text-white mb-2">{t('help.partners.title')}</h3>
+          <p className="text-sm">{t('help.partners.intro')}</p>
+        </div>
+
+        <div className="border-t border-gray-700 pt-4">
+          <h4 className="font-semibold text-cyan-400 mb-2">1. {t('help.partners.thesis.title')}</h4>
+          <p className="text-sm">{t('help.partners.thesis.desc')}</p>
+          <p className="text-sm mt-2">{t('help.partners.thesis.action')}</p>
+        </div>
+
+        <div className="border-t border-gray-700 pt-4">
+          <h4 className="font-semibold text-cyan-400 mb-2">2. {t('help.partners.opportunities.title')}</h4>
+          <ul className="list-disc list-inside text-sm space-y-2 pl-4">
+            <li><strong>{t('help.partners.opportunities.dataCenter.title')}:</strong> {t('help.partners.opportunities.dataCenter.desc')}</li>
+            <li><strong>{t('help.partners.opportunities.energy.title')}:</strong> {t('help.partners.opportunities.energy.desc')}</li>
+            <li><strong>{t('help.partners.opportunities.financials.title')}:</strong> {t('help.partners.opportunities.financials.desc')}</li>
+          </ul>
+        </div>
+
+        <div className="border-t border-gray-700 pt-4">
+          <h4 className="font-semibold text-cyan-400 mb-2">3. {t('help.partners.engage.title')}</h4>
+          <p className="text-sm">{t('help.partners.engage.desc')}</p>
+        </div>
+      </div>
+  );
+
+  const TutorialContent = () => (
+    <div className="text-center text-gray-400 pt-10">
+      <h3 className="text-lg font-semibold">{t('help.tutorial.title')}</h3>
+      <p>{t('global.comingSoon')}</p>
+    </div>
+  );
+
   return (
     <div
       className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn"
@@ -124,12 +160,14 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, t }) => {
         </header>
 
         <div className="flex flex-col md:flex-row flex-grow min-h-0">
-          <nav className="flex-shrink-0 md:w-48 p-4 border-b md:border-b-0 md:border-r border-gray-700">
+          <nav className="flex-shrink-0 md:w-52 p-4 border-b md:border-b-0 md:border-r border-gray-700">
             <ul className="flex flex-row md:flex-col gap-2">
-              <li><button onClick={() => setActiveTab('glossary')} className={tabButtonClasses('glossary')}>{t('help.glossary')}</button></li>
               <li><button onClick={() => setActiveTab('userGuide')} className={tabButtonClasses('userGuide')}>{t('help.userGuide')}</button></li>
-              <li><button onClick={() => setActiveTab('devGuide')} className={tabButtonClasses('devGuide')}>{t('help.devGuide')}</button></li>
+              <li><button onClick={() => setActiveTab('tutorial')} className={tabButtonClasses('tutorial')}>{t('help.tutorial')}</button></li>
+              <li><button onClick={() => setActiveTab('glossary')} className={tabButtonClasses('glossary')}>{t('help.glossary')}</button></li>
               <li><button onClick={() => setActiveTab('newProject')} className={tabButtonClasses('newProject')}>{t('help.newProject')}</button></li>
+              <li><button onClick={() => setActiveTab('partners')} className={tabButtonClasses('partners')}>{t('help.partners')}</button></li>
+              <li><button onClick={() => setActiveTab('devGuide')} className={tabButtonClasses('devGuide')}>{t('help.devGuide')}</button></li>
             </ul>
           </nav>
 
@@ -138,6 +176,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, t }) => {
             {activeTab === 'userGuide' && <UserGuideContent />}
             {activeTab === 'devGuide' && <DevOpsGuideContent />}
             {activeTab === 'newProject' && <NewProjectGuideContent />}
+            {activeTab === 'partners' && <PartnersGuideContent />}
+            {activeTab === 'tutorial' && <TutorialContent />}
           </main>
         </div>
       </div>
