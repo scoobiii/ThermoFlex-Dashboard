@@ -21,6 +21,7 @@ import MainTurbineMonitor from '../components/MainTurbineMonitor';
 import HistoricalData from '../components/HistoricalData';
 import ResourceManagement from '../components/ResourceManagement';
 import NuclearPlantInfo from '../components/NuclearPlantInfo';
+import NuclearProjectAnalysis from '../components/NuclearProjectAnalysis';
 
 // --- PROPS INTERFACE ---
 interface PowerPlantProps {
@@ -437,29 +438,19 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                     />
                 </div>
                 
-                <div className={`col-span-12 ${!selectedTurbine && maximizedStates.turbines ? 'h-[80vh]' : ''}`}>
-                    {selectedTurbine ? (
-                        <MainTurbineMonitor 
-                            turbine={selectedTurbine} 
-                            onClose={() => setSelectedTurbineId(null)}
-                            allTurbines={turbines}
-                            totalPowerOutput={powerOutput}
-                            t={t}
-                        />
-                    ) : (
-                        <TurbineStatus 
-                            turbines={filteredTurbines} 
-                            onSelectTurbine={setSelectedTurbineId} 
-                            selectedTurbineId={selectedTurbineId}
-                            isMaximizable
-                            isMaximized={maximizedStates.turbines}
-                            onToggleMaximize={() => toggleMaximize('turbines')}
-                            turbineTypeFilter={turbineTypeFilter}
-                            setTurbineTypeFilter={setTurbineTypeFilter}
-                            onPerformMaintenance={handlePerformMaintenance}
-                            t={t}
-                        />
-                    )}
+                <div className={`col-span-12 ${maximizedStates.turbines ? 'h-[80vh]' : ''}`}>
+                    <TurbineStatus 
+                        turbines={filteredTurbines} 
+                        onSelectTurbine={setSelectedTurbineId} 
+                        selectedTurbineId={selectedTurbineId}
+                        isMaximizable
+                        isMaximized={maximizedStates.turbines}
+                        onToggleMaximize={() => toggleMaximize('turbines')}
+                        turbineTypeFilter={turbineTypeFilter}
+                        setTurbineTypeFilter={setTurbineTypeFilter}
+                        onPerformMaintenance={handlePerformMaintenance}
+                        t={t}
+                    />
                 </div>
 
                 <div className={`col-span-12 ${maximizedStates.history ? 'h-[80vh]' : ''}`}>
@@ -473,7 +464,21 @@ const PowerPlant: React.FC<PowerPlantProps> = ({
                         t={t}
                     />
                 </div>
+                {fuelMode === FuelMode.Nuclear && (
+                    <div className="col-span-12 mt-6">
+                        <NuclearProjectAnalysis t={t} />
+                    </div>
+                )}
             </div>
+            {selectedTurbine && (
+                <MainTurbineMonitor
+                    turbine={selectedTurbine}
+                    onClose={() => setSelectedTurbineId(null)}
+                    allTurbines={turbines}
+                    totalPowerOutput={powerOutput}
+                    t={t}
+                />
+            )}
         </div>
     );
 };

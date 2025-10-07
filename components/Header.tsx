@@ -1,6 +1,6 @@
 import React from 'react';
 import { PlantStatus } from '../types';
-import { BoltIcon, ChartBarIcon } from './icons';
+import { BoltIcon, ChartBarIcon, QuestionMarkCircleIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
 
 interface HeaderProps {
@@ -10,10 +10,11 @@ interface HeaderProps {
   maxCapacity: number;
   language: string;
   setLanguage: (language: string) => void;
+  onHelpClick: () => void; // Added prop to handle help modal opening
   t: (key: string) => string;
 }
 
-const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput, selectedPlantName, maxCapacity, language, setLanguage, t }) => {
+const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput, selectedPlantName, maxCapacity, language, setLanguage, onHelpClick, t }) => {
   const statusInfo = {
     [PlantStatus.Online]: { text: t('plantStatus.ONLINE'), color: 'bg-green-500' },
     [PlantStatus.Offline]: { text: t('plantStatus.OFFLINE'), color: 'bg-red-500' },
@@ -33,6 +34,14 @@ const Header: React.FC<HeaderProps> = ({ plantStatus, powerOutput, selectedPlant
       </div>
       <div className="flex items-center space-x-4 sm:space-x-6">
         <LanguageSwitcher language={language} setLanguage={setLanguage} />
+        <button
+          onClick={onHelpClick}
+          className="p-2 bg-gray-800 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors"
+          aria-label={t('nav.help')}
+          title={t('nav.help')}
+        >
+          <QuestionMarkCircleIcon className="w-6 h-6 text-gray-400" />
+        </button>
         <div className="h-8 w-px bg-gray-700 hidden sm:block"></div>
         <div className="flex items-center space-x-2">
             <BoltIcon className="h-6 w-6 text-cyan-400" />

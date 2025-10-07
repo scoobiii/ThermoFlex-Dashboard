@@ -49,7 +49,7 @@ const navItems: NavItem[] = [
     { labelKey: 'nav.configuration', page: 'Configuration' },
     { labelKey: 'nav.infrastructure', page: 'Infrastructure' },
     { labelKey: 'nav.consortium', page: 'MAUAX consortium' },
-    { labelKey: 'nav.inventory', page: 'inventario UTE' }
+    { labelKey: 'nav.inventory', page: 'inventario UTE' },
 ];
 
 interface NavigationProps {

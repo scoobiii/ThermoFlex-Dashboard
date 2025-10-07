@@ -13,6 +13,7 @@ import PowerPlantSystem from './pages/PowerPlantSystem';
 import GasTurbineDiagram from './components/GasTurbineDiagram';
 import PowerPlantSankey from './components/PowerPlantSankey';
 import ExternalPageViewer from './pages/ExternalPageViewer';
+import HelpModal from './components/HelpModal'; // Import the new HelpModal component
 import { PlantStatus, FuelMode, TurbineStatus, Plant } from './types';
 import { POWER_PLANTS as initialPowerPlants } from './data/plants';
 import { useTranslations } from './hooks/useTranslations';
@@ -117,6 +118,7 @@ const App: React.FC = () => {
   const [currentPage, _setCurrentPage] = useState<Page>('Power Plant');
   const [previousPage, setPreviousPage] = useState<Page>('Power Plant');
   const [externalPageUrl, setExternalPageUrl] = useState<string | null>(null);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false); // State for help modal
   const { language, setLanguage } = useSettings();
   const { t } = useTranslations(language);
 
@@ -477,10 +479,16 @@ const App: React.FC = () => {
           maxCapacity={maxCapacity}
           language={language}
           setLanguage={setLanguage}
+          onHelpClick={() => setIsHelpModalOpen(true)} // Pass handler to open modal
           t={t}
         />
         {renderPage()}
       </div>
+      <HelpModal 
+        isOpen={isHelpModalOpen} 
+        onClose={() => setIsHelpModalOpen(false)} 
+        t={t} 
+      />
     </div>
   );
 };
