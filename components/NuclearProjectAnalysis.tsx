@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DashboardCard from './DashboardCard';
 import { ActivityIcon } from './icons';
@@ -19,31 +18,31 @@ const NuclearProjectAnalysis: React.FC<NuclearProjectAnalysisProps> = ({ t }) =>
     <style>
         :root {
             --primary-color: #2c3e50; --secondary-color: #3498db;
-            --accent-color: #e74c3c; --bg-color: #f8f9fa; --card-bg: #ffffff;
+            --accent-color: #e74c3c; --bg-color: #ecf0f1; --card-bg: #ffffff;
             --text-color: #34495e; --header-color: #ffffff;
         }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg-color ); color: var(--text-color); }
-        .container { max-width: 1400px; margin: 0 auto; padding: 0; }
-        header { background: linear-gradient(135deg, var(--primary-color), #34495e); color: var(--header-color); padding: 30px 20px; text-align: center; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        header h1 { margin: 0; font-size: 2.2em; }
-        header p { margin: 5px 0 0; font-size: 1.1em; opacity: 0.9; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
+        header { background: linear-gradient(135deg, var(--primary-color), #34495e); color: var(--header-color); padding: 40px 20px; text-align: center; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        header h1 { margin: 0; font-size: 2.5em; }
+        header p { margin: 5px 0 0; font-size: 1.2em; opacity: 0.9; }
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab { padding: 10px 20px; cursor: pointer; border: 2px solid transparent; background-color: var(--card-bg); color: var(--primary-color); border-radius: 50px; font-weight: 600; transition: all 0.3s ease; }
+        .tab { padding: 12px 25px; cursor: pointer; border: 2px solid transparent; background-color: var(--card-bg); color: var(--primary-color); border-radius: 50px; font-weight: 600; transition: all 0.3s ease; }
         .tab:hover { background-color: var(--secondary-color); color: white; }
         .tab.active { background-color: var(--primary-color); color: white; border-color: var(--secondary-color); }
-        .content { display: none; background-color: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .content { display: none; background-color: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .content.active { display: block; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        h2 { color: var(--primary-color); border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.6em; }
-        .mermaid { text-align: center; margin: 20px 0; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        h2 { color: var(--primary-color); border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.8em; }
+        .mermaid { text-align: center; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: var(--primary-color); color: var(--header-color); }
         tr:nth-child(even) { background-color: #f8f9fa; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
         .card { background: #fdfdfd; border-left: 5px solid var(--secondary-color); padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .card h4 { margin-top: 0; color: var(--primary-color); font-size: 1.1em; }
-        .card .value { font-size: 2.0em; font-weight: 700; color: var(--secondary-color); margin: 8px 0; }
+        .card .value { font-size: 2.2em; font-weight: 700; color: var(--secondary-color); margin: 8px 0; }
         .card .unit { font-size: 1em; color: #7f8c8d; }
     </style>
 </head>
@@ -66,13 +65,68 @@ const NuclearProjectAnalysis: React.FC<NuclearProjectAnalysisProps> = ({ t }) =>
             <p>Esta configuração prioriza a simplicidade do design, com um único ciclo de compressão e recuperação, enquanto ainda permite uma recuperação de calor em cascata para o ciclo ORC e o chiller.</p>
             <div class="mermaid">
                 graph TD;
-                    subgraph Legenda; direction LR; style SMR_L fill:#e74c3c,stroke:#c0392b,color:#fff; style SCO2_L fill:#f1c40f,stroke:#f39c12,color:#333; style ORC_L fill:#3498db,stroke:#2980b9,color:#fff; style CHILLER_L fill:#1abc9c,stroke:#16a085,color:#fff; style DC_L fill:#9b59b6,stroke:#8e44ad,color:#fff; SMR_L(SMR); SCO2_L(Ciclo S-CO₂); ORC_L(Ciclo ORC); CHILLER_L(Chiller); DC_L(Data Center); end;
-                    subgraph "Fonte Térmica Primária"; style SMR fill:#e74c3c,stroke:#c0392b,color:#fff; SMR(SMR 100 MWₜ); end;
-                    subgraph "Ciclo de Potência S-CO₂ (SRC)"; style T_SCO2 fill:#f1c40f,stroke:#f39c12; style C_SCO2 fill:#f1c40f,stroke:#f39c12; style REC_SCO2 fill:#f39c12,stroke:#f1c40f,color:#fff; SMR -- "Q_in: 100 MW" --> T_SCO2(Turbina S-CO₂); T_SCO2 -- "W_bruto: 42 MW" --> G1(Gerador 1); T_SCO2 -- "T: 300°C" --> REC_SCO2(Recuperador); REC_SCO2 -- "T: 150°C" --> IHX(IHX-ORC); IHX -- "T: 95°C" --> PC(Precooler); PC -- "T: 40°C" --> C_SCO2(Compressor); C_SCO2 -- "W_cons: 12 MW" --> T_SCO2; C_SCO2 -- "T: 70°C" --> REC_SCO2; REC_SCO2 -- "T: 280°C" --> SMR; end;
-                    subgraph "Ciclo de Potência Secundário (ORC)"; style ORC fill:#3498db,stroke:#2980b9,color:#fff; IHX -- "Q_rec: 15 MW" --> ORC(Ciclo ORC); ORC -- "W_liq: 9.2 MW" --> G2(Gerador 2); end;
-                    subgraph "Sistema de Refrigeração"; style CHILLER fill:#1abc9c,stroke:#16a085,color:#fff; style TORRE fill:#bdc3c7,stroke:#95a5a6; PC -- "Q_rec: 8 MW" --> CHILLER(Chiller de Absorção); ORC -- "Q_rec: 5.8 MW" --> CHILLER; CHILLER -- "Q_frio: 16.5 MW" --> DC(Data Center); CHILLER -- "Q_rej: 29.3 MW" --> TORRE(Torre de Resfriamento); end;
-                    subgraph "Carga Digital"; style DC fill:#9b59b6,stroke:#8e44ad,color:#fff; DC -- "Calor: 16.5 MW" --> CHILLER; end;
-                    subgraph "Balanço Elétrico"; style REDE fill:#2ecc71,stroke:#27ae60,color:#fff; G1[P_liq: 30 MW] --> REDE(Rede Elétrica); G2[P_liq: 9.2 MW] --> REDE; DC -- "Consumo: 18.3 MW" --> REDE; end;
+                    subgraph Legenda; 
+                        direction LR; 
+                        style SMR_L fill:#e74c3c,stroke:#c0392b,color:#fff; 
+                        style SCO2_L fill:#f1c40f,stroke:#f39c12,color:#333; 
+                        style ORC_L fill:#3498db,stroke:#2980b9,color:#fff; 
+                        style CHILLER_L fill:#1abc9c,stroke:#16a085,color:#fff; 
+                        style DC_L fill:#9b59b6,stroke:#8e44ad,color:#fff; 
+                        SMR_L(SMR); SCO2_L(Ciclo S-CO₂); ORC_L(Ciclo ORC); CHILLER_L(Chiller); DC_L(Data Center); 
+                    end;
+                
+                    subgraph "Fonte Térmica Primária"; 
+                        style SMR fill:#e74c3c,stroke:#c0392b,color:#fff; 
+                        SMR(SMR 100 MWₜ); 
+                    end;
+                
+                    subgraph "Ciclo de Potência S-CO₂ (SRC)"; 
+                        style T_SCO2 fill:#f1c40f,stroke:#f39c12; 
+                        style C_SCO2 fill:#f1c40f,stroke:#f39c12; 
+                        style REC_SCO2 fill:#f39c12,stroke:#f1c40f,color:#fff; 
+                        SMR -- "Q_in: <b>100 MW</b>" --> T_SCO2(Turbina S-CO₂); 
+                        T_SCO2 -- "W_bruto: <b>42 MW</b>" --> G1(Gerador 1); 
+                        T_SCO2 -- "T: 300°C" --> REC_SCO2(Recuperador); 
+                        PC(Precooler) -- "T: 40°C" --> C_SCO2(Compressor); 
+                        C_SCO2 -- "W_cons: <b>12 MW</b>" --> T_SCO2; 
+                        C_SCO2 -- "T: 70°C" --> REC_SCO2; 
+                        REC_SCO2 -- "T: 280°C" --> SMR; 
+                    end;
+                
+                    subgraph "Processamento de Calor Residual";
+                        style IHX fill:#f39c12,stroke:#f1c40f,color:#fff;
+                        REC_SCO2 -- "Calor @ 150°C" --> IHX(IHX-ORC);
+                        
+                        subgraph "Ciclo de Potência Secundário (ORC)"; 
+                            style ORC fill:#3498db,stroke:#2980b9,color:#fff; 
+                            IHX -- "Q_rec: <b>15 MW</b>" --> ORC(Ciclo ORC); 
+                            ORC -- "W_liq: <b>9.2 MW</b>" --> G2(Gerador 2); 
+                        end;
+                    end;
+                
+                    IHX -- "T: 95°C" --> PC;
+                
+                    subgraph "Sistema de Refrigeração"; 
+                        style CHILLER fill:#1abc9c,stroke:#16a085,color:#fff; 
+                        style TORRE fill:#bdc3c7,stroke:#95a5a6; 
+                        PC -- "Calor do S-CO₂ (<b>8 MW</b>)" --> CHILLER(Chiller de Absorção); 
+                        ORC -- "Calor do ORC (<b>5.8 MW</b>)" --> CHILLER; 
+                        CHILLER -- "Q_frio: <b>16.5 MW</b>" --> DC; 
+                        CHILLER -- "Rejeição de Calor: <b>29.3 MW</b>" --> TORRE(Torre de Resfriamento); 
+                    end;
+                
+                    subgraph "Carga Digital"; 
+                        style DC fill:#9b59b6,stroke:#8e44ad,color:#fff; 
+                        DC("<b>Data Center</b><br>Consumo Elétrico: 18.3MW");
+                        DC -- "Carga Térmica: <b>16.5 MW</b>" --> CHILLER;
+                    end;
+                
+                    subgraph "Balanço Elétrico"; 
+                        style REDE fill:#2ecc71,stroke:#27ae60,color:#fff; 
+                        G1[P_liq: 30 MW] --> REDE(Rede Elétrica); 
+                        G2[P_liq: 9.2 MW] --> REDE; 
+                        REDE -- "Consumo: <b>18.3 MW</b>" --> DC;
+                    end;
             </div>
         </div>
 
@@ -131,36 +185,14 @@ const NuclearProjectAnalysis: React.FC<NuclearProjectAnalysisProps> = ({ t }) =>
     </div>
 
     <script>
-        // Use a try-catch block to handle potential errors if mermaid is not available
-        try {
-            if (window.mermaid) {
-                window.mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
-            }
-        } catch (e) {
-            console.error('Mermaid.js failed to initialize.', e);
-        }
-
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
         function showTab(tabId) {
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            
-            const contentEl = document.getElementById(tabId);
-            const tabEl = document.querySelector(\`[onclick="showTab('\${tabId}')"]\`);
-            
-            if(contentEl) contentEl.classList.add('active');
-            if(tabEl) tabEl.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(\`[onclick="showTab(' \${tabId}')"]\`).classList.add('active');
         }
-
-        // Defer initial tab activation to ensure all elements are loaded
-        function activateInitialTab() {
-            showTab('diagrama_src');
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', activateInitialTab);
-        } else {
-            activateInitialTab();
-        }
+        document.addEventListener('DOMContentLoaded', () => showTab('diagrama_src'));
     </script>
 </body>
 </html>

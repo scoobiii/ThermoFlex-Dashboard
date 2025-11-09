@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const DataNuclear: React.FC = () => {
@@ -60,13 +59,68 @@ const DataNuclear: React.FC = () => {
             <p>Esta configuração prioriza a simplicidade do design, com um único ciclo de compressão e recuperação, enquanto ainda permite uma recuperação de calor em cascata para o ciclo ORC e o chiller.</p>
             <div class="mermaid">
                 graph TD;
-                    subgraph Legenda; direction LR; style SMR_L fill:#e74c3c,stroke:#c0392b,color:#fff; style SCO2_L fill:#f1c40f,stroke:#f39c12,color:#333; style ORC_L fill:#3498db,stroke:#2980b9,color:#fff; style CHILLER_L fill:#1abc9c,stroke:#16a085,color:#fff; style DC_L fill:#9b59b6,stroke:#8e44ad,color:#fff; SMR_L(SMR); SCO2_L(Ciclo S-CO₂); ORC_L(Ciclo ORC); CHILLER_L(Chiller); DC_L(Data Center); end;
-                    subgraph "Fonte Térmica Primária"; style SMR fill:#e74c3c,stroke:#c0392b,color:#fff; SMR(SMR 100 MWₜ); end;
-                    subgraph "Ciclo de Potência S-CO₂ (SRC)"; style T_SCO2 fill:#f1c40f,stroke:#f39c12; style C_SCO2 fill:#f1c40f,stroke:#f39c12; style REC_SCO2 fill:#f39c12,stroke:#f1c40f,color:#fff; SMR -- "Q_in: 100 MW" --> T_SCO2(Turbina S-CO₂); T_SCO2 -- "W_bruto: 42 MW" --> G1(Gerador 1); T_SCO2 -- "T: 300°C" --> REC_SCO2(Recuperador); REC_SCO2 -- "T: 150°C" --> IHX(IHX-ORC); IHX -- "T: 95°C" --> PC(Precooler); PC -- "T: 40°C" --> C_SCO2(Compressor); C_SCO2 -- "W_cons: 12 MW" --> T_SCO2; C_SCO2 -- "T: 70°C" --> REC_SCO2; REC_SCO2 -- "T: 280°C" --> SMR; end;
-                    subgraph "Ciclo de Potência Secundário (ORC)"; style ORC fill:#3498db,stroke:#2980b9,color:#fff; IHX -- "Q_rec: 15 MW" --> ORC(Ciclo ORC); ORC -- "W_liq: 9.2 MW" --> G2(Gerador 2); end;
-                    subgraph "Sistema de Refrigeração"; style CHILLER fill:#1abc9c,stroke:#16a085,color:#fff; style TORRE fill:#bdc3c7,stroke:#95a5a6; PC -- "Q_rec: 8 MW" --> CHILLER(Chiller de Absorção); ORC -- "Q_rec: 5.8 MW" --> CHILLER; CHILLER -- "Q_frio: 16.5 MW" --> DC(Data Center); CHILLER -- "Q_rej: 29.3 MW" --> TORRE(Torre de Resfriamento); end;
-                    subgraph "Carga Digital"; style DC fill:#9b59b6,stroke:#8e44ad,color:#fff; DC -- "Calor: 16.5 MW" --> CHILLER; end;
-                    subgraph "Balanço Elétrico"; style REDE fill:#2ecc71,stroke:#27ae60,color:#fff; G1[P_liq: 30 MW] --> REDE(Rede Elétrica); G2[P_liq: 9.2 MW] --> REDE; DC -- "Consumo: 18.3 MW" --> REDE; end;
+                    subgraph Legenda; 
+                        direction LR; 
+                        style SMR_L fill:#e74c3c,stroke:#c0392b,color:#fff; 
+                        style SCO2_L fill:#f1c40f,stroke:#f39c12,color:#333; 
+                        style ORC_L fill:#3498db,stroke:#2980b9,color:#fff; 
+                        style CHILLER_L fill:#1abc9c,stroke:#16a085,color:#fff; 
+                        style DC_L fill:#9b59b6,stroke:#8e44ad,color:#fff; 
+                        SMR_L(SMR); SCO2_L(Ciclo S-CO₂); ORC_L(Ciclo ORC); CHILLER_L(Chiller); DC_L(Data Center); 
+                    end;
+                
+                    subgraph "Fonte Térmica Primária"; 
+                        style SMR fill:#e74c3c,stroke:#c0392b,color:#fff; 
+                        SMR(SMR 100 MWₜ); 
+                    end;
+                
+                    subgraph "Ciclo de Potência S-CO₂ (SRC)"; 
+                        style T_SCO2 fill:#f1c40f,stroke:#f39c12; 
+                        style C_SCO2 fill:#f1c40f,stroke:#f39c12; 
+                        style REC_SCO2 fill:#f39c12,stroke:#f1c40f,color:#fff; 
+                        SMR -- "Q_in: <b>100 MW</b>" --> T_SCO2(Turbina S-CO₂); 
+                        T_SCO2 -- "W_bruto: <b>42 MW</b>" --> G1(Gerador 1); 
+                        T_SCO2 -- "T: 300°C" --> REC_SCO2(Recuperador); 
+                        PC(Precooler) -- "T: 40°C" --> C_SCO2(Compressor); 
+                        C_SCO2 -- "W_cons: <b>12 MW</b>" --> T_SCO2; 
+                        C_SCO2 -- "T: 70°C" --> REC_SCO2; 
+                        REC_SCO2 -- "T: 280°C" --> SMR; 
+                    end;
+                
+                    subgraph "Processamento de Calor Residual";
+                        style IHX fill:#f39c12,stroke:#f1c40f,color:#fff;
+                        REC_SCO2 -- "Calor @ 150°C" --> IHX(IHX-ORC);
+                        
+                        subgraph "Ciclo de Potência Secundário (ORC)"; 
+                            style ORC fill:#3498db,stroke:#2980b9,color:#fff; 
+                            IHX -- "Q_rec: <b>15 MW</b>" --> ORC(Ciclo ORC); 
+                            ORC -- "W_liq: <b>9.2 MW</b>" --> G2(Gerador 2); 
+                        end;
+                    end;
+                
+                    IHX -- "T: 95°C" --> PC;
+                
+                    subgraph "Sistema de Refrigeração"; 
+                        style CHILLER fill:#1abc9c,stroke:#16a085,color:#fff; 
+                        style TORRE fill:#bdc3c7,stroke:#95a5a6; 
+                        PC -- "Calor do S-CO₂ (<b>8 MW</b>)" --> CHILLER(Chiller de Absorção); 
+                        ORC -- "Calor do ORC (<b>5.8 MW</b>)" --> CHILLER; 
+                        CHILLER -- "Q_frio: <b>16.5 MW</b>" --> DC; 
+                        CHILLER -- "Rejeição de Calor: <b>29.3 MW</b>" --> TORRE(Torre de Resfriamento); 
+                    end;
+                
+                    subgraph "Carga Digital"; 
+                        style DC fill:#9b59b6,stroke:#8e44ad,color:#fff; 
+                        DC("<b>Data Center</b><br>Consumo Elétrico: 18.3MW");
+                        DC -- "Carga Térmica: <b>16.5 MW</b>" --> CHILLER;
+                    end;
+                
+                    subgraph "Balanço Elétrico"; 
+                        style REDE fill:#2ecc71,stroke:#27ae60,color:#fff; 
+                        G1[P_liq: 30 MW] --> REDE(Rede Elétrica); 
+                        G2[P_liq: 9.2 MW] --> REDE; 
+                        REDE -- "Consumo: <b>18.3 MW</b>" --> DC;
+                    end;
             </div>
         </div>
 
