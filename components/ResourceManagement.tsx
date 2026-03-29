@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import DashboardCard from './DashboardCard';
@@ -66,12 +63,22 @@ const StorageIndicator: React.FC<{ label: string; storage: Storage; unit: string
         <span className="text-gray-400">{label}</span>
         <span className="font-mono text-white">{storage.level.toLocaleString('pt-BR')}/{storage.capacity.toLocaleString('pt-BR')} {unit}</span>
       </div>
-      <div className="w-full bg-gray-700 rounded-full h-2.5">
-        <div className={`${colorClass} h-2.5 rounded-full`} style={{ width: `${percentage}%` }}></div>
+      <div className="w-full bg-gray-700 rounded-full h-4 relative overflow-hidden">
+        <div 
+          className={`${colorClass} h-full rounded-full transition-all duration-500 ease-out`} 
+          style={{ width: `${percentage}%` }}
+        >
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-xs font-bold text-white" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.5)'}}>
+                {percentage.toFixed(0)}%
+            </span>
+        </div>
       </div>
     </div>
   );
 };
+
 
 const ResourceToggle: React.FC<{ label: string; color: string; isActive: boolean; onClick: () => void;}> = ({ label, color, isActive, onClick }) => (
     <button

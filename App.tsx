@@ -14,6 +14,7 @@ import GasTurbineDiagram from './components/GasTurbineDiagram';
 import PowerPlantSankey from './components/PowerPlantSankey';
 import ExternalPageViewer from './pages/ExternalPageViewer';
 import HelpModal from './components/HelpModal'; // Import the new HelpModal component
+import MexInteligencia from './pages/MexInteligencia';
 import { PlantStatus, FuelMode, TurbineStatus, Plant } from './types';
 import { POWER_PLANTS as initialPowerPlants } from './data/plants';
 import { useTranslations } from './hooks/useTranslations';
@@ -396,6 +397,8 @@ const App: React.FC = () => {
         return <Infrastructure />;
       case 'MAUAX consortium':
         return <MexEcoBr />;
+      case 'Pitch MEX':
+        return <MexInteligencia t={t} />;
       case 'Financials':
         return <Financials 
           plantStatus={plantStatus}

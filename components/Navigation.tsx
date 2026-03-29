@@ -22,6 +22,7 @@ export type Page =
     'Chiller Absorção -> Data Cloud' |
     'Fog System Details' |
     'Power Plant Sankey' |
+    'Pitch MEX' |
     'External Page'; // New page for viewing external content
 
 interface NavItem {
@@ -50,6 +51,7 @@ const navItems: NavItem[] = [
     { labelKey: 'nav.infrastructure', page: 'Infrastructure' },
     { labelKey: 'nav.consortium', page: 'MAUAX consortium' },
     { labelKey: 'nav.inventory', page: 'inventario UTE' },
+    { labelKey: 'nav.pitchMex', page: 'Pitch MEX' },
 ];
 
 interface NavigationProps {
